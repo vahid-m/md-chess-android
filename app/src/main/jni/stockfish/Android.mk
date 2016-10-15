@@ -12,8 +12,7 @@ LOCAL_SRC_FILES := \
 	direction.cpp    mersenne.cpp  position.cpp \
 	endgame.cpp      misc.cpp      san.cpp
 
-LOCAL_CFLAGS    := -mandroid \
-	-DTARGET_OS=android -D__ANDROID__ \
+LOCAL_CFLAGS    :=	-DTARGET_OS=android -D__ANDROID__ \
 	-isystem $(SYSROOT)/usr/include \
 	-DNO_PREFETCH=1
 
