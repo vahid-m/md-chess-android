@@ -24,7 +24,7 @@ public class Appearance {
 
 	final static int getColor(int colorType) {
 
-        context=ChessTastic.getContextOfApplication();
+        context = ChessTastic.getContextOfApplication();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         int choice = sharedPreferences.getInt("Choice", 4);
         switch(choice)

@@ -14,8 +14,8 @@
     <item>Rating and Feedback</item>
 	<item>About</item>
 	</string-array>
-	<string name="app_name">ChessTastic™</string>
-    <string name="app_name_pop">ChessTastic™  Beta  1.0</string>
+	<string name="app_name">Chess Material</string>
+    <string name="app_name_pop">Chess Material Beta  1.0</string>
     <string name="erd_title">Rate this app</string>
     <string name="erd_message">Hi, take a minute to rate this app and help me to improve and add new features. ;)</string>
     <string name="erd_no_thanks">Never</string>
@@ -187,7 +187,7 @@
 	</string-array>
 	<string name="about_info">\
 <b>About</b>\n\
-<i>ChessTastic</i> is a fully material designed Android Lollipop optimised game to fully enjoy the wonders of Chess. It is developed by Avijit Ghosh, and is based on, and a continuation of the incredible work done by several people, as stated below. \
+<i>Chess Material</i> is a fully material designed Android Lollipop optimised game to fully enjoy the wonders of Chess. It is developed by Avijit Ghosh, and is based on, and a continuation of the incredible work done by several people, as stated below. \
 \n\
 \n\
 <i>Dark Knight</i> , by darktemplar824, is an open-source GPLv3 Honeycomb-optimized fork of the Droidfish chess engine, an Android interface \
@@ -230,23 +230,23 @@ Bluetooth play is still being developed and is in beta stage at this point. \
 go to the previous/next variation.\n\
 \n\
 <b>Analysis</b>\n\
-ChessTastic can analyze games to find better alternatives to moves. By \
+Chess Material can analyze games to find better alternatives to moves. By \
 using hints described above, players can optimize strategies and use the \
 computer to improve their play. Analysis can be activated in Settings. \
 \n\
 \n\
 <b>Opening book</b>\n\
-ChessTastic contains a small internal opening book. If you want to use \
+Chess Material contains a small internal opening book. If you want to use \
 a larger book, you can configure Dark Knight to use a <i>polyglot</i> book file:\n\
-1. Create a directory called <i>ChessTastic</i> on the SD card folder.\n\
-2. Copy one or more polyglot book files to the <i>ChessTastic</i> directory.\n\
+1. Create a directory called <i>Chess Material</i> on the SD card folder.\n\
+2. Copy one or more polyglot book files to the <i>Chess Material</i> directory.\n\
 3. From the program menu, activate the <i>Select opening book</i> function.\n\
 4. Select the opening book file you want to use.\n\
 \n\
 <b>PGN files</b>\n\
-ChessTastic can load games from PGN files. To use this feature:\n\
-1. Create a directory called <i>ChessTastic/pgn</i> on the SD card folder.\n\
-2. Copy one or more PGN files to the <i>ChessTastic/pgn</i> directory.\n\
+Chess Material can load games from PGN files. To use this feature:\n\
+1. Create a directory called <i>Chess Material/pgn</i> on the SD card folder.\n\
+2. Copy one or more PGN files to the <i>Chess Material/pgn</i> directory.\n\
 3. Long press the chess board and select <i>Load game from PGN file</i>.\n\
 4. Select the file, then the game within the file you want to load.\n\
 \n\
@@ -257,15 +257,15 @@ GNU GPL v3\n\
 * <i>Stockfish</i> is developed by Tord Romstad, Marco Costalba and Joona Kiiski.\n\
 * <i>Droidfish</i> is developed by Peter Österlund. (http://web.comhem.se/petero2home/droidfish/)\n\
 * <i>Dark Knight</i> is a Honeycomb fork of Droidfish. Its source is available at SourceForge.net.\n\
-* <i>ChessTastic</i> is a Lollipop fork of Droidfish and Dark Knight.\n\
+* <i>Chess Material</i> is a Lollipop fork of ChessTastic.\n\
 
 </string>
 
 <string name="cpu_warning">\
 <b>CPU Usage</b>\n\
-If you leave ChessTastic running in the background and the <i>GameMode</i> setting \
+If you leave Chess Material running in the background and the <i>GameMode</i> setting \
 is set to <i>Analysis</i> or <i>Computer vs Computer</i>, or if <i>Thinking Time</i> \
-is set to a large value, ChessTastic can use a lot of CPU power.\n\
+is set to a large value, Chess Material can use a lot of CPU power.\n\
 \n\
 If you are running on battery power, it is recommended that you disable analysis mode.
 	</string>
@@ -307,7 +307,7 @@ If you are running on battery power, it is recommended that you disable analysis
 	<string name="select_pgn_game">Select game to open</string>
 	<string name="reading_pgn_file">Reading PGN file</string>
 	<string name="please_wait">Please wait...</string>
-	<string name="no_pgn_files">No files found in directory ChessTastic/pgn on the SD card folder</string>
+	<string name="no_pgn_files">No files found in directory Chess Material/pgn on the SD card folder</string>
 	<string name="select_color_theme">Select Color Theme</string>
 	
 	<!--  Bluetooth -->
@@ -331,4 +331,17 @@ If you are running on battery power, it is recommended that you disable analysis
     <string name="dtitle">Set Color</string>
     <string name="dok">OK</string>
     <string name="dcancel">Cancel</string>
+
+	<!-- Tutorial -->
+	<string name="dg_title">Welcome</string>
+	<string name="dg_content">To play, tap a Chess Piece and then tap the destination square to move.</string>
+	<string name="dg_title_1">Move List</string>
+	<string name="dg_content_1">This box shows the details of the moves in the game. The text size can be adjusted in settings.</string>
+	<string name="dg_title_2">Undo and Redo</string>
+	<string name="dg_content_2">Use the Undo and Redo Buttons to go back and forth between moves.</string>
+	<string name="dg_title_3">More Options</string>
+	<string name="dg_content_3">Slide from the left to reveal more options.</string>
+
+    <string name="white_move">White\'s move</string>
+    <string name="black_move">Black\'s move</string>
 </resources>

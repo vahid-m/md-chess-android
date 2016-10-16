@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import org.empyrn.darkknight.bluetooth.BluetoothGameController;
 import org.empyrn.darkknight.bluetooth.DeviceListActivity;
@@ -25,8 +24,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -34,7 +31,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.graphics.Typeface;
@@ -44,12 +40,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.GravityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.ClipboardManager;
 import android.text.Html;
@@ -59,6 +53,7 @@ import android.text.SpannableStringBuilder;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.LeadingMarginSpan;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -74,7 +69,6 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -89,14 +83,14 @@ import android.widget.Toast;
 import com.github.amlcurran.showcaseview.ApiUtils;
 import com.github.amlcurran.showcaseview.OnShowcaseEventListener;
 import com.github.amlcurran.showcaseview.ShowcaseView;
-import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
 import com.github.amlcurran.showcaseview.targets.Target;
 import com.github.amlcurran.showcaseview.targets.ViewTarget;
 //import com.github.fernandodev.easyratingdialog.library.EasyRatingDialog;
-import com.nemesis.materialchess.BuildConfig;
 import com.nemesis.materialchess.R;
 
-public class ChessTastic extends ActionBarActivity implements GUIInterface, OnShowcaseEventListener {
+import static org.empyrn.darkknight.Appearance.context;
+
+public class ChessTastic extends AppCompatActivity implements GUIInterface, OnShowcaseEventListener {
     // FIXME!!! Computer clock should stop if phone turned off (computer stops
     // thinking if unplugged)
     // FIXME!!! book.txt (and test classes) should not be included in apk
@@ -145,7 +139,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     private TextView moveList;
     private TextView thinking;
 
-    SharedPreferences settings;
+    private SharedPreferences settings;
 
     private float scrollSensitivity;
     private boolean invertScrollDirection;
@@ -155,30 +149,28 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     private final String bookDir = "ChessTastic";
     private final String pgnDir = "ChessTastic" + File.separator + "pgn";
     private String currentBookFile = "";
-    private PGNOptions pgnOptions = new PGNOptions();
+    private final PGNOptions pgnOptions = new PGNOptions();
 
     private long lastVisibleMillis; // Time when GUI became invisible. 0 if
     // currently visible.
     private long lastComputationMillis; // Time when engine last showed that it
     // was computing.
 
-    BluetoothGameController bGameCtrl = null;
+    private BluetoothGameController bGameCtrl = null;
 
-    PgnScreenText gameTextListener;
+    private PgnScreenText gameTextListener;
 
     private DrawerLayout drawerLayoutt;
-    private ListView listView;
     private ActionBarDrawerToggle actionBarDrawerToggle;
-    private String[] navigationDrawerItems;
-    private MyAdapter myadapter;
 
-    int choice, theme;
-    public static Context contextOfApplication;
+    private int choice;
+    private int theme;
+    private static Context contextOfApplication;
     //private EasyRatingDialog easyRatingDialog;
     private boolean shouldGoInvisible;
     private static final float ALPHA_DIM_VALUE = 1f;
 
-    ShowcaseView sv;
+    private ShowcaseView sv;
     private ViewTarget target;
     private final ApiUtils apiUtils = new ApiUtils();
     private LinearLayout homelayout;
@@ -203,25 +195,25 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            choice = sharedPreferences.getInt("Choice", 4);
+            choice = sharedPreferences.getInt("Choice", 1);
             switch (choice) {
                 case 0:
-                    getWindow().setStatusBarColor(getResources().getColor(R.color.darkred));
+                    getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkred));
                     break;
                 case 1:
-                    getWindow().setStatusBarColor(getResources().getColor(R.color.darkblue));
+                    getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkblue));
                     break;
                 case 2:
-                    getWindow().setStatusBarColor(getResources().getColor(R.color.darkpurple));
+                    getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkpurple));
                     break;
                 case 3:
-                    getWindow().setStatusBarColor(getResources().getColor(R.color.darkgreen));
+                    getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkgreen));
                     break;
                 case 4:
-                    getWindow().setStatusBarColor(getResources().getColor(R.color.darkorange));
+                    getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkorange));
                     break;
                 case 5:
-                    getWindow().setStatusBarColor(getResources().getColor(R.color.darkgrey));
+                    getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkgrey));
                     break;
             }
         }
@@ -239,7 +231,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
         contextOfApplication = this;
 
-        initUI(true);
+        initUI();
 
         gameTextListener = new PgnScreenText(pgnOptions);
         ctrl = new ChessController(this, gameTextListener, pgnOptions);
@@ -284,22 +276,22 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 choice = sharedPreferences.getInt("Choice", 4);
                 switch (choice) {
                     case 0:
-                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkred));
+                        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkred));
                         break;
                     case 1:
-                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkblue));
+                        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkblue));
                         break;
                     case 2:
-                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkpurple));
+                        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkpurple));
                         break;
                     case 3:
-                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkgreen));
+                        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkgreen));
                         break;
                     case 4:
-                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkorange));
+                        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkorange));
                         break;
                     case 5:
-                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkgrey));
+                        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkgrey));
                         break;
                 }
             }
@@ -315,29 +307,25 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     public void onShowcaseViewShow(ShowcaseView showcaseView) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            getWindow().setStatusBarColor(getResources().getColor(R.color.darkgrey));
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkgrey));
         }
         dimView(homelayout);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        //easyRatingDialog.onStart();
     }
 
     public static Context getContextOfApplication() {
         return contextOfApplication;
     }
 
+
     protected void saveTheme(int str) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ChessTastic.this);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("Theme", str);
-        editor.commit();
+        editor.apply();
     }
 
-    protected void loadTheme() {
+
+    private void loadTheme() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(ChessTastic.this);
         theme = sharedPreferences.getInt("Theme", R.style.AppThemeOrange);
         super.setTheme(theme);
@@ -345,7 +333,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
     }
 
-    private final byte[] strToByteArr(String str) {
+    private byte[] strToByteArr(String str) {
         int nBytes = str.length() / 2;
         byte[] ret = new byte[nBytes];
         for (int i = 0; i < nBytes; i++) {
@@ -356,11 +344,11 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         return ret;
     }
 
-    private final String byteArrToString(byte[] data) {
+    private String byteArrToString(byte[] data) {
         StringBuilder ret = new StringBuilder(32768);
-        int nBytes = data.length;
-        for (int i = 0; i < nBytes; i++) {
-            int b = data[i];
+        //int nBytes = data.length;
+        for (byte aData : data) {
+            int b = aData;
             if (b < 0)
                 b += 256;
             char c1 = (char) ('A' + (b / 16));
@@ -373,7 +361,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
     @Override
     public void onBackPressed() {
-        if (drawerLayoutt.isDrawerOpen(Gravity.START | Gravity.LEFT)) {
+        if (drawerLayoutt.isDrawerOpen(Gravity.START)) {
             drawerLayoutt.closeDrawers();
             return;
         }
@@ -384,8 +372,8 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         target = new ViewTarget(R.id.chessboard, this);
         sv = new ShowcaseView.Builder(this, true)
                 .setTarget(target)
-                .setContentTitle("Welcome")
-                .setContentText("To play, tap a Chess Piece and then tap the destination square to move.")
+                .setContentTitle(getString(R.string.dg_title))
+                .setContentText(getString(R.string.dg_content))
                 .setStyle(R.style.CustomShowcaseTheme2)
                 .setShowcaseEventListener(new OnShowcaseEventListener() {
 
@@ -393,7 +381,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                     public void onShowcaseViewShow(final ShowcaseView scv) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                            getWindow().setStatusBarColor(getResources().getColor(R.color.darkgrey));
+                            getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.darkgrey));
                         }
                         dimView(homelayout);
                     }
@@ -412,12 +400,12 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 .build();
     }
 
-    public void showOverlayTutorialTwo() {
+    private void showOverlayTutorialTwo() {
         target = new ViewTarget(R.id.moveList, this);
         sv = new ShowcaseView.Builder(this, true)
                 .setTarget(target)
-                .setContentTitle("Move List")
-                .setContentText("This box shows the details of the moves in the game. The text size can be adjusted in settings.")
+                .setContentTitle(getString(R.string.dg_title_1))
+                .setContentText(getString(R.string.dg_content_1))
                 .setStyle(R.style.CustomShowcaseTheme2)
                 .setShowcaseEventListener(new OnShowcaseEventListener() {
 
@@ -438,21 +426,20 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 })
                 .build();
 
-
     }
 
-    public void showOverlayTutorialThree() {
+    private void showOverlayTutorialThree() {
         //target = new ViewTarget(R.id.moveList, this);
-        /*Target viewTarget = new Target() {
+        Target viewTarget = new Target() {
             @Override
             public Point getPoint() {
-                //return new ViewTarget(toolbar.findViewById(R.id.item_redo)).getPoint();
+                return new ViewTarget(toolbar.findViewById(R.id.item_redo)).getPoint();
             }
-        };*/
+        };
         sv = new ShowcaseView.Builder(this, true)
-                //.setTarget(viewTarget)
-                .setContentTitle("Undo and Redo")
-                .setContentText("Use the Undo and Redo Buttons to go back and forth between moves.")
+                .setTarget(viewTarget)
+                .setContentTitle(getString(R.string.dg_title_2))
+                .setContentText(getString(R.string.dg_content_2))
                 .setStyle(R.style.CustomShowcaseTheme2)
                 .setShowcaseEventListener(new OnShowcaseEventListener() {
 
@@ -462,7 +449,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
                     @Override
                     public void onShowcaseViewHide(final ShowcaseView scv) {
-                        drawerLayoutt.openDrawer(Gravity.LEFT);
+                        drawerLayoutt.openDrawer(Gravity.START);
                         showOverlayTutorialFour();
                         scv.setVisibility(View.GONE);
                     }
@@ -477,18 +464,18 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
     }
 
-    public void showOverlayTutorialFour() {
-        //target = new ViewTarget(R.id.moveList, this);
-        /*Target viewTarget = new Target() {
+    private void showOverlayTutorialFour() {
+        target = new ViewTarget(R.id.moveList, this);
+        Target viewTarget = new Target() {
             @Override
             public Point getPoint() {
                 return new ViewTarget(toolbar.findViewById(android.R.id.home)).getPoint();
             }
-        };*/
+        };
         sv = new ShowcaseView.Builder(this, true)
                 .setTarget(new ViewTarget(((ViewGroup) findViewById(R.id.my_awesome_toolbar2)).getChildAt(0)))
-                .setContentTitle("More Options")
-                .setContentText("Slide from the left to reveal more options.")
+                .setContentTitle(getString(R.string.dg_title_3))
+                .setContentText(getString(R.string.dg_content_3))
                 .setStyle(R.style.CustomShowcaseTheme3)
                 .setShowcaseEventListener(new OnShowcaseEventListener() {
 
@@ -506,22 +493,22 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                                 choice = sharedPreferences.getInt("Choice", 4);
                                 switch (choice) {
                                     case 0:
-                                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkred));
+                                        getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.darkred));
                                         break;
                                     case 1:
-                                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkblue));
+                                        getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.darkblue));
                                         break;
                                     case 2:
-                                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkpurple));
+                                        getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.darkpurple));
                                         break;
                                     case 3:
-                                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkgreen));
+                                        getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.darkgreen));
                                         break;
                                     case 4:
-                                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkorange));
+                                        getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.darkorange));
                                         break;
                                     case 5:
-                                        getWindow().setStatusBarColor(getResources().getColor(R.color.darkgrey));
+                                        getWindow().setStatusBarColor(ContextCompat.getColor(context, R.color.darkgrey));
                                         break;
                                 }
                             }
@@ -536,7 +523,6 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 })
                 .build();
 
-
     }
 
 
@@ -546,7 +532,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         actionBarDrawerToggle.onConfigurationChanged(newConfig);
         ChessBoard oldCB = cb;
         String statusStr = status.getText().toString();
-        initUI(false);
+        initUI();
         readPrefs();
         ctrl.setMaxDepth(maxDepth);
         cb.cursorX = oldCB.cursorX;
@@ -561,14 +547,14 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         updateThinkingInfo();
     }
 
-    private final void initUI(boolean initTitle) {
+    private void initUI() {
         setContentView(R.layout.main);
 
         toolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar2);
-        navigationDrawerItems = getResources().getStringArray(R.array.navigation_drawer_items);
+        //String[] navigationDrawerItems = getResources().getStringArray(R.array.navigation_drawer_items);
         drawerLayoutt = (DrawerLayout) findViewById(R.id.drawer_layout);
-        myadapter = new MyAdapter(this);
-        listView = (ListView) findViewById(R.id.left_drawer);
+        MyAdapter myadapter = new MyAdapter(this);
+        ListView listView = (ListView) findViewById(R.id.left_drawer);
         SpannableString s = new SpannableString("CHESSTASTIC");
         s.setSpan(new TypefaceSpan(this, "KlinicSlabBold.otf"), 0, s.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -582,8 +568,8 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         txt3.setTypeface(font);
 
         if (toolbar != null) {
-            //setSupportActionBar(toolbar);
-            //getSupportActionBar().setTitle(s);
+            setSupportActionBar(toolbar);
+            getSupportActionBar().setTitle(s);
 
 
             //drawerLayoutt.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
@@ -631,10 +617,10 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
                 }
             };
-            drawerLayoutt.setDrawerListener(actionBarDrawerToggle);
+            drawerLayoutt.addDrawerListener(actionBarDrawerToggle);
             // enable ActionBar app icon to behave as action to toggle nav drawer
-            //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            //getSupportActionBar().setHomeButtonEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
             /*if (savedInstanceState == null) {
             selectItem(0);
             }*/
@@ -652,7 +638,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 // first time task
 
                 // record the fact that the app has been started at least once
-                settings2.edit().putBoolean("my_first_time", false).commit();
+                settings2.edit().putBoolean("my_first_time", false).apply();
             }
 
 
@@ -673,7 +659,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         cb.requestFocus();
         cb.setClickable(true);
 
-        final GestureDetector gd = new GestureDetector(
+        final GestureDetector gd = new GestureDetector(getBaseContext(),
                 new GestureDetector.SimpleOnGestureListener() {
                     private float scrollX = 0;
                     private float scrollY = 0;
@@ -752,7 +738,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                         return true;
                     }
 
-                    private final void handleClick(MotionEvent e) {
+                    private void handleClick(MotionEvent e) {
                         if (ctrl.humansTurn()) {
                             int sq = cb.eventToSquare(e);
                             Move m = cb.mousePressed(sq);
@@ -814,7 +800,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
             Editor editor = settings.edit();
             String dataStr = byteArrToString(data);
             editor.putString("gameState", dataStr);
-            editor.commit();
+            editor.apply();
         }
 
         lastVisibleMillis = System.currentTimeMillis();
@@ -838,7 +824,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     }
 
 
-    private final void readPrefs() {
+    private void readPrefs() {
         String tmp = settings.getString("gameMode", "1");
         int modeNr = Integer.parseInt(tmp);
         gameMode = new GameMode(modeNr);
@@ -920,7 +906,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         ctrl.prefsChanged();
     }
 
-    private final void setBookFile(String bookFile) {
+    private void setBookFile(String bookFile) {
         currentBookFile = bookFile;
         if (bookFile.length() > 0) {
             File extDir = Environment.getExternalStorageDirectory();
@@ -940,10 +926,10 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     public boolean onPrepareOptionsMenu(Menu menu) {
         //final MenuItem bluetoothSubmenuItem = (MenuItem) menu
         //	.findItem(R.id.bluetooth_submenu);
-        final MenuItem undoMenuItem = (MenuItem) menu.findItem(R.id.item_undo);
-        final MenuItem redoMenuItem = (MenuItem) menu.findItem(R.id.item_redo);
+        //final MenuItem undoMenuItem = (MenuItem) menu.findItem(R.id.item_undo);
+        //final MenuItem redoMenuItem = (MenuItem) menu.findItem(R.id.item_redo);
         /*final MenuItem gotoMoveMenuItem = (MenuItem) menu
-				.findItem(R.id.item_goto_move);
+                .findItem(R.id.item_goto_move);
 		final MenuItem loadPGNMenuItem = (MenuItem) menu
 				.findItem(R.id.item_load_pgn_file);
 		final MenuItem editBoardMenuItem = (MenuItem) menu
@@ -954,6 +940,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 				.findItem(R.id.item_resign);
 		// final MenuItem drawMenuItem = (MenuItem)
 		// menu.findItem(R.id.item_draw);
+		/*
 		if (gameMode.bluetoothMode()) {
 			bluetoothSubmenuItem.setEnabled(true);
 			undoMenuItem.setEnabled(false);
@@ -973,7 +960,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 			forceMoveMenuItem.setEnabled(true);
 			resignMenuItem.setEnabled(true);
 		}
-
+*//*
 		if (ctrl != null && ctrl.computerBusy()) {
 			forceMoveMenuItem.setEnabled(true);
 		} else {
@@ -1005,8 +992,8 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         try {
             actionBarDrawerToggle.syncState();
         } catch (Exception e) {
+            Log.d("Exception", e.toString());
         }
-        ;
     }
 
 
@@ -1017,8 +1004,8 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 return true;
             }
         } catch (Exception e) {
+            Log.d("Exception", e.toString());
         }
-        ;
 
         switch (item.getItemId()) {
             case R.id.item_undo:
@@ -1027,8 +1014,8 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
             case R.id.item_redo:
                 ctrl.redoMove();
                 return true;
-		/*case R.id.item_new_game:
-			if (gameMode.bluetoothMode()) {
+        /*case R.id.item_new_game:
+            if (gameMode.bluetoothMode()) {
 				Intent serverIntent = new Intent(this, DeviceListActivity.class);
 				startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
 				return true;
@@ -1149,6 +1136,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                         String fen = data.getAction();
                         ctrl.setFENOrPGN(fen);
                     } catch (ChessParseError e) {
+                        Log.d("Exception", e.toString());
                     }
                 }
                 break;
@@ -1165,12 +1153,10 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 break;
             case REQUEST_CONNECT_DEVICE:
                 if (bGameCtrl == null) {
-                    if (bGameCtrl == null) {
-                        Toast.makeText(getApplicationContext(),
-                                "Bluetooth mode is not enabled", Toast.LENGTH_SHORT)
-                                .show();
-                        return;
-                    }
+                    Toast.makeText(getApplicationContext(),
+                            "Bluetooth mode is not enabled", Toast.LENGTH_SHORT)
+                            .show();
+                    return;
                 }
 
                 // When DeviceListActivity returns with a device to connect
@@ -1207,7 +1193,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         }
     }
 
-    private final void flipBoard() {
+    private void flipBoard() {
         boardFlipped = !boardFlipped;
 
         Editor editor = settings.edit();
@@ -1217,20 +1203,18 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         setBoardFlip();
     }
 
-    private final void setBoardFlip() {
+    private void setBoardFlip() {
         boolean flipped = boardFlipped;
         if (autoSwapSides) {
             if (gameMode.analysisMode()) {
                 flipped = !cb.pos.whiteMove;
             } else if (gameMode.playerWhite() && gameMode.playerBlack()) {
                 flipped = !cb.pos.whiteMove;
-            } else if (gameMode.playerWhite()) {
-                flipped = false;
-            } else if (gameMode.playerBlack()) {
-                flipped = true;
-            } else { // two computers
-                flipped = !cb.pos.whiteMove;
-            }
+            } else
+                flipped = !gameMode.playerWhite() && (gameMode.playerBlack() || !cb.pos.whiteMove);
+// two computers
+
+
         }
         cb.setFlipped(flipped);
     }
@@ -1247,7 +1231,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
     @Override
     public void moveListUpdated() {
-        moveList.setText("\n" + gameTextListener.getSpannableData());
+        moveList.setText(gameTextListener.getSpannableData());
         if (gameTextListener.atEnd())
             moveListScroll.fullScroll(ScrollView.FOCUS_DOWN);
     }
@@ -1288,7 +1272,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     }
 
 	/*
-	 * private double parseEvaluationFromThinkingString(String thinkingStr) {
+     * private double parseEvaluationFromThinkingString(String thinkingStr) {
 	 * double eval;
 	 * 
 	 * try { StringTokenizer tokenizer = new StringTokenizer(thinkingStr);
@@ -1329,7 +1313,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 	 * return mateNum; }
 	 */
 
-    private final void updateThinkingInfo() {
+    private void updateThinkingInfo() {
         boolean thinkingEmpty = true;
         {
             String s = "";
@@ -1345,7 +1329,11 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
             if (!thinkingEmpty)
                 s += "<br>";
             s += "<b>Book:</b>" + bookInfoStr;
-            thinking.append(Html.fromHtml(s));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                thinking.append(Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY));
+            } else {
+                thinking.append(Html.fromHtml(s));
+            }
             thinkingEmpty = false;
         }
         if (variantStr.indexOf(' ') >= 0) {
@@ -1353,6 +1341,11 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
             if (!thinkingEmpty)
                 s += "<br>";
             s += "<b>Var:</b> " + variantStr;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                thinking.append(Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY));
+            } else {
+                thinking.append(Html.fromHtml(s));
+            }
             thinking.append(Html.fromHtml(s));
         }
 
@@ -1370,14 +1363,14 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         cb.setMoveHints(hints);
     }
 
-    static final int PROMOTE_DIALOG = 0;
-    static final int CLIPBOARD_DIALOG = 1;
-    static final int ABOUT_DIALOG = 2;
-    static final int SELECT_MOVE_DIALOG = 3;
-    static final int SELECT_BOOK_DIALOG = 4;
-    static final int SELECT_PGN_FILE_DIALOG = 5;
-    static final int SET_COLOR_THEME_DIALOG = 6;
-    static final int CONFIRM_RESIGN_DIALOG = 7;
+    private static final int PROMOTE_DIALOG = 0;
+    private static final int CLIPBOARD_DIALOG = 1;
+    private static final int ABOUT_DIALOG = 2;
+    private static final int SELECT_MOVE_DIALOG = 3;
+    private static final int SELECT_BOOK_DIALOG = 4;
+    private static final int SELECT_PGN_FILE_DIALOG = 5;
+    // --Commented out by Inspection (15/10/2016 06:07 PM):static final int SET_COLOR_THEME_DIALOG = 6;
+    private static final int CONFIRM_RESIGN_DIALOG = 7;
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -1393,8 +1386,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                         ctrl.reportPromotePiece(item);
                     }
                 });
-                AlertDialog alert = builder.create();
-                return alert;
+                return builder.create();
             }
             case CLIPBOARD_DIALOG: {
                 final int COPY_GAME = 0;
@@ -1403,8 +1395,8 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 final int LOAD_GAME = 3;
                 final int REMOVE_VARIATION = 4;
 
-                List<CharSequence> lst = new ArrayList<CharSequence>();
-                List<Integer> actions = new ArrayList<Integer>();
+                List<CharSequence> lst = new ArrayList<>();
+                List<Integer> actions = new ArrayList<>();
                 lst.add(getString(R.string.copy_game));
                 actions.add(COPY_GAME);
                 lst.add(getString(R.string.copy_position));
@@ -1461,15 +1453,13 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                                 }
                             }
                         });
-                AlertDialog alert = builder.create();
-                return alert;
+                return builder.create();
             }
             case ABOUT_DIALOG: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.app_name_pop).setMessage(R.string.about_info);
-                AlertDialog alert = builder.create();
                 //alert.getWindow().setLayout(600, 400);
-                return alert;
+                return builder.create();
             }
             case SELECT_MOVE_DIALOG: {
                 //final Dialog dialog = new Dialog(this);
@@ -1526,8 +1516,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 String[] fileNames = findFilesInDirectory(bookDir);
                 final int numFiles = fileNames.length;
                 CharSequence[] items = new CharSequence[numFiles + 1];
-                for (int i = 0; i < numFiles; i++)
-                    items[i] = fileNames[i];
+                System.arraycopy(fileNames, 0, items, 0, numFiles);
                 items[numFiles] = getString(R.string.internal_book);
                 final CharSequence[] finalItems = items;
                 int defaultItem = numFiles;
@@ -1547,13 +1536,12 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                                 if (item < numFiles)
                                     bookFile = finalItems[item].toString();
                                 editor.putString("bookFile", bookFile);
-                                editor.commit();
+                                editor.apply();
                                 setBookFile(bookFile);
                                 dialog.dismiss();
                             }
                         });
-                AlertDialog alert = builder.create();
-                return alert;
+                return builder.create();
             }
             case SELECT_PGN_FILE_DIALOG: {
                 final String[] fileNames = findFilesInDirectory(pgnDir);
@@ -1562,8 +1550,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle(R.string.app_name).setMessage(
                             R.string.no_pgn_files);
-                    AlertDialog alert = builder.create();
-                    return alert;
+                    return builder.create();
                 }
                 int defaultItem = 0;
                 String currentPGNFile = settings.getString("currentPGNFile", "");
@@ -1579,9 +1566,9 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int item) {
                                 Editor editor = settings.edit();
-                                String pgnFile = fileNames[item].toString();
+                                String pgnFile = fileNames[item];
                                 editor.putString("currentPGNFile", pgnFile);
-                                editor.commit();
+                                editor.apply();
                                 String sep = File.separator;
                                 String pathName = Environment
                                         .getExternalStorageDirectory()
@@ -1618,14 +1605,13 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                                         dialog.cancel();
                                     }
                                 });
-                AlertDialog alert = builder.create();
-                return alert;
+                return builder.create();
             }
         }
         return null;
     }
 
-    private final String[] findFilesInDirectory(String dirName) {
+    private String[] findFilesInDirectory(String dirName) {
         File extDir = Environment.getExternalStorageDirectory();
         String sep = File.separator;
         File dir = new File(extDir.getAbsolutePath() + sep + dirName);
@@ -1678,7 +1664,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     /**
      * Decide if user should be warned about heavy CPU usage.
      */
-    private final void updateNotification() {
+    private void updateNotification() {
         boolean warn = false;
         if (lastVisibleMillis != 0) { // GUI not visible
             warn = lastComputationMillis >= lastVisibleMillis + 30000;
@@ -1692,7 +1678,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     /**
      * Set/clear the "heavy CPU usage" notification.
      */
-    private final void setNotification(boolean show) {
+    private void setNotification(boolean show) {
         if (notificationActive == show)
             return;
         notificationActive = show;
@@ -1706,13 +1692,13 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
             Notification notification = new Notification(icon, tickerText, when);
             notification.flags |= Notification.FLAG_ONGOING_EVENT;
 
-            Context context = getApplicationContext();
-            CharSequence contentTitle = "Background processing";
-            CharSequence contentText = "ChessTastic is using a lot of CPU power";
-            Intent notificationIntent = new Intent(this, CPUWarning.class);
+            //Context context = getApplicationContext();
+            //CharSequence contentTitle = "Background processing";
+            //CharSequence contentText = "ChessTastic is using a lot of CPU power";
+            //Intent notificationIntent = new Intent(this, CPUWarning.class);
 
-            PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                    notificationIntent, 0);
+            //PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+//                    notificationIntent, 0);
             //notification.setLatestEventInfo(context, contentTitle, contentText,
             //		contentIntent);
 
@@ -1723,7 +1709,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
     }
 
 	/*
-	 * private final String timeToString(long time) { int secs = (int)
+     * private final String timeToString(long time) { int secs = (int)
 	 * Math.floor((time + 999) / 1000.0); boolean neg = false; if (secs < 0) {
 	 * neg = true; secs = -secs; } int mins = secs / 60; secs -= mins * 60;
 	 * StringBuilder ret = new StringBuilder(); if (neg) ret.append('-');
@@ -1732,7 +1718,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 	 */
 
 	/*
-	 * private Handler handlerTimer = new Handler(); private Runnable r = new
+     * private Handler handlerTimer = new Handler(); private Runnable r = new
 	 * Runnable() { public void run() { ctrl.updateRemainingTime(); } };
 	 */
 
@@ -1749,18 +1735,19 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
      * PngTokenReceiver implementation that renders PGN data for screen display.
      */
     static class PgnScreenText implements PgnToken.PgnTokenReceiver {
-        private SpannableStringBuilder sb = new SpannableStringBuilder();
+        private final SpannableStringBuilder sb = new SpannableStringBuilder();
         private int prevType = PgnToken.EOF;
         int nestLevel = 0;
         boolean col0 = true;
-        Node currNode = null;
+        // --Commented out by Inspection (15/10/2016 06:07 PM):Node currNode = null;
         final int indentStep = 15;
         int currPos = 0, endPos = 0;
         boolean upToDate = false;
-        PGNOptions options;
+        final PGNOptions options;
 
         private static class NodeInfo {
-            int l0, l1;
+            final int l0;
+            final int l1;
 
             NodeInfo(int ls, int le) {
                 l0 = ls;
@@ -1768,10 +1755,10 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
             }
         }
 
-        HashMap<Node, NodeInfo> nodeToCharPos;
+        final HashMap<Node, NodeInfo> nodeToCharPos;
 
         PgnScreenText(PGNOptions options) {
-            nodeToCharPos = new HashMap<Node, NodeInfo>();
+            nodeToCharPos = new HashMap<>();
             this.options = options;
         }
 
@@ -1791,7 +1778,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
         int paraIndent = 0;
         boolean paraBold = false;
 
-        private final void newLine() {
+        private void newLine() {
             if (!col0) {
                 if (paraIndent > 0) {
                     int paraEnd = sb.length();
@@ -1895,6 +1882,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                 }
                 case PgnToken.COMMENT:
                     if (prevType == PgnToken.RIGHT_BRACKET) {
+                        Log.d("Weird", "nothing to do here?");
                     } else if (nestLevel == 0) {
                         nestLevel++;
                         newLine();
@@ -1923,7 +1911,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
             prevType = PgnToken.EOF;
             nestLevel = 0;
             col0 = true;
-            currNode = null;
+            //currNode = null;
             currPos = 0;
             endPos = 0;
             nodeToCharPos.clear();
@@ -1935,7 +1923,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
             upToDate = false;
         }
 
-        BackgroundColorSpan bgSpan = new BackgroundColorSpan(0xff888888);
+        final BackgroundColorSpan bgSpan = new BackgroundColorSpan(0xff888888);
 
         @Override
         public void setCurrent(Node node) {
@@ -1946,7 +1934,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                         Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 currPos = ni.l0;
             }
-            currNode = node;
+            //currNode = node;
         }
     }
 
@@ -1981,7 +1969,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                         Editor editor = settings.edit();
                         String gameModeStr = String.format("%d", gameModeType);
                         editor.putString("gameMode", gameModeStr);
-                        editor.commit();
+                        editor.apply();
                         gameMode = new GameMode(gameModeType);
                     }
 
@@ -2019,7 +2007,7 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
                                 Toast.LENGTH_SHORT).show();
                     break;
                 }
-				/*
+                /*
 				 * case R.id.item_draw: { if (ctrl.humansTurn()) { if
 				 * (!ctrl.claimDrawIfPossible()) {
 				 * Toast.makeText(getApplicationContext(), R.string.offer_draw,
@@ -2136,9 +2124,9 @@ public class ChessTastic extends ActionBarActivity implements GUIInterface, OnSh
 
 class MyAdapter extends BaseAdapter {
 
-    String[] options;
-    int[] images = {R.drawable.newg, R.drawable.edit, R.drawable.flip, R.drawable.bt, R.drawable.pgn, R.drawable.settings, R.drawable.resign, R.drawable.goton, R.drawable.force, R.drawable.book, R.drawable.thumb, R.drawable.about};
-    private Context context;
+    private final String[] options;
+    private final int[] images = {R.drawable.newg, R.drawable.edit, R.drawable.flip, R.drawable.bt, R.drawable.pgn, R.drawable.settings, R.drawable.resign, R.drawable.goton, R.drawable.force, R.drawable.book, R.drawable.thumb, R.drawable.about};
+    private final Context context;
 
 
     MyAdapter(Context context) {
@@ -2167,7 +2155,7 @@ class MyAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // TODO Auto-generated method stub
-        View row = null;
+        View row;
 
 
         if (convertView == null) {
@@ -2181,7 +2169,7 @@ class MyAdapter extends BaseAdapter {
         RelativeLayout lLayout = (RelativeLayout) row.findViewById(R.id.parentLayout);
         if (position == 3) {
             tv1.setText(options[position]);
-            tv1.setTextColor(ChessTastic.getContextOfApplication().getResources().getColor(R.color.disabled));
+            tv1.setTextColor(ContextCompat.getColor(context, R.color.disabled));
             iv1.setImageResource(images[position]);
             //row.setVisibility(View.GONE);
             lLayout.setVisibility(View.GONE);
