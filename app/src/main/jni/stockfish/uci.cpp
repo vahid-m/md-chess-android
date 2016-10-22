@@ -1,7 +1,8 @@
 /*
   Stockfish, a UCI chess playing engine derived from Glaurung 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
-  Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2008-2015 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2015-2016 Marco Costalba, Joona Kiiski, Gary Linscott, Tord Romstad
 
   Stockfish is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,309 +18,272 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-////
-//// Includes
-////
-
-#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "book.h"
 #include "evaluate.h"
-#include "misc.h"
-#include "move.h"
 #include "movegen.h"
 #include "position.h"
-#include "san.h"
 #include "search.h"
+#include "thread.h"
+#include "timeman.h"
 #include "uci.h"
-#include "ucioption.h"
 
 using namespace std;
 
-////
-//// Local definitions:
-////
+extern void benchmark(const Position& pos, istream& is);
 
 namespace {
 
-  // UCIInputParser is a class for parsing UCI input. The class
-  // is actually a string stream built on a given input string.
+  // FEN string of the initial position, normal chess
+  const char* StartFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-  typedef istringstream UCIInputParser;
-
-  // The root position. This is set up when the user (or in practice, the GUI)
-  // sends the "position" UCI command. The root position is sent to the think()
-  // function when the program receives the "go" command.
-  Position RootPosition(0);
-
-  // Local functions
-  bool handle_command(const string& command);
-  void set_option(UCIInputParser& uip);
-  void set_position(UCIInputParser& uip);
-  bool go(UCIInputParser& uip);
-  void perft(UCIInputParser& uip);
-}
+  // A list to keep track of the position states along the setup moves (from the
+  // start position to the position just before the search starts). Needed by
+  // 'draw by repetition' detection.
+  StateListPtr States(new std::deque<StateInfo>(1));
 
 
-////
-//// Functions
-////
+  // position() is called when engine receives the "position" UCI command.
+  // The function sets up the position described in the given FEN string ("fen")
+  // or the starting position ("startpos") and then makes the moves given in the
+  // following move list ("moves").
 
-/// uci_main_loop() is the only global function in this file. It is
-/// called immediately after the program has finished initializing.
-/// The program remains in this loop until it receives the "quit" UCI
-/// command. It waits for a command from the user, and passes this
-/// command to handle_command and also intercepts EOF from stdin,
-/// by translating EOF to the "quit" command. This ensures that Stockfish
-/// exits gracefully if the GUI dies unexpectedly.
+  void position(Position& pos, istringstream& is) {
 
-void uci_main_loop() {
+    Move m;
+    string token, fen;
 
-  RootPosition.from_fen(StartPosition);
-  string command;
-
-  do {
-      // Wait for a command from stdin
-      if (!getline(cin, command))
-          command = "quit";
-
-  } while (handle_command(command));
-}
-
-
-////
-//// Local functions
-////
-
-namespace {
-
-  // handle_command() takes a text string as input, uses a
-  // UCIInputParser object to parse this text string as a UCI command,
-  // and calls the appropriate functions. In addition to the UCI
-  // commands, the function also supports a few debug commands.
-
-  bool handle_command(const string& command) {
-
-    UCIInputParser uip(command);
-    string token;
-
-    if (!(uip >> token)) // operator>>() skips any whitespace
-        return true;
-
-    if (token == "quit")
-        return false;
-
-    if (token == "go")
-        return go(uip);
-
-    if (token == "uci")
-    {
-        cout << "id name " << engine_name()
-             << "\nid author Tord Romstad, Marco Costalba, Joona Kiiski\n";
-        print_uci_options();
-        cout << "uciok" << endl;
-    }
-    else if (token == "ucinewgame")
-    {
-        push_button("New Game");
-        Position::init_piece_square_tables();
-        RootPosition.from_fen(StartPosition);
-    }
-    else if (token == "isready")
-        cout << "readyok" << endl;
-    else if (token == "position")
-        set_position(uip);
-    else if (token == "setoption")
-        set_option(uip);
-
-    // The remaining commands are for debugging purposes only.
-    // Perhaps they should be removed later in order to reduce the
-    // size of the program binary.
-    else if (token == "d")
-        RootPosition.print();
-    else if (token == "flip")
-    {
-        Position p(RootPosition, RootPosition.thread());
-        RootPosition.flipped_copy(p);
-    }
-    else if (token == "eval")
-    {
-        EvalInfo ei;
-        cout << "Incremental mg: " << mg_value(RootPosition.value())
-             << "\nIncremental eg: " << eg_value(RootPosition.value())
-             << "\nFull eval: " << evaluate(RootPosition, ei) << endl;
-    }
-    else if (token == "key")
-        cout << "key: " << hex << RootPosition.get_key()
-             << "\nmaterial key: " << RootPosition.get_material_key()
-             << "\npawn key: " << RootPosition.get_pawn_key() << endl;
-    else if (token == "perft")
-        perft(uip);
-    else
-        cout << "Unknown command: " << command << endl;
-
-    return true;
-  }
-
-
-  // set_position() is called when Stockfish receives the "position" UCI
-  // command. The input parameter is a UCIInputParser. It is assumed
-  // that this parser has consumed the first token of the UCI command
-  // ("position"), and is ready to read the second token ("startpos"
-  // or "fen", if the input is well-formed).
-
-  void set_position(UCIInputParser& uip) {
-
-    string token;
-
-    if (!(uip >> token)) // operator>>() skips any whitespace
-        return;
+    is >> token;
 
     if (token == "startpos")
-        RootPosition.from_fen(StartPosition);
-    else if (token == "fen")
     {
-        string fen;
-        while (uip >> token && token != "moves")
-        {
-            fen += token;
-            fen += ' ';
-        }
-        RootPosition.from_fen(fen);
+        fen = StartFEN;
+        is >> token; // Consume "moves" token if any
     }
+    else if (token == "fen")
+        while (is >> token && token != "moves")
+            fen += token + " ";
+    else
+        return;
 
-    if (uip.good())
+    States = StateListPtr(new std::deque<StateInfo>(1));
+    pos.set(fen, Options["UCI_Chess960"], &States->back(), Threads.main());
+
+    // Parse move list (if any)
+    while (is >> token && (m = UCI::to_move(pos, token)) != MOVE_NONE)
     {
-        if (token != "moves")
-          uip >> token;
-
-        if (token == "moves")
-        {
-            Move move;
-            StateInfo st;
-            while (uip >> token)
-            {
-                move = move_from_string(RootPosition, token);
-                RootPosition.do_move(move, st);
-                if (RootPosition.rule_50_counter() == 0)
-                    RootPosition.reset_game_ply();
-            }
-            // Our StateInfo st is about going out of scope so copy
-            // its content inside RootPosition before they disappear.
-            RootPosition.detach();
-        }
+        States->push_back(StateInfo());
+        pos.do_move(m, States->back(), pos.gives_check(m));
     }
   }
 
 
-  // set_option() is called when Stockfish receives the "setoption" UCI
-  // command. The input parameter is a UCIInputParser. It is assumed
-  // that this parser has consumed the first token of the UCI command
-  // ("setoption"), and is ready to read the second token ("name", if
-  // the input is well-formed).
+  // setoption() is called when engine receives the "setoption" UCI command. The
+  // function updates the UCI option ("name") to the given value ("value").
 
-  void set_option(UCIInputParser& uip) {
+  void setoption(istringstream& is) {
 
     string token, name, value;
 
-    if (!(uip >> token)) // operator>>() skips any whitespace
-        return;
+    is >> token; // Consume "name" token
 
-    if (token == "name" && uip >> name)
-    {
-        while (uip >> token && token != "value")
-            name += (" " + token);
+    // Read option name (can contain spaces)
+    while (is >> token && token != "value")
+        name += string(" ", name.empty() ? 0 : 1) + token;
 
-        if (token == "value" && uip >> value)
-        {
-            while (uip >> token)
-                value += (" " + token);
+    // Read option value (can contain spaces)
+    while (is >> token)
+        value += string(" ", value.empty() ? 0 : 1) + token;
 
-            set_option_value(name, value);
-        } else
-            push_button(name);
-    }
+    if (Options.count(name))
+        Options[name] = value;
+    else
+        sync_cout << "No such option: " << name << sync_endl;
   }
 
 
-  // go() is called when Stockfish receives the "go" UCI command. The
-  // input parameter is a UCIInputParser. It is assumed that this
-  // parser has consumed the first token of the UCI command ("go"),
-  // and is ready to read the second token. The function sets the
-  // thinking time and other parameters from the input string, and
-  // calls think() (defined in search.cpp) with the appropriate
-  // parameters. Returns false if a quit command is received while
-  // thinking, returns true otherwise.
+  // go() is called when engine receives the "go" UCI command. The function sets
+  // the thinking time and other parameters from the input string, then starts
+  // the search.
 
-  bool go(UCIInputParser& uip) {
+  void go(Position& pos, istringstream& is) {
 
+    Search::LimitsType limits;
     string token;
 
-    int time[2] = {0, 0}, inc[2] = {0, 0};
-    int movesToGo = 0, depth = 0, nodes = 0, moveTime = 0;
-    bool infinite = false, ponder = false;
-    Move searchMoves[500];
+    limits.startTime = now(); // As early as possible!
 
-    searchMoves[0] = MOVE_NONE;
+    while (is >> token)
+        if (token == "searchmoves")
+            while (is >> token)
+                limits.searchmoves.push_back(UCI::to_move(pos, token));
 
-    while (uip >> token)
-    {
-        if (token == "infinite")
-            infinite = true;
-        else if (token == "ponder")
-            ponder = true;
-        else if (token == "wtime")
-            uip >> time[0];
-        else if (token == "btime")
-            uip >> time[1];
-        else if (token == "winc")
-            uip >> inc[0];
-        else if (token == "binc")
-            uip >> inc[1];
-        else if (token == "movestogo")
-            uip >> movesToGo;
-        else if (token == "depth")
-            uip >> depth;
-        else if (token == "nodes")
-            uip >> nodes;
-        else if (token == "movetime")
-            uip >> moveTime;
-        else if (token == "searchmoves")
-        {
-            int numOfMoves = 0;
-            while (uip >> token)
-                searchMoves[numOfMoves++] = move_from_string(RootPosition, token);
+        else if (token == "wtime")     is >> limits.time[WHITE];
+        else if (token == "btime")     is >> limits.time[BLACK];
+        else if (token == "winc")      is >> limits.inc[WHITE];
+        else if (token == "binc")      is >> limits.inc[BLACK];
+        else if (token == "movestogo") is >> limits.movestogo;
+        else if (token == "depth")     is >> limits.depth;
+        else if (token == "nodes")     is >> limits.nodes;
+        else if (token == "movetime")  is >> limits.movetime;
+        else if (token == "mate")      is >> limits.mate;
+        else if (token == "infinite")  limits.infinite = 1;
+        else if (token == "ponder")    limits.ponder = 1;
 
-            searchMoves[numOfMoves] = MOVE_NONE;
-        }
-    }
-
-    assert(RootPosition.is_ok());
-
-    return think(RootPosition, infinite, ponder, RootPosition.side_to_move(),
-                 time, inc, movesToGo, depth, nodes, moveTime, searchMoves);
+    Threads.start_thinking(pos, States, limits);
   }
 
-  void perft(UCIInputParser& uip) {
+} // namespace
 
-    string token;
-    int depth, tm, n;
-    Position pos(RootPosition, RootPosition.thread());
 
-    if (!(uip >> depth))
-        return;
+/// UCI::loop() waits for a command from stdin, parses it and calls the appropriate
+/// function. Also intercepts EOF from stdin to ensure gracefully exiting if the
+/// GUI dies unexpectedly. When called with some command line arguments, e.g. to
+/// run 'bench', once the command is executed the function returns immediately.
+/// In addition to the UCI ones, also some additional debug commands are supported.
 
-    tm = get_system_time();
+void UCI::loop(int argc, char* argv[]) {
 
-    n = perft(pos, depth * OnePly);
+  Position pos;
+  string token, cmd;
 
-    tm = get_system_time() - tm;
-    std::cout << "\nNodes " << n
-              << "\nTime (ms) " << tm
-              << "\nNodes/second " << (int)(n/(tm/1000.0)) << std::endl;
-  }
+  pos.set(StartFEN, false, &States->back(), Threads.main());
+
+  for (int i = 1; i < argc; ++i)
+      cmd += std::string(argv[i]) + " ";
+
+  do {
+      if (argc == 1 && !getline(cin, cmd)) // Block here waiting for input or EOF
+          cmd = "quit";
+
+      istringstream is(cmd);
+
+      token.clear(); // getline() could return empty or blank line
+      is >> skipws >> token;
+
+      // The GUI sends 'ponderhit' to tell us to ponder on the same move the
+      // opponent has played. In case Signals.stopOnPonderhit is set we are
+      // waiting for 'ponderhit' to stop the search (for instance because we
+      // already ran out of time), otherwise we should continue searching but
+      // switching from pondering to normal search.
+      if (    token == "quit"
+          ||  token == "stop"
+          || (token == "ponderhit" && Search::Signals.stopOnPonderhit))
+      {
+          Search::Signals.stop = true;
+          Threads.main()->start_searching(true); // Could be sleeping
+      }
+      else if (token == "ponderhit")
+          Search::Limits.ponder = 0; // Switch to normal search
+
+      else if (token == "uci")
+          sync_cout << "id name " << engine_info(true)
+                    << "\n"       << Options
+                    << "\nuciok"  << sync_endl;
+
+      else if (token == "ucinewgame")
+      {
+          Search::clear();
+          Time.availableNodes = 0;
+      }
+      else if (token == "isready")    sync_cout << "readyok" << sync_endl;
+      else if (token == "go")         go(pos, is);
+      else if (token == "position")   position(pos, is);
+      else if (token == "setoption")  setoption(is);
+
+      // Additional custom non-UCI commands, useful for debugging
+      else if (token == "flip")       pos.flip();
+      else if (token == "bench")      benchmark(pos, is);
+      else if (token == "d")          sync_cout << pos << sync_endl;
+      else if (token == "eval")       sync_cout << Eval::trace(pos) << sync_endl;
+      else if (token == "perft")
+      {
+          int depth;
+          stringstream ss;
+
+          is >> depth;
+          ss << Options["Hash"]    << " "
+             << Options["Threads"] << " " << depth << " current perft";
+
+          benchmark(pos, ss);
+      }
+      else
+          sync_cout << "Unknown command: " << cmd << sync_endl;
+
+  } while (token != "quit" && argc == 1); // Passed args have one-shot behaviour
+
+  Threads.main()->wait_for_search_finished();
+}
+
+
+/// UCI::value() converts a Value to a string suitable for use with the UCI
+/// protocol specification:
+///
+/// cp <x>    The score from the engine's point of view in centipawns.
+/// mate <y>  Mate in y moves, not plies. If the engine is getting mated
+///           use negative values for y.
+
+string UCI::value(Value v) {
+
+  stringstream ss;
+
+  if (abs(v) < VALUE_MATE - MAX_PLY)
+      ss << "cp " << v * 100 / PawnValueEg;
+  else
+      ss << "mate " << (v > 0 ? VALUE_MATE - v + 1 : -VALUE_MATE - v) / 2;
+
+  return ss.str();
+}
+
+
+/// UCI::square() converts a Square to a string in algebraic notation (g1, a7, etc.)
+
+std::string UCI::square(Square s) {
+  return std::string{ char('a' + file_of(s)), char('1' + rank_of(s)) };
+}
+
+
+/// UCI::move() converts a Move to a string in coordinate notation (g1f3, a7a8q).
+/// The only special case is castling, where we print in the e1g1 notation in
+/// normal chess mode, and in e1h1 notation in chess960 mode. Internally all
+/// castling moves are always encoded as 'king captures rook'.
+
+string UCI::move(Move m, bool chess960) {
+
+  Square from = from_sq(m);
+  Square to = to_sq(m);
+
+  if (m == MOVE_NONE)
+      return "(none)";
+
+  if (m == MOVE_NULL)
+      return "0000";
+
+  if (type_of(m) == CASTLING && !chess960)
+      to = make_square(to > from ? FILE_G : FILE_C, rank_of(from));
+
+  string move = UCI::square(from) + UCI::square(to);
+
+  if (type_of(m) == PROMOTION)
+      move += " pnbrqk"[promotion_type(m)];
+
+  return move;
+}
+
+
+/// UCI::to_move() converts a string representing a move in coordinate notation
+/// (g1f3, a7a8q) to the corresponding legal Move, if any.
+
+Move UCI::to_move(const Position& pos, string& str) {
+
+  if (str.length() == 5) // Junior could send promotion piece in uppercase
+      str[4] = char(tolower(str[4]));
+
+  for (const auto& m : MoveList<LEGAL>(pos))
+      if (str == UCI::move(m, pos.is_chess960()))
+          return m;
+
+  return MOVE_NONE;
 }

@@ -1,7 +1,8 @@
 /*
   Stockfish, a UCI chess playing engine derived from Glaurung 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
-  Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2008-2015 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2015-2016 Marco Costalba, Joona Kiiski, Gary Linscott, Tord Romstad
 
   Stockfish is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,65 +18,97 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#if !defined(MISC_H_INCLUDED)
+#ifndef MISC_H_INCLUDED
 #define MISC_H_INCLUDED
 
-
-////
-//// Includes
-////
-
-#include <fstream>
+#include <cassert>
+#include <chrono>
+#include <ostream>
 #include <string>
+#include <vector>
+#include <sstream>
 
-#include "application.h"
 #include "types.h"
 
-////
-//// Macros
-////
+const std::string engine_info(bool to_uci = false);
+void prefetch(void* addr);
+void start_logger(const std::string& fname);
 
-#define Min(x, y) (((x) < (y))? (x) : (y))
-#define Max(x, y) (((x) < (y))? (y) : (x))
+void dbg_hit_on(bool b);
+void dbg_hit_on(bool c, bool b);
+void dbg_mean_of(int v);
+void dbg_print();
+
+typedef std::chrono::milliseconds::rep TimePoint; // A value in milliseconds
+
+inline TimePoint now() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+template<class Entry, int Size>
+struct HashTable {
+  Entry* operator[](Key key) { return &table[(uint32_t)key & (Size - 1)]; }
+
+private:
+  std::vector<Entry> table = std::vector<Entry>(Size);
+};
 
 
-////
-//// Variables
-////
+enum SyncCout { IO_LOCK, IO_UNLOCK };
+std::ostream& operator<<(std::ostream&, SyncCout);
 
-extern bool Chess960;
-
-
-////
-//// Prototypes
-////
-
-extern const std::string engine_name();
-extern int get_system_time();
-extern int cpu_count();
-extern int Bioskey();
-extern void prefetch(char* addr);
+#define sync_cout std::cout << IO_LOCK
+#define sync_endl std::endl << IO_UNLOCK
 
 
-////
-//// Debug
-////
+/// xorshift64star Pseudo-Random Number Generator
+/// This class is based on original code written and dedicated
+/// to the public domain by Sebastiano Vigna (2014).
+/// It has the following characteristics:
+///
+///  -  Outputs 64-bit numbers
+///  -  Passes Dieharder and SmallCrush test batteries
+///  -  Does not require warm-up, no zeroland to escape
+///  -  Internal state is a single 64-bit integer
+///  -  Period is 2^64 - 1
+///  -  Speed: 1.60 ns/call (Core i7 @3.40GHz)
+///
+/// For further analysis see
+///   <http://vigna.di.unimi.it/ftp/papers/xorshift.pdf>
 
-extern bool dbg_show_mean;
-extern bool dbg_show_hit_rate;
+class PRNG {
 
-extern uint64_t dbg_cnt0;
-extern uint64_t dbg_cnt1;
+  uint64_t s;
 
-extern void dbg_hit_on(bool b);
-extern void dbg_hit_on_c(bool c, bool b);
-extern void dbg_before();
-extern void dbg_after();
-extern void dbg_mean_of(int v);
-extern void dbg_print_hit_rate();
-extern void dbg_print_mean();
-extern void dbg_print_hit_rate(std::ofstream& logFile);
-extern void dbg_print_mean(std::ofstream& logFile);
+  uint64_t rand64() {
 
-#endif // !defined(MISC_H_INCLUDED)
+    s ^= s >> 12, s ^= s << 25, s ^= s >> 27;
+    return s * 2685821657736338717LL;
+  }
+
+public:
+  PRNG(uint64_t seed) : s(seed) { assert(seed); }
+
+  template<typename T> T rand() { return T(rand64()); }
+
+  /// Special generator used to fast init magic numbers.
+  /// Output values only have 1/8th of their bits set on average.
+  template<typename T> T sparse_rand()
+  { return T(rand64() & rand64() & rand64()); }
+};
+
+inline int stoi(const std::string& s) {
+    std::stringstream ss(s);
+    int result = 0;
+    ss >> result;
+    return result;
+}
+
+inline std::string to_string(int v) {
+    std::stringstream ss;
+    ss << v;
+    return ss.str();
+}
+
+#endif // #ifndef MISC_H_INCLUDED

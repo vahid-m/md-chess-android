@@ -5,9 +5,9 @@ android {
     buildToolsVersion "24.0.2"
 
     defaultConfig {
-        applicationId "com.nemesis.materialchess"
+        applicationId "org.mdc.chess"
         minSdkVersion 19
-        targetSdkVersion 22
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
 
@@ -22,8 +22,6 @@ android {
 
     }
 
-
-
     sourceSets.main {
         jniLibs.srcDir 'src/main/libs'
         jni.srcDirs = [] //disable automatic ndk-build call
@@ -37,4 +35,5 @@ repositories {
 dependencies {
     compile 'com.android.support:appcompat-v7:24.2.1'
     compile 'com.github.amlcurran.showcaseview:library:5.0.0'
+    compile project(':cuckoochessengine')
 }

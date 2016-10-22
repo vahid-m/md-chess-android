@@ -1,13 +1,13 @@
 /*
   Stockfish, a UCI chess playing engine derived from Glaurung 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
-  Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2008-2015 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2015-2016 Marco Costalba, Joona Kiiski, Gary Linscott, Tord Romstad
 
   Stockfish is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
-
 
   Stockfish is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,125 +18,101 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#if !defined(BITBOARD_H_INCLUDED)
+#ifndef BITBOARD_H_INCLUDED
 #define BITBOARD_H_INCLUDED
 
-////
-//// Includes
-////
+#include <string>
 
-#include "direction.h"
-#include "piece.h"
-#include "square.h"
 #include "types.h"
 
+namespace Bitbases {
 
-////
-//// Constants and variables
-////
+void init();
+bool probe(Square wksq, Square wpsq, Square bksq, Color us);
 
-const Bitboard EmptyBoardBB = 0ULL;
+}
 
-const Bitboard WhiteSquaresBB = 0x55AA55AA55AA55AAULL;
-const Bitboard BlackSquaresBB = 0xAA55AA55AA55AA55ULL;
+namespace Bitboards {
+
+void init();
+const std::string pretty(Bitboard b);
+
+}
+
+const Bitboard DarkSquares = 0xAA55AA55AA55AA55ULL;
 
 const Bitboard FileABB = 0x0101010101010101ULL;
-const Bitboard FileBBB = 0x0202020202020202ULL;
-const Bitboard FileCBB = 0x0404040404040404ULL;
-const Bitboard FileDBB = 0x0808080808080808ULL;
-const Bitboard FileEBB = 0x1010101010101010ULL;
-const Bitboard FileFBB = 0x2020202020202020ULL;
-const Bitboard FileGBB = 0x4040404040404040ULL;
-const Bitboard FileHBB = 0x8080808080808080ULL;
+const Bitboard FileBBB = FileABB << 1;
+const Bitboard FileCBB = FileABB << 2;
+const Bitboard FileDBB = FileABB << 3;
+const Bitboard FileEBB = FileABB << 4;
+const Bitboard FileFBB = FileABB << 5;
+const Bitboard FileGBB = FileABB << 6;
+const Bitboard FileHBB = FileABB << 7;
 
-const Bitboard Rank1BB = 0xFFULL;
-const Bitboard Rank2BB = 0xFF00ULL;
-const Bitboard Rank3BB = 0xFF0000ULL;
-const Bitboard Rank4BB = 0xFF000000ULL;
-const Bitboard Rank5BB = 0xFF00000000ULL;
-const Bitboard Rank6BB = 0xFF0000000000ULL;
-const Bitboard Rank7BB = 0xFF000000000000ULL;
-const Bitboard Rank8BB = 0xFF00000000000000ULL;
+const Bitboard Rank1BB = 0xFF;
+const Bitboard Rank2BB = Rank1BB << (8 * 1);
+const Bitboard Rank3BB = Rank1BB << (8 * 2);
+const Bitboard Rank4BB = Rank1BB << (8 * 3);
+const Bitboard Rank5BB = Rank1BB << (8 * 4);
+const Bitboard Rank6BB = Rank1BB << (8 * 5);
+const Bitboard Rank7BB = Rank1BB << (8 * 6);
+const Bitboard Rank8BB = Rank1BB << (8 * 7);
 
-extern const Bitboard SquaresByColorBB[2];
-extern const Bitboard FileBB[8];
-extern const Bitboard NeighboringFilesBB[8];
-extern const Bitboard ThisAndNeighboringFilesBB[8];
-extern const Bitboard RankBB[8];
-extern const Bitboard RelativeRankBB[2][8];
-extern const Bitboard InFrontBB[2][8];
+extern int SquareDistance[SQUARE_NB][SQUARE_NB];
 
-extern Bitboard SetMaskBB[65];
-extern Bitboard ClearMaskBB[65];
-
-extern Bitboard StepAttackBB[16][64];
-extern Bitboard RayBB[64][8];
-extern Bitboard BetweenBB[64][64];
-
-extern Bitboard SquaresInFrontMask[2][64];
-extern Bitboard PassedPawnMask[2][64];
-extern Bitboard AttackSpanMask[2][64];
-
-extern const uint64_t RMult[64];
-extern const int RShift[64];
-extern Bitboard RMask[64];
-extern int RAttackIndex[64];
-extern Bitboard RAttacks[0x19000];
-
-extern const uint64_t BMult[64];
-extern const int BShift[64];
-extern Bitboard BMask[64];
-extern int BAttackIndex[64];
-extern Bitboard BAttacks[0x1480];
-
-extern Bitboard BishopPseudoAttacks[64];
-extern Bitboard RookPseudoAttacks[64];
-extern Bitboard QueenPseudoAttacks[64];
-
-extern uint8_t BitCount8Bit[256];
+extern Bitboard SquareBB[SQUARE_NB];
+extern Bitboard FileBB[FILE_NB];
+extern Bitboard RankBB[RANK_NB];
+extern Bitboard AdjacentFilesBB[FILE_NB];
+extern Bitboard InFrontBB[COLOR_NB][RANK_NB];
+extern Bitboard StepAttacksBB[PIECE_NB][SQUARE_NB];
+extern Bitboard BetweenBB[SQUARE_NB][SQUARE_NB];
+extern Bitboard LineBB[SQUARE_NB][SQUARE_NB];
+extern Bitboard DistanceRingBB[SQUARE_NB][8];
+extern Bitboard ForwardBB[COLOR_NB][SQUARE_NB];
+extern Bitboard PassedPawnMask[COLOR_NB][SQUARE_NB];
+extern Bitboard PawnAttackSpan[COLOR_NB][SQUARE_NB];
+extern Bitboard PseudoAttacks[PIECE_TYPE_NB][SQUARE_NB];
 
 
-////
-//// Inline functions
-////
+/// Overloads of bitwise operators between a Bitboard and a Square for testing
+/// whether a given bit is set in a bitboard, and for setting and clearing bits.
 
-/// Functions for testing whether a given bit is set in a bitboard, and for
-/// setting and clearing bits.
-
-inline Bitboard bit_is_set(Bitboard b, Square s) {
-  return b & SetMaskBB[s];
+inline Bitboard operator&(Bitboard b, Square s) {
+  return b & SquareBB[s];
 }
 
-inline void set_bit(Bitboard *b, Square s) {
-  *b |= SetMaskBB[s];
+inline Bitboard operator|(Bitboard b, Square s) {
+  return b | SquareBB[s];
 }
 
-inline void clear_bit(Bitboard *b, Square s) {
-  *b &= ClearMaskBB[s];
+inline Bitboard operator^(Bitboard b, Square s) {
+  return b ^ SquareBB[s];
+}
+
+inline Bitboard& operator|=(Bitboard& b, Square s) {
+  return b |= SquareBB[s];
+}
+
+inline Bitboard& operator^=(Bitboard& b, Square s) {
+  return b ^= SquareBB[s];
+}
+
+inline bool more_than_one(Bitboard b) {
+  return b & (b - 1);
 }
 
 
-/// Functions used to update a bitboard after a move. This is faster
-/// then calling a sequence of clear_bit() + set_bit()
-
-inline Bitboard make_move_bb(Square from, Square to) {
-  return SetMaskBB[from] | SetMaskBB[to];
-}
-
-inline void do_move_bb(Bitboard *b, Bitboard move_bb) {
-  *b ^= move_bb;
-}
-
-/// rank_bb() and file_bb() take a file or a square as input, and return
-/// a bitboard representing all squares on the given file or rank.
+/// rank_bb() and file_bb() return a bitboard representing all the squares on
+/// the given file or rank.
 
 inline Bitboard rank_bb(Rank r) {
   return RankBB[r];
 }
 
 inline Bitboard rank_bb(Square s) {
-  return rank_bb(square_rank(s));
+  return RankBB[rank_of(s)];
 }
 
 inline Bitboard file_bb(File f) {
@@ -144,204 +120,219 @@ inline Bitboard file_bb(File f) {
 }
 
 inline Bitboard file_bb(Square s) {
-  return file_bb(square_file(s));
+  return FileBB[file_of(s)];
 }
 
 
-/// neighboring_files_bb takes a file or a square as input, and returns a
-/// bitboard representing all squares on the neighboring files.
+/// shift_bb() moves a bitboard one step along direction Delta. Mainly for pawns
 
-inline Bitboard neighboring_files_bb(File f) {
-  return NeighboringFilesBB[f];
-}
-
-inline Bitboard neighboring_files_bb(Square s) {
-  return NeighboringFilesBB[square_file(s)];
-}
-
-
-/// this_and_neighboring_files_bb takes a file or a square as input, and
-/// returns a bitboard representing all squares on the given and neighboring
-/// files.
-
-inline Bitboard this_and_neighboring_files_bb(File f) {
-  return ThisAndNeighboringFilesBB[f];
-}
-
-inline Bitboard this_and_neighboring_files_bb(Square s) {
-  return ThisAndNeighboringFilesBB[square_file(s)];
+template<Square Delta>
+inline Bitboard shift_bb(Bitboard b) {
+  return  Delta == DELTA_N  ?  b             << 8 : Delta == DELTA_S  ?  b             >> 8
+        : Delta == DELTA_NE ? (b & ~FileHBB) << 9 : Delta == DELTA_SE ? (b & ~FileHBB) >> 7
+        : Delta == DELTA_NW ? (b & ~FileABB) << 7 : Delta == DELTA_SW ? (b & ~FileABB) >> 9
+        : 0;
 }
 
 
-/// relative_rank_bb() takes a color and a rank as input, and returns a bitboard
-/// representing all squares on the given rank from the given color's point of
-/// view. For instance, relative_rank_bb(WHITE, 7) gives all squares on the
-/// 7th rank, while relative_rank_bb(BLACK, 7) gives all squares on the 2nd
-/// rank.
+/// adjacent_files_bb() returns a bitboard representing all the squares on the
+/// adjacent files of the given one.
 
-inline Bitboard relative_rank_bb(Color c, Rank r) {
-  return RelativeRankBB[c][r];
+inline Bitboard adjacent_files_bb(File f) {
+  return AdjacentFilesBB[f];
 }
 
 
-/// in_front_bb() takes a color and a rank or square as input, and returns a
-/// bitboard representing all the squares on all ranks in front of the rank
-/// (or square), from the given color's point of view.  For instance,
-/// in_front_bb(WHITE, RANK_5) will give all squares on ranks 6, 7 and 8, while
-/// in_front_bb(BLACK, SQ_D3) will give all squares on ranks 1 and 2.
+/// between_bb() returns a bitboard representing all the squares between the two
+/// given ones. For instance, between_bb(SQ_C4, SQ_F7) returns a bitboard with
+/// the bits for square d5 and e6 set. If s1 and s2 are not on the same rank, file
+/// or diagonal, 0 is returned.
+
+inline Bitboard between_bb(Square s1, Square s2) {
+  return BetweenBB[s1][s2];
+}
+
+
+/// in_front_bb() returns a bitboard representing all the squares on all the ranks
+/// in front of the given one, from the point of view of the given color. For
+/// instance, in_front_bb(BLACK, RANK_3) will return the squares on ranks 1 and 2.
 
 inline Bitboard in_front_bb(Color c, Rank r) {
   return InFrontBB[c][r];
 }
 
-inline Bitboard in_front_bb(Color c, Square s) {
-  return InFrontBB[c][square_rank(s)];
+
+/// forward_bb() returns a bitboard representing all the squares along the line
+/// in front of the given one, from the point of view of the given color:
+///        ForwardBB[c][s] = in_front_bb(c, s) & file_bb(s)
+
+inline Bitboard forward_bb(Color c, Square s) {
+  return ForwardBB[c][s];
 }
 
 
-/// behind_bb() takes a color and a rank or square as input, and returns a
-/// bitboard representing all the squares on all ranks behind of the rank
-/// (or square), from the given color's point of view.
+/// pawn_attack_span() returns a bitboard representing all the squares that can be
+/// attacked by a pawn of the given color when it moves along its file, starting
+/// from the given square:
+///       PawnAttackSpan[c][s] = in_front_bb(c, s) & adjacent_files_bb(s);
 
-inline Bitboard behind_bb(Color c, Rank r) {
-  return InFrontBB[opposite_color(c)][r];
-}
-
-inline Bitboard behind_bb(Color c, Square s) {
-  return InFrontBB[opposite_color(c)][square_rank(s)];
+inline Bitboard pawn_attack_span(Color c, Square s) {
+  return PawnAttackSpan[c][s];
 }
 
 
-/// ray_bb() gives a bitboard representing all squares along the ray in a
-/// given direction from a given square.
-
-inline Bitboard ray_bb(Square s, SignedDirection d) {
-  return RayBB[s][d];
-}
-
-
-/// Functions for computing sliding attack bitboards. rook_attacks_bb(),
-/// bishop_attacks_bb() and queen_attacks_bb() all take a square and a
-/// bitboard of occupied squares as input, and return a bitboard representing
-/// all squares attacked by a rook, bishop or queen on the given square.
-
-#if defined(IS_64BIT)
-
-inline Bitboard rook_attacks_bb(Square s, Bitboard blockers) {
-  Bitboard b = blockers & RMask[s];
-  return RAttacks[RAttackIndex[s] + ((b * RMult[s]) >> RShift[s])];
-}
-
-inline Bitboard bishop_attacks_bb(Square s, Bitboard blockers) {
-  Bitboard b = blockers & BMask[s];
-  return BAttacks[BAttackIndex[s] + ((b * BMult[s]) >> BShift[s])];
-}
-
-#else // if !defined(IS_64BIT)
-
-inline Bitboard rook_attacks_bb(Square s, Bitboard blockers) {
-  Bitboard b = blockers & RMask[s];
-  return RAttacks[RAttackIndex[s] +
-                  (unsigned(int(b) * int(RMult[s]) ^
-                            int(b >> 32) * int(RMult[s] >> 32))
-                   >> RShift[s])];
-}
-
-inline Bitboard bishop_attacks_bb(Square s, Bitboard blockers) {
-  Bitboard b = blockers & BMask[s];
-  return BAttacks[BAttackIndex[s] +
-                  (unsigned(int(b) * int(BMult[s]) ^
-                            int(b >> 32) * int(BMult[s] >> 32))
-                   >> BShift[s])];
-}
-
-#endif
-
-inline Bitboard queen_attacks_bb(Square s, Bitboard blockers) {
-  return rook_attacks_bb(s, blockers) | bishop_attacks_bb(s, blockers);
-}
-
-
-/// squares_between returns a bitboard representing all squares between
-/// two squares.  For instance, squares_between(SQ_C4, SQ_F7) returns a
-/// bitboard with the bits for square d5 and e6 set.  If s1 and s2 are not
-/// on the same line, file or diagonal, EmptyBoardBB is returned.
-
-inline Bitboard squares_between(Square s1, Square s2) {
-  return BetweenBB[s1][s2];
-}
-
-
-/// squares_in_front_of takes a color and a square as input, and returns a
-/// bitboard representing all squares along the line in front of the square,
-/// from the point of view of the given color. Definition of the table is:
-/// SquaresInFrontOf[c][s] = in_front_bb(c, s) & file_bb(s)
-
-inline Bitboard squares_in_front_of(Color c, Square s) {
-  return SquaresInFrontMask[c][s];
-}
-
-
-/// squares_behind is similar to squares_in_front, but returns the squares
-/// behind the square instead of in front of the square.
-
-inline Bitboard squares_behind(Color c, Square s) {
-  return SquaresInFrontMask[opposite_color(c)][s];
-}
-
-
-/// passed_pawn_mask takes a color and a square as input, and returns a
-/// bitboard mask which can be used to test if a pawn of the given color on
-/// the given square is a passed pawn. Definition of the table is:
-/// PassedPawnMask[c][s] = in_front_bb(c, s) & this_and_neighboring_files_bb(s)
+/// passed_pawn_mask() returns a bitboard mask which can be used to test if a
+/// pawn of the given color and on the given square is a passed pawn:
+///       PassedPawnMask[c][s] = pawn_attack_span(c, s) | forward_bb(c, s)
 
 inline Bitboard passed_pawn_mask(Color c, Square s) {
   return PassedPawnMask[c][s];
 }
 
 
-/// attack_span_mask takes a color and a square as input, and returns a bitboard
-/// representing all squares that can be attacked by a pawn of the given color
-/// when it moves along its file starting from the given square. Definition is:
-/// AttackSpanMask[c][s] = in_front_bb(c, s) & neighboring_files_bb(s);
+/// aligned() returns true if the squares s1, s2 and s3 are aligned either on a
+/// straight or on a diagonal line.
 
-inline Bitboard attack_span_mask(Color c, Square s) {
-  return AttackSpanMask[c][s];
+inline bool aligned(Square s1, Square s2, Square s3) {
+  return LineBB[s1][s2] & s3;
 }
 
 
-/// first_1() finds the least significant nonzero bit in a nonzero bitboard.
-/// pop_1st_bit() finds and clears the least significant nonzero bit in a
-/// nonzero bitboard.
+/// distance() functions return the distance between x and y, defined as the
+/// number of steps for a king in x to reach y. Works with squares, ranks, files.
 
-#if defined(USE_BSFQ) // Assembly code by Heinz van Saanen
+template<typename T> inline int distance(T x, T y) { return x < y ? y - x : x - y; }
+template<> inline int distance<Square>(Square x, Square y) { return SquareDistance[x][y]; }
 
-inline Square first_1(Bitboard b) {
-  Bitboard dummy;
-  __asm__("bsfq %1, %0": "=r"(dummy): "rm"(b) );
-  return (Square)(dummy);
+template<typename T1, typename T2> inline int distance(T2 x, T2 y);
+template<> inline int distance<File>(Square x, Square y) { return distance(file_of(x), file_of(y)); }
+template<> inline int distance<Rank>(Square x, Square y) { return distance(rank_of(x), rank_of(y)); }
+
+
+/// attacks_bb() returns a bitboard representing all the squares attacked by a
+/// piece of type Pt (bishop or rook) placed on 's'. The helper magic_index()
+/// looks up the index using the 'magic bitboards' approach.
+template<PieceType Pt>
+inline unsigned magic_index(Square s, Bitboard occupied) {
+
+  extern Bitboard RookMasks[SQUARE_NB];
+  extern Bitboard RookMagics[SQUARE_NB];
+  extern unsigned RookShifts[SQUARE_NB];
+  extern Bitboard BishopMasks[SQUARE_NB];
+  extern Bitboard BishopMagics[SQUARE_NB];
+  extern unsigned BishopShifts[SQUARE_NB];
+
+  Bitboard* const Masks  = Pt == ROOK ? RookMasks  : BishopMasks;
+  Bitboard* const Magics = Pt == ROOK ? RookMagics : BishopMagics;
+  unsigned* const Shifts = Pt == ROOK ? RookShifts : BishopShifts;
+
+  if (HasPext)
+      return unsigned(pext(occupied, Masks[s]));
+
+  if (Is64Bit)
+      return unsigned(((occupied & Masks[s]) * Magics[s]) >> Shifts[s]);
+
+  unsigned lo = unsigned(occupied) & unsigned(Masks[s]);
+  unsigned hi = unsigned(occupied >> 32) & unsigned(Masks[s] >> 32);
+  return (lo * unsigned(Magics[s]) ^ hi * unsigned(Magics[s] >> 32)) >> Shifts[s];
 }
 
-inline Square pop_1st_bit(Bitboard* b) {
-  const Square s = first_1(*b);
-  *b &= ~(1ULL<<s);
-  return s;
+template<PieceType Pt>
+inline Bitboard attacks_bb(Square s, Bitboard occupied) {
+
+  extern Bitboard* RookAttacks[SQUARE_NB];
+  extern Bitboard* BishopAttacks[SQUARE_NB];
+
+  return (Pt == ROOK ? RookAttacks : BishopAttacks)[s][magic_index<Pt>(s, occupied)];
 }
 
-#else // if !defined(USE_BSFQ)
+inline Bitboard attacks_bb(Piece pc, Square s, Bitboard occupied) {
 
-extern Square first_1(Bitboard b);
-extern Square pop_1st_bit(Bitboard* b);
+  switch (type_of(pc))
+  {
+  case BISHOP: return attacks_bb<BISHOP>(s, occupied);
+  case ROOK  : return attacks_bb<ROOK>(s, occupied);
+  case QUEEN : return attacks_bb<BISHOP>(s, occupied) | attacks_bb<ROOK>(s, occupied);
+  default    : return StepAttacksBB[pc][s];
+  }
+}
+
+
+/// popcount() counts the number of non-zero bits in a bitboard
+
+inline int popcount(Bitboard b) {
+
+#ifndef USE_POPCNT
+
+  extern uint8_t PopCnt16[1 << 16];
+  union { Bitboard bb; uint16_t u[4]; } v = { b };
+  return PopCnt16[v.u[0]] + PopCnt16[v.u[1]] + PopCnt16[v.u[2]] + PopCnt16[v.u[3]];
+
+#elif defined(_MSC_VER) || defined(__INTEL_COMPILER)
+
+  return (int)_mm_popcnt_u64(b);
+
+#else // Assumed gcc or compatible compiler
+
+  return __builtin_popcountll(b);
+
+#endif
+}
+
+
+/// lsb() and msb() return the least/most significant bit in a non-zero bitboard
+
+#if defined(__GNUC__)
+
+inline Square lsb(Bitboard b) {
+  assert(b);
+  return Square(__builtin_ctzll(b));
+}
+
+inline Square msb(Bitboard b) {
+  assert(b);
+  return Square(63 - __builtin_clzll(b));
+}
+
+#elif defined(_WIN64) && defined(_MSC_VER)
+
+inline Square lsb(Bitboard b) {
+  assert(b);
+  unsigned long idx;
+  _BitScanForward64(&idx, b);
+  return (Square) idx;
+}
+
+inline Square msb(Bitboard b) {
+  assert(b);
+  unsigned long idx;
+  _BitScanReverse64(&idx, b);
+  return (Square) idx;
+}
+
+#else
+
+#define NO_BSF // Fallback on software implementation for other cases
+
+Square lsb(Bitboard b);
+Square msb(Bitboard b);
 
 #endif
 
 
-////
-//// Prototypes
-////
+/// pop_lsb() finds and clears the least significant bit in a non-zero bitboard
 
-extern void print_bitboard(Bitboard b);
-extern void init_bitboards();
+inline Square pop_lsb(Bitboard* b) {
+  const Square s = lsb(*b);
+  *b &= *b - 1;
+  return s;
+}
 
 
-#endif // !defined(BITBOARD_H_INCLUDED)
+/// frontmost_sq() and backmost_sq() return the square corresponding to the
+/// most/least advanced bit relative to the given color.
+
+inline Square frontmost_sq(Color c, Bitboard b) { return c == WHITE ? msb(b) : lsb(b); }
+inline Square  backmost_sq(Color c, Bitboard b) { return c == WHITE ? lsb(b) : msb(b); }
+
+#endif // #ifndef BITBOARD_H_INCLUDED

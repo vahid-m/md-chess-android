@@ -1,74 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:id="@+id/my_home"
-    android:fitsSystemWindows="true">
-    
-    <android.support.v7.widget.Toolbar
-    android:id="@+id/my_awesome_toolbar2"
-    android:layout_height="wrap_content"
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:minHeight="?attr/actionBarSize"
-    android:background="?attr/colorPrimary" />
-    
-    <android.support.v4.widget.DrawerLayout
-        android:id="@+id/drawer_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        
-   	<LinearLayout 
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    >
-    
-	<view
-		class="org.empyrn.darkknight.ChessBoard"
-	    android:id="@+id/chessboard"
-    	android:layout_width="fill_parent"
-	    android:layout_height="fill_parent"/>
-	<TextView
-    	android:id="@+id/status"
-	    android:layout_width="fill_parent" 
-    	android:layout_height="wrap_content" 
-	    android:includeFontPadding="true"
-    	android:textStyle="bold"
-	    android:textAppearance="?android:attr/textAppearanceMedium"/>
-	<!--  android:typeface="monospace"-->
-	<ScrollView
-		android:id="@+id/scrollView"
-		android:layout_width="fill_parent"
-		android:layout_height="0dp"
-		android:layout_weight="1">
-		<TextView
-    		android:id="@+id/moveList"
-	    	android:layout_width="fill_parent" 
-    		android:layout_height="wrap_content" 
-	    	android:includeFontPadding="true"
-    		
-		    android:textAppearance="?android:attr/textAppearanceSmall"/>
-		<!--  android:typeface="monospace"-->
-	</ScrollView>
-	<TextView
-    	android:id="@+id/thinking"
-	    android:layout_width="fill_parent" 
-    	android:layout_height="wrap_content" 
-	    android:includeFontPadding="true"
-    	
-	    android:textAppearance="?android:attr/textAppearanceSmall"/>
-	<!--  android:typeface="monospace"-->
-		
-		</LinearLayout>
-		<ListView
-		android:id="@+id/left_drawer"
-		android:layout_width="304dp"
-		android:layout_height="match_parent"
-		android:layout_gravity="start"
-		android:background="#212121"
-		android:choiceMode="singleChoice"
-		android:divider="@android:color/transparent"
-		android:dividerHeight="0dp"/>
-    </android.support.v4.widget.DrawerLayout>
-</LinearLayout>
+    android:layout_height="match_parent">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/main"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/White"
+        android:orientation="vertical">
+
+        <include
+            layout="@layout/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <include
+            layout="@layout/title"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"/>
+
+        <view
+            android:id="@+id/chessboard"
+            class="org.mdc.chess.ChessBoardPlay"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" />
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="6dp"
+            android:orientation="horizontal"
+            android:background="@color/White"
+            android:paddingTop="1dp">
+
+            <TextView
+                android:id="@+id/status"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="monospace"
+                android:includeFontPadding="true"
+                android:textSize="12sp"
+                android:typeface="monospace" />
+
+            <LinearLayout
+                android:id="@+id/buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/custom3Button"
+                    android:layout_width="36dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="@string/buttonDesc_custom3"/>
+
+                <ImageButton
+                    android:id="@+id/custom2Button"
+                    android:layout_width="36dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="@string/buttonDesc_custom2"/>
+
+                <ImageButton
+                    android:id="@+id/custom1Button"
+                    android:layout_width="36dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="@string/buttonDesc_custom1"/>
+
+                <ImageButton
+                    android:id="@+id/modeButton"
+                    android:layout_width="36dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="@string/buttonDesc_mode"/>
+
+                <ImageButton
+                    android:id="@+id/undoButton"
+                    android:layout_width="36dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="@string/buttonDesc_back"/>
+
+                <ImageButton
+                    android:id="@+id/redoButton"
+                    android:layout_width="36dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="@string/buttonDesc_forward"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <view
+            class="org.mdc.chess.MyRelativeLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="@color/White"
+            android:orientation="vertical">
+
+            <ScrollView
+                android:id="@+id/scrollView"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+
+                <view
+                    android:id="@+id/moveList"
+                    class="org.mdc.chess.MoveListView"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="true"
+                    android:background="@color/White"
+                    android:padding="0dp" />
+            </ScrollView>
+
+            <view
+                android:id="@+id/scrollViewBot"
+                class="org.mdc.chess.MyScrollView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true">
+
+                <TextView
+                    android:id="@+id/thinking"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:includeFontPadding="true"
+                    android:tag="thinking"
+                    android:textSize="12sp"
+                    android:typeface="monospace" />
+            </view>
+        </view>
+    </LinearLayout>
+
+    <include layout="@layout/left_drawer" />
+
+    <include layout="@layout/right_drawer" />
+</android.support.v4.widget.DrawerLayout>

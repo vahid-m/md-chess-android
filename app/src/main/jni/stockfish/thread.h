@@ -1,7 +1,8 @@
 /*
   Stockfish, a UCI chess playing engine derived from Glaurung 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
-  Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2008-2015 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2015-2016 Marco Costalba, Joona Kiiski, Gary Linscott, Tord Romstad
 
   Stockfish is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,79 +18,92 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#if !defined(THREAD_H_INCLUDED)
+#ifndef THREAD_H_INCLUDED
 #define THREAD_H_INCLUDED
 
+#include <atomic>
+#include <bitset>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+#include <vector>
 
-////
-//// Includes
-////
-
-#include <cstring>
-
-#include "lock.h"
+#include "material.h"
 #include "movepick.h"
+#include "pawns.h"
 #include "position.h"
 #include "search.h"
+#include "thread_win32.h"
 
 
-////
-//// Constants and variables
-////
+/// Thread struct keeps together all the thread-related stuff. We also use
+/// per-thread pawn and material hash tables so that once we get a pointer to an
+/// entry its life time is unlimited and we don't have to care about someone
+/// changing the entry under our feet.
 
-const int MAX_THREADS = 8;
-const int ACTIVE_SPLIT_POINTS_MAX = 8;
+class Thread {
 
+  std::thread nativeThread;
+  Mutex mutex;
+  ConditionVariable sleepCondition;
+  bool exit, searching;
 
-////
-//// Types
-////
+public:
+  Thread();
+  virtual ~Thread();
+  virtual void search();
+  void idle_loop();
+  void start_searching(bool resume = false);
+  void wait_for_search_finished();
+  void wait(std::atomic_bool& b);
 
-struct SplitPoint {
+  Pawns::Table pawnsTable;
+  Material::Table materialTable;
+  Endgames endgames;
+  size_t idx, PVIdx;
+  int maxPly, callsCnt;
 
-  // Const data after splitPoint has been setup
-  SplitPoint* parent;
-  const Position* pos;
-  Depth depth;
-  bool pvNode, mateThreat;
-  Value beta;
-  int ply;
-  SearchStack sstack[MAX_THREADS][PLY_MAX_PLUS_2];
-
-  // Const pointers to shared data
-  MovePicker* mp;
-  SearchStack* parentSstack;
-
-  // Shared data
-  Lock lock;
-  volatile Value alpha;
-  volatile Value bestValue;
-  volatile int moveCount;
-  volatile bool stopRequest;
-  volatile int slaves[MAX_THREADS];
-};
-
-// ThreadState type is used to represent thread's current state
-
-enum ThreadState
-{
-  THREAD_SEARCHING,     // thread is performing work
-  THREAD_AVAILABLE,     // thread is polling for work
-  THREAD_SLEEPING,      // we are not thinking, so thread is sleeping
-  THREAD_BOOKED,        // other thread (master) has booked us as a slave
-  THREAD_WORKISWAITING, // master has ordered us to start
-  THREAD_TERMINATED     // we are quitting and thread is terminated
-};
-
-struct Thread {
-  SplitPoint* volatile splitPoint;
-  volatile int activeSplitPoints;
-  uint64_t nodes;
-  uint64_t betaCutOffs[2];
-  volatile ThreadState state;
-  unsigned char pad[64]; // set some distance among local data for each thread
+  Position rootPos;
+  Search::RootMoves rootMoves;
+  Depth rootDepth;
+  Depth completedDepth;
+  std::atomic_bool resetCalls;
+  HistoryStats history;
+  MoveStats counterMoves;
+  FromToStats fromTo;
+  CounterMoveHistoryStats counterMoveHistory;
 };
 
 
-#endif // !defined(THREAD_H_INCLUDED)
+/// MainThread is a derived class with a specific overload for the main thread
+
+struct MainThread : public Thread {
+  virtual void search();
+
+  bool easyMovePlayed, failedLow;
+  double bestMoveChanges;
+  Value previousScore;
+};
+
+
+/// ThreadPool struct handles all the threads-related stuff like init, starting,
+/// parking and, most importantly, launching a thread. All the access to threads
+/// data is done through this class.
+
+struct ThreadPool : public std::vector<Thread*> {
+
+  void init(); // No constructor and destructor, threads rely on globals that should
+  void exit(); // be initialized and valid during the whole thread lifetime.
+
+  MainThread* main() { return static_cast<MainThread*>(at(0)); }
+  void start_thinking(Position&, StateListPtr&, const Search::LimitsType&);
+  void read_uci_options();
+  int64_t nodes_searched();
+
+private:
+  StateListPtr setupStates;
+};
+
+extern ThreadPool Threads;
+
+#endif // #ifndef THREAD_H_INCLUDED

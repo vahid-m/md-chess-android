@@ -1,7 +1,8 @@
 /*
   Stockfish, a UCI chess playing engine derived from Glaurung 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
-  Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2008-2015 Marco Costalba, Joona Kiiski, Tord Romstad
+  Copyright (C) 2015-2016 Marco Costalba, Joona Kiiski, Gary Linscott, Tord Romstad
 
   Stockfish is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -17,326 +18,146 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-////
-//// Includes
-////
-
 #include <algorithm>
 #include <cassert>
-#include <map>
-#include <string>
-#include <sstream>
-#include <vector>
+#include <ostream>
 
 #include "misc.h"
+#include "search.h"
 #include "thread.h"
-#include "ucioption.h"
+#include "tt.h"
+#include "uci.h"
+#include "syzygy/tbprobe.h"
 
 using std::string;
 
-////
-//// Local definitions
-////
+UCI::OptionsMap Options; // Global object
 
-namespace {
+namespace UCI {
 
-  ///
-  /// Types
-  ///
-
-  enum OptionType { SPIN, COMBO, CHECK, STRING, BUTTON };
-
-  typedef std::vector<string> ComboValues;
-
-  struct Option {
-
-    string name, defaultValue, currentValue;
-    OptionType type;
-    size_t idx;
-    int minValue, maxValue;
-    ComboValues comboValues;
-
-    Option();
-    Option(const char* defaultValue, OptionType = STRING);
-    Option(bool defaultValue, OptionType = CHECK);
-    Option(int defaultValue, int minValue, int maxValue);
-
-    bool operator<(const Option& o) const { return this->idx < o.idx; }
-  };
-
-  typedef std::map<string, Option> Options;
-
-  ///
-  /// Constants
-  ///
-
-  // load_defaults populates the options map with the hard
-  // coded names and default values.
-
-  void load_defaults(Options& o) {
-
-    o["Use Search Log"] = Option(false);
-    o["Search Log Filename"] = Option("SearchLog.txt");
-    o["Book File"] = Option("book.bin");
-    o["Best Book Move"] = Option(false);
-    o["Mobility (Middle Game)"] = Option(100, 0, 200);
-    o["Mobility (Endgame)"] = Option(100, 0, 200);
-    o["Pawn Structure (Middle Game)"] = Option(100, 0, 200);
-    o["Pawn Structure (Endgame)"] = Option(100, 0, 200);
-    o["Passed Pawns (Middle Game)"] = Option(100, 0, 200);
-    o["Passed Pawns (Endgame)"] = Option(100, 0, 200);
-    o["Space"] = Option(100, 0, 200);
-    o["Aggressiveness"] = Option(100, 0, 200);
-    o["Cowardice"] = Option(100, 0, 200);
-    o["Check Extension (PV nodes)"] = Option(2, 0, 2);
-    o["Check Extension (non-PV nodes)"] = Option(1, 0, 2);
-    o["Single Evasion Extension (PV nodes)"] = Option(2, 0, 2);
-    o["Single Evasion Extension (non-PV nodes)"] = Option(2, 0, 2);
-    o["Mate Threat Extension (PV nodes)"] = Option(2, 0, 2);
-    o["Mate Threat Extension (non-PV nodes)"] = Option(2, 0, 2);
-    o["Pawn Push to 7th Extension (PV nodes)"] = Option(1, 0, 2);
-    o["Pawn Push to 7th Extension (non-PV nodes)"] = Option(1, 0, 2);
-    o["Passed Pawn Extension (PV nodes)"] = Option(1, 0, 2);
-    o["Passed Pawn Extension (non-PV nodes)"] = Option(0, 0, 2);
-    o["Pawn Endgame Extension (PV nodes)"] = Option(2, 0, 2);
-    o["Pawn Endgame Extension (non-PV nodes)"] = Option(2, 0, 2);
-    o["Randomness"] = Option(0, 0, 10);
-    o["Minimum Split Depth"] = Option(4, 4, 7);
-    o["Maximum Number of Threads per Split Point"] = Option(5, 4, 8);
-    o["Threads"] = Option(1, 1, MAX_THREADS);
-    o["Hash"] = Option(32, 4, 8192);
-    o["Clear Hash"] = Option(false, BUTTON);
-    o["New Game"] = Option(false, BUTTON);
-    o["Ponder"] = Option(true);
-    o["OwnBook"] = Option(true);
-    o["MultiPV"] = Option(1, 1, 500);
-    o["UCI_Chess960"] = Option(false);
-    o["UCI_AnalyseMode"] = Option(false);
-
-    // Any option should know its name so to be easily printed
-    for (Options::iterator it = o.begin(); it != o.end(); ++it)
-        it->second.name = it->first;
-  }
-
-  ///
-  /// Variables
-  ///
-
-  Options options;
-
-  // stringify converts a value of type T to a std::string
-  template<typename T>
-  string stringify(const T& v) {
-
-     std::ostringstream ss;
-     ss << v;
-     return ss.str();
-  }
+/// 'On change' actions, triggered by an option's value change
+void on_clear_hash(const Option&) { Search::clear(); }
+void on_hash_size(const Option& o) { TT.resize(o); }
+void on_logger(const Option& o) { start_logger(o); }
+void on_threads(const Option&) { Threads.read_uci_options(); }
+void on_tb_path(const Option& o) { Tablebases::init(o); }
 
 
-  // get_option_value implements the various get_option_value_<type>
-  // functions defined later, because only the option value
-  // type changes a template seems a proper solution.
+/// Our case insensitive less() function as required by UCI protocol
+bool CaseInsensitiveLess::operator() (const string& s1, const string& s2) const {
 
-  template<typename T>
-  T get_option_value(const string& optionName) {
-
-      T ret = T();
-      if (options.find(optionName) == options.end())
-          return ret;
-
-      std::istringstream ss(options[optionName].currentValue);
-      ss >> ret;
-      return ret;
-  }
-
-  // Specialization for std::string where instruction 'ss >> ret;'
-  // would erroneusly tokenize a string with spaces.
-
-  template<>
-  string get_option_value<string>(const string& optionName) {
-
-      if (options.find(optionName) == options.end())
-          return string();
-
-      return options[optionName].currentValue;
-  }
-
-}
-
-////
-//// Functions
-////
-
-/// init_uci_options() initializes the UCI options.  Currently, the only
-/// thing this function does is to initialize the default value of the
-/// "Threads" parameter to the number of available CPU cores.
-
-void init_uci_options() {
-
-  load_defaults(options);
-
-  // Set optimal value for parameter "Minimum Split Depth"
-  // according to number of available cores.
-  assert(options.find("Threads") != options.end());
-  assert(options.find("Minimum Split Depth") != options.end());
-
-  Option& thr = options["Threads"];
-  Option& msd = options["Minimum Split Depth"];
-
-  thr.defaultValue = thr.currentValue = stringify(cpu_count());
-
-  if (cpu_count() >= 8)
-      msd.defaultValue = msd.currentValue = stringify(7);
+  return std::lexicographical_compare(s1.begin(), s1.end(), s2.begin(), s2.end(),
+         [](char c1, char c2) { return tolower(c1) < tolower(c2); });
 }
 
 
-/// print_uci_options() prints all the UCI options to the standard output,
-/// in the format defined by the UCI protocol.
+/// init() initializes the UCI options to their hard-coded default values
 
-void print_uci_options() {
+void init(OptionsMap& o) {
 
-  static const char optionTypeName[][16] = {
-    "spin", "combo", "check", "string", "button"
-  };
+  const int MaxHashMB = Is64Bit ? 1024 * 1024 : 2048;
 
-  // Build up a vector out of the options map and sort it according to idx
-  // field, that is the chronological insertion order in options map.
-  std::vector<Option> vec;
-  for (Options::const_iterator it = options.begin(); it != options.end(); ++it)
-      vec.push_back(it->second);
-
-  std::sort(vec.begin(), vec.end());
-
-  for (std::vector<Option>::const_iterator it = vec.begin(); it != vec.end(); ++it)
-  {
-      std::cout << "\noption name " << it->name
-                << " type "         << optionTypeName[it->type];
-
-      if (it->type == BUTTON)
-          continue;
-
-      if (it->type == CHECK)
-          std::cout << " default " << (it->defaultValue == "1" ? "true" : "false");
-      else
-          std::cout << " default " << it->defaultValue;
-
-      if (it->type == SPIN)
-          std::cout << " min " << it->minValue << " max " << it->maxValue;
-      else if (it->type == COMBO)
-          for (ComboValues::const_iterator itc = it->comboValues.begin();
-              itc != it->comboValues.end(); ++itc)
-              std::cout << " var " << *itc;
-  }
-  std::cout << std::endl;
+  o["Debug Log File"]        << Option("", on_logger);
+  o["Contempt"]              << Option(0, -100, 100);
+  o["Threads"]               << Option(1, 1, 128, on_threads);
+  o["Hash"]                  << Option(16, 1, MaxHashMB, on_hash_size);
+  o["Clear Hash"]            << Option(on_clear_hash);
+  o["Ponder"]                << Option(false);
+  o["MultiPV"]               << Option(1, 1, 500);
+  o["Skill Level"]           << Option(20, 0, 20);
+  o["Move Overhead"]         << Option(30, 0, 5000);
+  o["Minimum Thinking Time"] << Option(20, 0, 5000);
+  o["Slow Mover"]            << Option(89, 10, 1000);
+  o["nodestime"]             << Option(0, 0, 10000);
+  o["UCI_Chess960"]          << Option(false);
+  o["SyzygyPath"]            << Option("<empty>", on_tb_path);
+  o["SyzygyProbeDepth"]      << Option(1, 1, 100);
+  o["Syzygy50MoveRule"]      << Option(true);
+  o["SyzygyProbeLimit"]      << Option(6, 0, 6);
 }
 
 
-/// get_option_value_bool() returns the current value of a UCI parameter of
-/// type "check".
+/// operator<<() is used to print all the options default values in chronological
+/// insertion order (the idx field) and in the format defined by the UCI protocol.
 
-bool get_option_value_bool(const string& optionName) {
+std::ostream& operator<<(std::ostream& os, const OptionsMap& om) {
 
-  return get_option_value<bool>(optionName);
+  for (size_t idx = 0; idx < om.size(); ++idx)
+      for (const auto& it : om)
+          if (it.second.idx == idx)
+          {
+              const Option& o = it.second;
+              os << "\noption name " << it.first << " type " << o.type;
+
+              if (o.type != "button")
+                  os << " default " << o.defaultValue;
+
+              if (o.type == "spin")
+                  os << " min " << o.min << " max " << o.max;
+
+              break;
+          }
+
+  return os;
 }
 
 
-/// get_option_value_int() returns the value of a UCI parameter as an integer.
-/// Normally, this function will be used for a parameter of type "spin", but
-/// it could also be used with a "combo" parameter, where all the available
-/// values are integers.
+/// Option class constructors and conversion operators
 
-int get_option_value_int(const string& optionName) {
+Option::Option(const char* v, OnChange f) : type("string"), min(0), max(0), on_change(f)
+{ defaultValue = currentValue = v; }
 
-  return get_option_value<int>(optionName);
+Option::Option(bool v, OnChange f) : type("check"), min(0), max(0), on_change(f)
+{ defaultValue = currentValue = (v ? "true" : "false"); }
+
+Option::Option(OnChange f) : type("button"), min(0), max(0), on_change(f)
+{}
+
+Option::Option(int v, int minv, int maxv, OnChange f) : type("spin"), min(minv), max(maxv), on_change(f)
+{ defaultValue = currentValue = to_string(v); }
+
+Option::operator int() const {
+  assert(type == "check" || type == "spin");
+  return (type == "spin" ? stoi(currentValue) : currentValue == "true");
+}
+
+Option::operator std::string() const {
+  assert(type == "string");
+  return currentValue;
 }
 
 
-/// get_option_value_string() returns the current value of a UCI parameter as
-/// a string. It is used with parameters of type "combo" and "string".
+/// operator<<() inits options and assigns idx in the correct printing order
 
-string get_option_value_string(const string& optionName) {
+void Option::operator<<(const Option& o) {
 
-   return get_option_value<string>(optionName);
+  static size_t insert_order = 0;
+
+  *this = o;
+  idx = insert_order++;
 }
 
 
-/// set_option_value() inserts a new value for a UCI parameter. Note that
-/// the function does not check that the new value is legal for the given
-/// parameter: This is assumed to be the responsibility of the GUI.
+/// operator=() updates currentValue and triggers on_change() action. It's up to
+/// the GUI to check for option's limits, but we could receive the new value from
+/// the user by console window, so let's check the bounds anyway.
 
-void set_option_value(const string& name, const string& value) {
+Option& Option::operator=(const string& v) {
 
-  // UCI protocol uses "true" and "false" instead of "1" and "0", so convert
-  // value according to standard C++ convention before to store it.
-  string v(value);
-  if (v == "true")
-      v = "1";
-  else if (v == "false")
-      v = "0";
+  assert(!type.empty());
 
-  if (options.find(name) == options.end())
-  {
-      std::cout << "No such option: " << name << std::endl;
-      return;
-  }
+  if (   (type != "button" && v.empty())
+      || (type == "check" && v != "true" && v != "false")
+      || (type == "spin" && (stoi(v) < min || stoi(v) > max)))
+      return *this;
 
-  // Normally it's up to the GUI to check for option's limits,
-  // but we could receive the new value directly from the user
-  // by teminal window. So let's check the bounds anyway.
-  Option& opt = options[name];
+  if (type != "button")
+      currentValue = v;
 
-  if (opt.type == CHECK && v != "0" && v != "1")
-      return;
+  if (on_change)
+      on_change(*this);
 
-  else if (opt.type == SPIN)
-  {
-      int val = atoi(v.c_str());
-      if (val < opt.minValue || val > opt.maxValue)
-          return;
-  }
-
-  opt.currentValue = v;
+  return *this;
 }
 
-
-/// push_button() is used to tell the engine that a UCI parameter of type
-/// "button" has been selected:
-
-void push_button(const string& buttonName) {
-
-  set_option_value(buttonName, "true");
-}
-
-
-/// button_was_pressed() tests whether a UCI parameter of type "button" has
-/// been selected since the last time the function was called, in this case
-/// it also resets the button.
-
-bool button_was_pressed(const string& buttonName) {
-
-  if (!get_option_value<bool>(buttonName))
-      return false;
-
-  set_option_value(buttonName, "false");
-  return true;
-}
-
-
-namespace {
-
-  // Define constructors of Option class.
-
-  Option::Option() {} // To allow insertion in a std::map
-
-  Option::Option(const char* def, OptionType t)
-  : defaultValue(def), currentValue(def), type(t), idx(options.size()), minValue(0), maxValue(0) {}
-
-  Option::Option(bool def, OptionType t)
-  : defaultValue(stringify(def)), currentValue(stringify(def)), type(t), idx(options.size()), minValue(0), maxValue(0) {}
-
-  Option::Option(int def, int minv, int maxv)
-  : defaultValue(stringify(def)), currentValue(stringify(def)), type(SPIN), idx(options.size()), minValue(minv), maxValue(maxv) {}
-
-}
+} // namespace UCI

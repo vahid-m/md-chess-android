@@ -2,16 +2,15 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := jni
-LOCAL_SRC_FILES := jni.cpp
-
-LOCAL_CFLAGS    := 	-DTARGET_OS=android -D__ANDROID__ \
-	-isystem $(SYSROOT)/usr/include
-
-APP_PLATFORM := android-14
-
-LOCAL_STATIC_LIBRARIES := stockfish
+LOCAL_MODULE    := nativeutil
+LOCAL_SRC_FILES := nativeutil.cpp
 
 include $(BUILD_SHARED_LIBRARY)
 
-include $(LOCAL_PATH)/stockfish/Android.mk
+ZPATH := $(LOCAL_PATH)
+
+include $(ZPATH)/stockfish/Android.mk
+
+include $(ZPATH)/gtb/Android.mk
+
+include $(ZPATH)/rtb/Android.mk
