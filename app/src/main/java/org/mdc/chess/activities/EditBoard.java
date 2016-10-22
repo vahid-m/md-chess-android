@@ -90,7 +90,7 @@ public class EditBoard extends Activity {
     private Typeface figNotation;
 
     private DrawerLayout drawerLayout;
-    private ListView leftDrawer;
+    private ListView mainDrawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -253,7 +253,7 @@ public class EditBoard extends Activity {
      */
     private void initDrawers() {
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        leftDrawer = (ListView) findViewById(R.id.left_drawer);
+        mainDrawer = (ListView) findViewById(R.id.main_drawer);
 
         class DrawerItem {
             int id;
@@ -292,15 +292,15 @@ public class EditBoard extends Activity {
         if (MaterialChess.hasFenProvider(getPackageManager()))
             leftItems.add(new DrawerItem(GET_FEN, R.string.get_fen));
 
-        leftDrawer.setAdapter(new ArrayAdapter<DrawerItem>(this,
+        mainDrawer.setAdapter(new ArrayAdapter<DrawerItem>(this,
                 R.layout.drawer_list_item,
                 leftItems.toArray(new DrawerItem[0])));
-        leftDrawer.setOnItemClickListener(new OnItemClickListener() {
+        mainDrawer.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
                 drawerLayout.closeDrawer(Gravity.LEFT);
-                leftDrawer.clearChoices();
+                mainDrawer.clearChoices();
                 DrawerItem di = leftItems.get(position);
                 switch (di.id) {
                     case SIDE_TO_MOVE:

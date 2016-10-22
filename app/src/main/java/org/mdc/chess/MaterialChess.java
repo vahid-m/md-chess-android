@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -68,12 +67,11 @@ import tourguide.tourguide.TourGuide;
 
 import com.kalab.chess.enginesupport.ChessEngine;
 import com.kalab.chess.enginesupport.ChessEngineResolver;
-import com.larvalabs.svgandroid.SVG;
-import com.larvalabs.svgandroid.SVGParser;
+//import com.larvalabs.svgandroid.SVG;
+//import com.larvalabs.svgandroid.SVGParser;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
@@ -95,11 +93,10 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
-import android.content.res.Resources;
+//import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.drawable.StateListDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -108,8 +105,10 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -123,14 +122,14 @@ import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.LeadingMarginSpan;
 import android.text.style.StyleSpan;
-import android.util.TypedValue;
+import android.util.Log;
+//import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.ViewConfiguration;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.View.OnLongClickListener;
@@ -141,8 +140,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -157,8 +154,10 @@ public class MaterialChess extends AppCompatActivity
     // FIXME!!! Implement bookmark mechanism for positions in pgn files
     // FIXME!!! Add support for "Chess Leipzig" font
 
-    // FIXME!!! Computer clock should stop if phone turned off (computer stops thinking if unplugged)
-    // FIXME!!! Add support for "no time control" and "hour-glass time control" as defined by the PGN standard
+    // FIXME!!! Computer clock should stop if phone turned off (computer stops thinking if
+    // unplugged)
+    // FIXME!!! Add support for "no time control" and "hour-glass time control" as defined by the
+    // PGN standard
 
     // FIXME!!! Add chess960 support
     // FIXME!!! Implement "hint" feature
@@ -194,6 +193,8 @@ public class MaterialChess extends AppCompatActivity
     private boolean autoSwapSides;
     private boolean playerNameFlip;
     private boolean discardVariations;
+    // --Commented out by Inspection (21/10/2016 11:33 PM):private ActionBarDrawerToggle
+    // mDrawerToggle;
 
     private TextView status;
     private ScrollView moveListScroll;
@@ -201,17 +202,18 @@ public class MaterialChess extends AppCompatActivity
     private View thinkingScroll;
     private TextView thinking;
     private View buttons;
-    private ImageButton custom1Button, custom2Button, custom3Button;
-    private ImageButton modeButton, undoButton, redoButton;
-    private ButtonActions custom1ButtonActions, custom2ButtonActions, custom3ButtonActions;
+    //private ImageButton custom1Button, custom2Button, custom3Button;
+    //private ImageButton modeButton, undoButton, redoButton;
+    //private ButtonActions custom1ButtonActions, custom2ButtonActions, custom3ButtonActions;
     private TextView whiteTitleText, blackTitleText, engineTitleText;
-    private View firstTitleLine, secondTitleLine;
+    private View secondTitleLine;
     private TextView whiteFigText, blackFigText, summaryTitleText;
     private static Dialog moveListMenuDlg;
 
     private DrawerLayout drawerLayout;
-    private ListView leftDrawer;
-    private ListView rightDrawer;
+    // --Commented out by Inspection (22/10/2016 12:08 AM):private ActionBarDrawerToggle actionBarDrawerToggle;
+    private ListView maintDrawer;
+    //private ListView rightDrawer;
 
     private SharedPreferences settings;
 
@@ -224,13 +226,12 @@ public class MaterialChess extends AppCompatActivity
     private boolean vibrateEnabled;
     private boolean animateMoves;
     private boolean autoScrollTitle;
-    private boolean showMaterialDiff;
     private boolean showVariationLine;
 
     private int autoMoveDelay; // Delay in auto forward/backward mode
 
-    private static enum AutoMode {
-        OFF, FORWARD, BACKWARD;
+    private enum AutoMode {
+        OFF, FORWARD, BACKWARD
     }
 
     private AutoMode autoMode = AutoMode.OFF;
@@ -238,7 +239,7 @@ public class MaterialChess extends AppCompatActivity
     /**
      * State of requested permissions.
      */
-    private static enum PermissionState {
+    private enum PermissionState {
         UNKNOWN,
         REQUESTED,
         GRANTED,
@@ -256,16 +257,14 @@ public class MaterialChess extends AppCompatActivity
     private final static String engineDir = "MaterialChess/uci";
     private final static String gtbDefaultDir = "MaterialChess/gtb";
     private final static String rtbDefaultDir = "MaterialChess/rtb";
-    private BookOptions bookOptions = new BookOptions();
-    private PGNOptions pgnOptions = new PGNOptions();
-    private EngineOptions engineOptions = new EngineOptions();
+    private final BookOptions bookOptions = new BookOptions();
+    private final PGNOptions pgnOptions = new PGNOptions();
+    private final EngineOptions engineOptions = new EngineOptions();
 
     private long lastVisibleMillis; // Time when GUI became invisible. 0 if currently visible.
     private long lastComputationMillis; // Time when engine last showed that it was computing.
 
     private PgnScreenText gameTextListener;
-
-    private boolean useWakeLock = false;
 
     private Typeface figNotation;
     private Typeface defaultThinkingListTypeFace;
@@ -274,301 +273,303 @@ public class MaterialChess extends AppCompatActivity
     private TourGuide tourGuide;
 
 
-    /**
-     * Defines all configurable button actions.
-     */
-    private ActionFactory actionFactory = new ActionFactory() {
-        private HashMap<String, UIAction> actions;
-
-        private void addAction(UIAction a) {
-            actions.put(a.getId(), a);
-        }
-
-        {
-            actions = new HashMap<String, UIAction>();
-            addAction(new UIAction() {
-                public String getId() {
-                    return "flipboard";
-                }
-
-                public int getName() {
-                    return R.string.flip_board;
-                }
-
-                public int getIcon() {
-                    return R.raw.flip;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    boardFlipped = !cb.flipped;
-                    setBooleanPref("boardFlipped", boardFlipped);
-                    cb.setFlipped(boardFlipped);
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "showThinking";
-                }
-
-                public int getName() {
-                    return R.string.toggle_show_thinking;
-                }
-
-                public int getIcon() {
-                    return R.raw.thinking;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    mShowThinking = toggleBooleanPref("showThinking");
-                    updateThinkingInfo();
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "bookHints";
-                }
-
-                public int getName() {
-                    return R.string.toggle_book_hints;
-                }
-
-                public int getIcon() {
-                    return R.raw.book;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    mShowBookHints = toggleBooleanPref("bookHints");
-                    updateThinkingInfo();
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "viewVariations";
-                }
-
-                public int getName() {
-                    return R.string.toggle_pgn_variations;
-                }
-
-                public int getIcon() {
-                    return R.raw.variation;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    pgnOptions.view.variations = toggleBooleanPref("viewVariations");
-                    gameTextListener.clear();
-                    ctrl.prefsChanged(false);
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "viewComments";
-                }
-
-                public int getName() {
-                    return R.string.toggle_pgn_comments;
-                }
-
-                public int getIcon() {
-                    return R.raw.comment;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    pgnOptions.view.comments = toggleBooleanPref("viewComments");
-                    gameTextListener.clear();
-                    ctrl.prefsChanged(false);
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "viewHeaders";
-                }
-
-                public int getName() {
-                    return R.string.toggle_pgn_headers;
-                }
-
-                public int getIcon() {
-                    return R.raw.header;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    pgnOptions.view.headers = toggleBooleanPref("viewHeaders");
-                    gameTextListener.clear();
-                    ctrl.prefsChanged(false);
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "toggleAnalysis";
-                }
-
-                public int getName() {
-                    return R.string.toggle_analysis;
-                }
-
-                public int getIcon() {
-                    return R.raw.analyze;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                private int oldGameModeType = GameMode.EDIT_GAME;
-
-                public void run() {
-                    int gameModeType;
-                    if (ctrl.analysisMode()) {
-                        gameModeType = oldGameModeType;
-                    } else {
-                        oldGameModeType = ctrl.getGameMode().getModeNr();
-                        gameModeType = GameMode.ANALYSIS;
-                    }
-                    newGameMode(gameModeType);
-                    setBoardFlip(true);
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "largeButtons";
-                }
-
-                public int getName() {
-                    return R.string.toggle_large_buttons;
-                }
-
-                public int getIcon() {
-                    return R.raw.magnify;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    pgnOptions.view.headers = toggleBooleanPref("largeButtons");
-                    updateButtons();
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "blindMode";
-                }
-
-                public int getName() {
-                    return R.string.blind_mode;
-                }
-
-                public int getIcon() {
-                    return R.raw.blind;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    boolean blindMode = !cb.blindMode;
-                    setBooleanPref("blindMode", blindMode);
-                    cb.setBlindMode(blindMode);
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "loadLastFile";
-                }
-
-                public int getName() {
-                    return R.string.load_last_file;
-                }
-
-                public int getIcon() {
-                    return R.raw.open_last_file;
-                }
-
-                public boolean enabled() {
-                    return currFileType() != FT_NONE && storageAvailable();
-                }
-
-                public void run() {
-                    loadLastFile();
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "selectEngine";
-                }
-
-                public int getName() {
-                    return R.string.select_engine;
-                }
-
-                public int getIcon() {
-                    return R.raw.engine;
-                }
-
-                public boolean enabled() {
-                    return true;
-                }
-
-                public void run() {
-                    removeDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
-                    showDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
-                }
-            });
-            addAction(new UIAction() {
-                public String getId() {
-                    return "engineOptions";
-                }
-
-                public int getName() {
-                    return R.string.engine_options;
-                }
-
-                public int getIcon() {
-                    return R.raw.custom;
-                }
-
-                public boolean enabled() {
-                    return canSetEngineOptions();
-                }
-
-                public void run() {
-                    setEngineOptions();
-                }
-            });
-        }
-
-        @Override
-        public UIAction getAction(String actionId) {
-            return actions.get(actionId);
-        }
-    };
+// --Commented out by Inspection START (21/10/2016 11:33 PM):
+//    /**
+//     * Defines all configurable button actions.
+//     */
+//    private ActionFactory actionFactory = new ActionFactory() {
+//        private HashMap<String, UIAction> actions;
+//
+//        private void addAction(UIAction a) {
+//            actions.put(a.getId(), a);
+//        }
+//
+//        {
+//            actions = new HashMap<String, UIAction>();
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "flipboard";
+//                }
+//
+//                public int getName() {
+//                    return R.string.flip_board;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.flip;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    boardFlipped = !cb.flipped;
+//                    setBooleanPref("boardFlipped", boardFlipped);
+//                    cb.setFlipped(boardFlipped);
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "showThinking";
+//                }
+//
+//                public int getName() {
+//                    return R.string.toggle_show_thinking;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.thinking;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    mShowThinking = toggleBooleanPref("showThinking");
+//                    updateThinkingInfo();
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "bookHints";
+//                }
+//
+//                public int getName() {
+//                    return R.string.toggle_book_hints;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.book;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    mShowBookHints = toggleBooleanPref("bookHints");
+//                    updateThinkingInfo();
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "viewVariations";
+//                }
+//
+//                public int getName() {
+//                    return R.string.toggle_pgn_variations;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.variation;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    pgnOptions.view.variations = toggleBooleanPref("viewVariations");
+//                    gameTextListener.clear();
+//                    ctrl.prefsChanged(false);
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "viewComments";
+//                }
+//
+//                public int getName() {
+//                    return R.string.toggle_pgn_comments;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.comment;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    pgnOptions.view.comments = toggleBooleanPref("viewComments");
+//                    gameTextListener.clear();
+//                    ctrl.prefsChanged(false);
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "viewHeaders";
+//                }
+//
+//                public int getName() {
+//                    return R.string.toggle_pgn_headers;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.header;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    pgnOptions.view.headers = toggleBooleanPref("viewHeaders");
+//                    gameTextListener.clear();
+//                    ctrl.prefsChanged(false);
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "toggleAnalysis";
+//                }
+//
+//                public int getName() {
+//                    return R.string.toggle_analysis;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.analyze;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                private int oldGameModeType = GameMode.EDIT_GAME;
+//
+//                public void run() {
+//                    int gameModeType;
+//                    if (ctrl.analysisMode()) {
+//                        gameModeType = oldGameModeType;
+//                    } else {
+//                        oldGameModeType = ctrl.getGameMode().getModeNr();
+//                        gameModeType = GameMode.ANALYSIS;
+//                    }
+//                    newGameMode(gameModeType);
+//                    setBoardFlip(true);
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "largeButtons";
+//                }
+//
+//                public int getName() {
+//                    return R.string.toggle_large_buttons;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.magnify;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    pgnOptions.view.headers = toggleBooleanPref("largeButtons");
+//                    updateButtons();
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "blindMode";
+//                }
+//
+//                public int getName() {
+//                    return R.string.blind_mode;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.blind;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    boolean blindMode = !cb.blindMode;
+//                    setBooleanPref("blindMode", blindMode);
+//                    cb.setBlindMode(blindMode);
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "loadLastFile";
+//                }
+//
+//                public int getName() {
+//                    return R.string.load_last_file;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.open_last_file;
+//                }
+//
+//                public boolean enabled() {
+//                    return currFileType() != FT_NONE && storageAvailable();
+//                }
+//
+//                public void run() {
+//                    loadLastFile();
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "selectEngine";
+//                }
+//
+//                public int getName() {
+//                    return R.string.select_engine;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.engine;
+//                }
+//
+//                public boolean enabled() {
+//                    return true;
+//                }
+//
+//                public void run() {
+//                    removeDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
+//                    showDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
+//                }
+//            });
+//            addAction(new UIAction() {
+//                public String getId() {
+//                    return "engineOptions";
+//                }
+//
+//                public int getName() {
+//                    return R.string.engine_options;
+//                }
+//
+//                public int getIcon() {
+//                    return R.raw.custom;
+//                }
+//
+//                public boolean enabled() {
+//                    return canSetEngineOptions();
+//                }
+//
+//                public void run() {
+//                    setEngineOptions();
+//                }
+//            });
+//        }
+//
+//        @Override
+//        public UIAction getAction(String actionId) {
+//            return actions.get(actionId);
+//        }
+//    };
+// --Commented out by Inspection STOP (21/10/2016 11:33 PM)
 
     /**
      * Called when the activity is first created.
@@ -582,6 +583,7 @@ public class MaterialChess extends AppCompatActivity
         String intentFilename = pair.second;
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         createDirectories();
 
@@ -590,12 +592,12 @@ public class MaterialChess extends AppCompatActivity
 
         setWakeLock(false);
 
-        custom1ButtonActions = new ButtonActions("custom1", CUSTOM1_BUTTON_DIALOG,
+        /*custom1ButtonActions = new ButtonActions("custom1", CUSTOM1_BUTTON_DIALOG,
                 R.string.select_action);
         custom2ButtonActions = new ButtonActions("custom2", CUSTOM2_BUTTON_DIALOG,
                 R.string.select_action);
         custom3ButtonActions = new ButtonActions("custom3", CUSTOM3_BUTTON_DIALOG,
-                R.string.select_action);
+                R.string.select_action);*/
 
         figNotation = Typeface.createFromAsset(getAssets(), "fonts/KlinicSlabBold.otf");
         setPieceNames(PGNOptions.PT_LOCAL);
@@ -604,8 +606,9 @@ public class MaterialChess extends AppCompatActivity
         gameTextListener = new PgnScreenText(this, pgnOptions);
         moveList.setOnLinkClickListener(gameTextListener);
         moveList.setBackgroundColor(Color.WHITE);
-        if (ctrl != null)
+        if (ctrl != null) {
             ctrl.shutdownEngine();
+        }
         ctrl = new DroidChessController(this, gameTextListener, pgnOptions);
         egtbForceReload = true;
         readPrefs();
@@ -622,11 +625,13 @@ public class MaterialChess extends AppCompatActivity
             } else {
                 String dataStr = settings.getString("gameState", null);
                 version = settings.getInt("gameStateVersion", version);
-                if (dataStr != null)
+                if (dataStr != null) {
                     data = strToByteArr(dataStr);
+                }
             }
-            if (data != null)
+            if (data != null) {
                 ctrl.fromByteArray(data, version);
+            }
         }
         ctrl.setGuiPaused(true);
         ctrl.setGuiPaused(false);
@@ -640,37 +645,37 @@ public class MaterialChess extends AppCompatActivity
                 try {
                     TextIO.readFEN(intentPgnOrFen);
                 } catch (ChessParseError e2) {
-                    if (e2.pos != null)
+                    if (e2.pos != null) {
                         startEditBoard(intentPgnOrFen);
+                    }
                 }
             }
         } else if (intentFilename != null) {
             if (intentFilename.toLowerCase(Locale.US).endsWith(".fen") ||
-                    intentFilename.toLowerCase(Locale.US).endsWith(".epd"))
+                    intentFilename.toLowerCase(Locale.US).endsWith(".epd")) {
                 loadFENFromFile(intentFilename);
-            else
+            } else {
                 loadPGNFromFile(intentFilename);
+            }
         }
-
-        setSupportActionBar(toolbar);
-
 
 
         startTourGuide();
     }
 
     private void startTourGuide() {
-        if (!guideShowOnStart)
+        if (!guideShowOnStart) {
             return;
+        }
 
         tourGuide = TourGuide.init(this);
-        ArrayList<TourGuide> guides = new ArrayList<TourGuide>();
+        ArrayList<TourGuide> guides = new ArrayList<>();
 
         TourGuide tg = TourGuide.init(this);
         tg.setToolTip(new ToolTip()
                 .setTitle(getString(R.string.tour_leftMenu_title))
                 .setDescription(getString(R.string.tour_leftMenu_desc))
-                .setGravity(Gravity.BOTTOM | Gravity.RIGHT));
+                .setGravity(Gravity.BOTTOM | Gravity.END));
         tg.playLater(whiteTitleText);
         guides.add(tg);
 
@@ -678,12 +683,13 @@ public class MaterialChess extends AppCompatActivity
         tg.setToolTip(new ToolTip()
                 .setTitle(getString(R.string.tour_rightMenu_title))
                 .setDescription(getString(R.string.tour_rightMenu_desc))
-                .setGravity(Gravity.BOTTOM | Gravity.LEFT));
+                .setGravity(Gravity.BOTTOM | Gravity.START));
         tg.playLater(blackTitleText);
         guides.add(tg);
 
         tg = TourGuide.init(this);
-        int gravity = !landScapeView() ? Gravity.BOTTOM : leftHandedView() ? Gravity.LEFT : Gravity.RIGHT;
+        int gravity =
+                !landScapeView() ? Gravity.BOTTOM : leftHandedView() ? Gravity.START : Gravity.END;
         tg.setToolTip(new ToolTip()
                 .setTitle(getString(R.string.tour_chessBoard_title))
                 .setDescription(getString(R.string.tour_chessBoard_desc))
@@ -701,7 +707,7 @@ public class MaterialChess extends AppCompatActivity
         guides.add(tg);
 
         tg = TourGuide.init(this);
-        gravity = !landScapeView() ? Gravity.TOP : leftHandedView() ? Gravity.RIGHT : Gravity.LEFT;
+        gravity = !landScapeView() ? Gravity.TOP : leftHandedView() ? Gravity.END : Gravity.START;
         tg.setToolTip(new ToolTip()
                 .setTitle(getString(R.string.tour_moveList_title))
                 .setDescription(getString(R.string.tour_moveList_desc))
@@ -724,7 +730,7 @@ public class MaterialChess extends AppCompatActivity
                         guideShowOnStart = false;
                         Editor editor = settings.edit();
                         editor.putBoolean("guideShowOnStart", false);
-                        editor.commit();
+                        editor.apply();
                         tourGuide.next();
                         tourGuide = null;
                     }
@@ -753,7 +759,7 @@ public class MaterialChess extends AppCompatActivity
             Piece.NOTATION_QUEEN + " " +
             Piece.NOTATION_KING;
 
-    private final void setPieceNames(int pieceType) {
+    private void setPieceNames(int pieceType) {
         if (pieceType == PGNOptions.PT_FIGURINE) {
             TextIO.setPieceNames(figurinePieceNames);
         } else {
@@ -764,7 +770,7 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Create directory structure on SD card.
      */
-    private final void createDirectories() {
+    private void createDirectories() {
         if (storagePermission == PermissionState.UNKNOWN) {
             String extStorage = Manifest.permission.WRITE_EXTERNAL_STORAGE;
             if (ContextCompat.checkSelfPermission(this, extStorage) ==
@@ -775,27 +781,45 @@ public class MaterialChess extends AppCompatActivity
                 storagePermission = PermissionState.REQUESTED;
             }
         }
-        if (storagePermission != PermissionState.GRANTED)
+        if (storagePermission != PermissionState.GRANTED) {
             return;
+        }
 
         File extDir = Environment.getExternalStorageDirectory();
         String sep = File.separator;
-        new File(extDir + sep + bookDir).mkdirs();
-        new File(extDir + sep + pgnDir).mkdirs();
-        new File(extDir + sep + fenDir).mkdirs();
-        new File(extDir + sep + engineDir).mkdirs();
-        new File(extDir + sep + engineDir + sep + EngineUtil.openExchangeDir).mkdirs();
-        new File(extDir + sep + gtbDefaultDir).mkdirs();
-        new File(extDir + sep + rtbDefaultDir).mkdirs();
+        boolean result;
+
+        result = new File(extDir + sep + bookDir).mkdirs();
+        Log.d("Result" + extDir + sep + bookDir, "" + result);
+
+        result = new File(extDir + sep + pgnDir).mkdirs();
+        Log.d("Result" + extDir + sep + pgnDir, "" + result);
+
+        result = new File(extDir + sep + fenDir).mkdirs();
+        Log.d("Result" + extDir + sep + fenDir, "" + result);
+
+        result = new File(extDir + sep + engineDir).mkdirs();
+        Log.d("Result" + extDir + sep + engineDir, "" + result);
+
+        result = new File(extDir + sep + engineDir + sep + EngineUtil.openExchangeDir).mkdirs();
+        Log.d("Result" + extDir + sep + engineDir + sep + EngineUtil.openExchangeDir, "" + result);
+
+        result = new File(extDir + sep + gtbDefaultDir).mkdirs();
+        Log.d("Result" + extDir + sep + gtbDefaultDir, "" + result);
+
+        result = new File(extDir + sep + rtbDefaultDir).mkdirs();
+        Log.d("Result" + extDir + sep + rtbDefaultDir, "" + result);
     }
 
     @Override
-    public void onRequestPermissionsResult(int code, String[] permissions, int[] results) {
+    public void onRequestPermissionsResult(int code, @NonNull String[] permissions,
+            @NonNull int[] results) {
         if (storagePermission == PermissionState.REQUESTED) {
-            if ((results.length > 0) && (results[0] == PackageManager.PERMISSION_GRANTED))
+            if ((results.length > 0) && (results[0] == PackageManager.PERMISSION_GRANTED)) {
                 storagePermission = PermissionState.GRANTED;
-            else
+            } else {
                 storagePermission = PermissionState.DENIED;
+            }
         }
         createDirectories();
     }
@@ -812,7 +836,7 @@ public class MaterialChess extends AppCompatActivity
      *
      * @return Pair of PGN/FEN data and filename.
      */
-    private final Pair<String, String> getPgnOrFenIntent() {
+    private Pair<String, String> getPgnOrFenIntent() {
         String pgnOrFen = null;
         String filename = null;
         try {
@@ -826,8 +850,9 @@ public class MaterialChess extends AppCompatActivity
                         data = (Uri) strm;
                         if ("file".equals(data.getScheme())) {
                             filename = data.getEncodedPath();
-                            if (filename != null)
+                            if (filename != null) {
                                 filename = Uri.decode(filename);
+                            }
                         }
                     }
                 }
@@ -836,14 +861,16 @@ public class MaterialChess extends AppCompatActivity
                 if ((Intent.ACTION_SEND.equals(intent.getAction()) ||
                         Intent.ACTION_VIEW.equals(intent.getAction())) &&
                         ("application/x-chess-pgn".equals(intent.getType()) ||
-                                "application/x-chess-fen".equals(intent.getType())))
+                                "application/x-chess-fen".equals(intent.getType()))) {
                     pgnOrFen = intent.getStringExtra(Intent.EXTRA_TEXT);
+                }
             } else {
                 String scheme = intent.getScheme();
                 if ("file".equals(scheme)) {
                     filename = data.getEncodedPath();
-                    if (filename != null)
+                    if (filename != null) {
                         filename = Uri.decode(filename);
+                    }
                 }
                 if ((filename == null) &&
                         ("content".equals(scheme) ||
@@ -853,9 +880,10 @@ public class MaterialChess extends AppCompatActivity
                     StringBuilder sb = new StringBuilder();
                     while (true) {
                         byte[] buffer = new byte[16384];
-                        int len = in.read(buffer);
-                        if (len <= 0)
+                        int len = in != null ? in.read(buffer) : 0;
+                        if (len <= 0) {
                             break;
+                        }
                         sb.append(new String(buffer, 0, len));
                     }
                     pgnOrFen = sb.toString();
@@ -865,12 +893,13 @@ public class MaterialChess extends AppCompatActivity
             Toast.makeText(getApplicationContext(), R.string.failed_to_read_pgn_data,
                     Toast.LENGTH_SHORT).show();
         }
-        return new Pair<String, String>(pgnOrFen, filename);
+        return new Pair<>(pgnOrFen, filename);
     }
 
-    private final byte[] strToByteArr(String str) {
-        if (str == null)
+    private byte[] strToByteArr(String str) {
+        if (str == null) {
             return null;
+        }
         int nBytes = str.length() / 2;
         byte[] ret = new byte[nBytes];
         for (int i = 0; i < nBytes; i++) {
@@ -881,13 +910,14 @@ public class MaterialChess extends AppCompatActivity
         return ret;
     }
 
-    private final String byteArrToString(byte[] data) {
-        if (data == null)
+    private String byteArrToString(byte[] data) {
+        if (data == null) {
             return null;
+        }
         StringBuilder ret = new StringBuilder(32768);
-        int nBytes = data.length;
-        for (int i = 0; i < nBytes; i++) {
-            int b = data[i];
+        //int nBytes = data.length;
+        for (byte aData : data) {
+            int b = aData;
             if (b < 0) b += 256;
             char c1 = (char) ('A' + (b / 16));
             char c2 = (char) ('A' + (b & 15));
@@ -900,13 +930,14 @@ public class MaterialChess extends AppCompatActivity
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        //actionBarDrawerToggle.onConfigurationChanged(newConfig);
         reInitUI();
     }
 
     /**
      * Re-initialize UI when layout should change because of rotation or handedness change.
      */
-    private final void reInitUI() {
+    private void reInitUI() {
         ChessBoardPlay oldCB = cb;
         String statusStr = status.getText().toString();
         initUI();
@@ -938,36 +969,37 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Return true if the current orientation is landscape.
      */
-    private final boolean landScapeView() {
+    private boolean landScapeView() {
         return getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
     /**
      * Return true if left-handed layout should be used.
      */
-    private final boolean leftHandedView() {
+    private boolean leftHandedView() {
         return settings.getBoolean("leftHanded", false) && landScapeView();
     }
 
     /**
      * Re-read preferences settings.
      */
-    private final void handlePrefsChange() {
-        if (leftHanded != leftHandedView())
+    private void handlePrefsChange() {
+        if (leftHanded != leftHandedView()) {
             reInitUI();
-        else
+        } else {
             readPrefs();
+        }
         maybeAutoModeOff(gameMode);
         ctrl.setGameMode(gameMode);
     }
 
-    private final void initUI() {
+    private void initUI() {
         leftHanded = leftHandedView();
         setContentView(leftHanded ? R.layout.main_left_handed : R.layout.main);
-        overrideViewAttribs();
+        //overrideViewAttribs();
 
         // title lines need to be regenerated every time due to layout changes (rotations)
-        firstTitleLine = findViewById(R.id.first_title_line);
+        View firstTitleLine = findViewById(R.id.first_title_line);
         secondTitleLine = findViewById(R.id.second_title_line);
         whiteTitleText = (TextView) findViewById(R.id.white_clock);
         whiteTitleText.setSelected(true);
@@ -987,7 +1019,7 @@ public class MaterialChess extends AppCompatActivity
         status = (TextView) findViewById(R.id.status);
         moveListScroll = (ScrollView) findViewById(R.id.scrollView);
         moveList = (MoveListView) findViewById(R.id.moveList);
-        thinkingScroll = (View) findViewById(R.id.scrollViewBot);
+        thinkingScroll = findViewById(R.id.scrollViewBot);
         thinking = (TextView) findViewById(R.id.thinking);
         defaultThinkingListTypeFace = thinking.getTypeface();
         status.setFocusable(false);
@@ -1003,7 +1035,7 @@ public class MaterialChess extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 boolean left = touchX <= v.getWidth() / 2.0;
-                drawerLayout.openDrawer(left ? Gravity.LEFT : Gravity.RIGHT);
+                drawerLayout.openDrawer(left ? GravityCompat.START : GravityCompat.END);
                 touchX = -1;
             }
 
@@ -1033,8 +1065,8 @@ public class MaterialChess extends AppCompatActivity
             private float scrollY = 0;
             private float prevX = 0;
             private float prevY = 0;
-            private Handler handler = new Handler();
-            private Runnable runnable = new Runnable() {
+            private final Handler handler = new Handler();
+            private final Runnable runnable = new Runnable() {
                 public void run() {
                     pending = false;
                     handler.removeCallbacks(runnable);
@@ -1079,8 +1111,9 @@ public class MaterialChess extends AppCompatActivity
                         if (pending) {
                             pending = false;
                             handler.removeCallbacks(runnable);
-                            if (!pendingClick)
+                            if (!pendingClick) {
                                 break;
+                            }
                             int sq = cb.eventToSquare(event);
                             if (sq == sq0) {
                                 if (ctrl.humansTurn()) {
@@ -1129,8 +1162,9 @@ public class MaterialChess extends AppCompatActivity
                         if (nRedo + nUndo > 1) {
                             boolean analysis = gameMode.analysisMode();
                             boolean human = gameMode.playerWhite() || gameMode.playerBlack();
-                            if (analysis || !human)
+                            if (analysis || !human) {
                                 ctrl.setGameMode(new GameMode(GameMode.TWO_PLAYERS));
+                            }
                         }
                         for (int i = 0; i < nRedo; i++) ctrl.redoMove();
                         for (int i = 0; i < nUndo; i++) ctrl.undoMove();
@@ -1190,8 +1224,8 @@ public class MaterialChess extends AppCompatActivity
             }
         });
 
-        buttons = (View) findViewById(R.id.buttons);
-        custom1Button = (ImageButton) findViewById(R.id.custom1Button);
+        buttons = findViewById(R.id.buttons);
+        /*custom1Button = (ImageButton) findViewById(R.id.custom1Button);
         custom1ButtonActions.setImageButton(custom1Button, this);
         custom2Button = (ImageButton) findViewById(R.id.custom2Button);
         custom2ButtonActions.setImageButton(custom2Button, this);
@@ -1243,7 +1277,7 @@ public class MaterialChess extends AppCompatActivity
                 showDialog(GO_FORWARD_MENU_DIALOG);
                 return true;
             }
-        });
+        });*/
     }
 
     @Override
@@ -1259,8 +1293,9 @@ public class MaterialChess extends AppCompatActivity
     @Override
     protected void onResume() {
         lastVisibleMillis = 0;
-        if (ctrl != null)
+        if (ctrl != null) {
             ctrl.setGuiPaused(false);
+        }
         notificationActive = true;
         updateNotification();
         super.onResume();
@@ -1276,7 +1311,7 @@ public class MaterialChess extends AppCompatActivity
             String dataStr = byteArrToString(data);
             editor.putString("gameState", dataStr);
             editor.putInt("gameStateVersion", 3);
-            editor.commit();
+            editor.apply();
         }
         lastVisibleMillis = System.currentTimeMillis();
         updateNotification();
@@ -1286,19 +1321,19 @@ public class MaterialChess extends AppCompatActivity
     @Override
     protected void onDestroy() {
         setAutoMode(AutoMode.OFF);
-        if (ctrl != null)
+        if (ctrl != null) {
             ctrl.shutdownEngine();
+        }
         setNotification(false);
         super.onDestroy();
     }
 
-    private final int getIntSetting(String settingName, int defaultValue) {
+    private int getIntSetting(String settingName, int defaultValue) {
         String tmp = settings.getString(settingName, String.format(Locale.US, "%d", defaultValue));
-        int value = Integer.parseInt(tmp);
-        return value;
+        return Integer.parseInt(tmp);
     }
 
-    private final void readPrefs() {
+    private void readPrefs() {
         int modeNr = getIntSetting("gameMode", 1);
         gameMode = new GameMode(modeNr);
         String oldPlayerName = playerName;
@@ -1327,8 +1362,9 @@ public class MaterialChess extends AppCompatActivity
         setEngineStrength(engine, strength);
 
         mPonderMode = settings.getBoolean("ponderMode", false);
-        if (!mPonderMode)
+        if (!mPonderMode) {
             ctrl.stopPonder();
+        }
 
         timeControl = getIntSetting("timeControl", 120000);
         movesPerSession = getIntSetting("movesPerSession", 60);
@@ -1340,14 +1376,15 @@ public class MaterialChess extends AppCompatActivity
         invertScrollDirection = settings.getBoolean("invertScrollDirection", false);
         discardVariations = settings.getBoolean("discardVariations", false);
         Util.setFullScreenMode(this, settings);
-        useWakeLock = settings.getBoolean("wakeLock", false);
+        boolean useWakeLock = settings.getBoolean("wakeLock", false);
         setWakeLock(useWakeLock);
 
         int fontSize = getIntSetting("fontSize", 12);
         int statusFontSize = fontSize;
         Configuration config = getResources().getConfiguration();
-        if (config.orientation == Configuration.ORIENTATION_PORTRAIT)
+        if (config.orientation == Configuration.ORIENTATION_PORTRAIT) {
             statusFontSize = Math.min(statusFontSize, 16);
+        }
         status.setTextSize(statusFontSize);
         soundEnabled = settings.getBoolean("soundEnabled", false);
         vibrateEnabled = settings.getBoolean("vibrateEnabled", false);
@@ -1355,10 +1392,10 @@ public class MaterialChess extends AppCompatActivity
         autoScrollTitle = settings.getBoolean("autoScrollTitle", true);
         setTitleScrolling();
 
-        custom1ButtonActions.readPrefs(settings, actionFactory);
+        /*custom1ButtonActions.readPrefs(settings, actionFactory);
         custom2ButtonActions.readPrefs(settings, actionFactory);
-        custom3ButtonActions.readPrefs(settings, actionFactory);
-        updateButtons();
+        custom3ButtonActions.readPrefs(settings, actionFactory);*/
+        //updateButtons();
 
         guideShowOnStart = settings.getBoolean("guideShowOnStart", true);
 
@@ -1372,24 +1409,25 @@ public class MaterialChess extends AppCompatActivity
         File extDir = Environment.getExternalStorageDirectory();
         String sep = File.separator;
         engineOptions.hashMB = getIntSetting("hashMB", 16);
-        engineOptions.unSafeHash = new File(extDir + sep + engineDir + sep + ".unsafehash").exists();
+        engineOptions.unSafeHash = new File(
+                extDir + sep + engineDir + sep + ".unsafehash").exists();
         engineOptions.hints = settings.getBoolean("tbHints", false);
         engineOptions.hintsEdit = settings.getBoolean("tbHintsEdit", false);
         engineOptions.rootProbe = settings.getBoolean("tbRootProbe", true);
         engineOptions.engineProbe = settings.getBoolean("tbEngineProbe", true);
 
         String gtbPath = settings.getString("gtbPath", "").trim();
-        if (gtbPath.length() == 0)
+        if (gtbPath.length() == 0) {
             gtbPath = extDir.getAbsolutePath() + sep + gtbDefaultDir;
+        }
         engineOptions.gtbPath = gtbPath;
-        String gtbPathNet = settings.getString("gtbPathNet", "").trim();
-        engineOptions.gtbPathNet = gtbPathNet;
+        engineOptions.gtbPathNet = settings.getString("gtbPathNet", "").trim();
         String rtbPath = settings.getString("rtbPath", "").trim();
-        if (rtbPath.length() == 0)
+        if (rtbPath.length() == 0) {
             rtbPath = extDir.getAbsolutePath() + sep + rtbDefaultDir;
+        }
         engineOptions.rtbPath = rtbPath;
-        String rtbPathNet = settings.getString("rtbPathNet", "").trim();
-        engineOptions.rtbPathNet = rtbPathNet;
+        engineOptions.rtbPathNet = settings.getString("rtbPathNet", "").trim();
 
         setEngineOptions(false);
         setEgtbHints(cb.getSelectedSquare());
@@ -1414,7 +1452,7 @@ public class MaterialChess extends AppCompatActivity
 
         ColorTheme.instance().readColors(settings);
         cb.setColors();
-        overrideViewAttribs();
+        //overrideViewAttribs();
 
         gameTextListener.clear();
         setPieceNames(pgnOptions.view.pieceType);
@@ -1423,18 +1461,20 @@ public class MaterialChess extends AppCompatActivity
         // as well in rotation
         setFigurineNotation(pgnOptions.view.pieceType == PGNOptions.PT_FIGURINE, fontSize);
 
-        showMaterialDiff = settings.getBoolean("materialDiff", false);
+        boolean showMaterialDiff = settings.getBoolean("materialDiff", false);
         secondTitleLine.setVisibility(showMaterialDiff ? View.VISIBLE : View.GONE);
     }
 
-    private void overrideViewAttribs() {
-        Util.overrideViewAttribs(findViewById(R.id.toolbar));
-    }
+// --Commented out by Inspection START (22/10/2016 12:10 AM):
+//    private void overrideViewAttribs() {
+//        Util.overrideViewAttribs(findViewById(R.id.toolbar));
+//    }
+// --Commented out by Inspection STOP (22/10/2016 12:10 AM)
 
     /**
      * Change the Pieces into figurine or regular (i.e. letters) display
      */
-    private final void setFigurineNotation(boolean displayAsFigures, int fontSize) {
+    private void setFigurineNotation(boolean displayAsFigures, int fontSize) {
         if (displayAsFigures) {
             // increase the font cause it has different kerning and looks small
             float increaseFontSize = fontSize * 1.1f;
@@ -1451,7 +1491,7 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Enable/disable title bar scrolling.
      */
-    private final void setTitleScrolling() {
+    private void setTitleScrolling() {
         TextUtils.TruncateAt where = autoScrollTitle ? TextUtils.TruncateAt.MARQUEE
                 : TextUtils.TruncateAt.END;
         whiteTitleText.setEllipsize(where);
@@ -1460,73 +1500,63 @@ public class MaterialChess extends AppCompatActivity
         blackFigText.setEllipsize(where);
     }
 
-    private final void updateButtons() {
-        boolean largeButtons = settings.getBoolean("largeButtons", false);
-        Resources r = getResources();
-        int bWidth = (int) Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, r.getDisplayMetrics()));
-        int bHeight = (int) Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, r.getDisplayMetrics()));
-        if (largeButtons) {
-            if (custom1ButtonActions.isEnabled() &&
-                    custom2ButtonActions.isEnabled() &&
-                    custom3ButtonActions.isEnabled()) {
-                Configuration config = getResources().getConfiguration();
-                if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    bWidth = bWidth * 6 / 5;
-                    bHeight = bHeight * 6 / 5;
-                } else {
-                    bWidth = bWidth * 5 / 4;
-                    bHeight = bHeight * 5 / 4;
-                }
-            } else {
-                bWidth = bWidth * 3 / 2;
-                bHeight = bHeight * 3 / 2;
-            }
-        }
-        SVG svg = SVGParser.getSVGFromResource(getResources(), R.raw.touch);
-        setButtonData(custom1Button, bWidth, bHeight, custom1ButtonActions.getIcon(), svg);
+    //private void updateButtons() {
+    //boolean largeButtons = settings.getBoolean("largeButtons", false);
+    //Resources r = getResources();
+    //int bWidth = (int) Math.round(
+    //        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, r.getDisplayMetrics()));
+    //int bHeight = (int) Math.round(
+    //        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, r.getDisplayMetrics()));
+
+    //SVG svg = SVGParser.getSVGFromResource(getResources(), R.raw.touch);
+        /*setButtonData(custom1Button, bWidth, bHeight, custom1ButtonActions.getIcon(), svg);
         setButtonData(custom2Button, bWidth, bHeight, custom2ButtonActions.getIcon(), svg);
         setButtonData(custom3Button, bWidth, bHeight, custom3ButtonActions.getIcon(), svg);
         setButtonData(modeButton, bWidth, bHeight, R.raw.mode, svg);
         setButtonData(undoButton, bWidth, bHeight, R.raw.left, svg);
-        setButtonData(redoButton, bWidth, bHeight, R.raw.right, svg);
-    }
+        setButtonData(redoButton, bWidth, bHeight, R.raw.right, svg);*/
+    //}
 
-    @SuppressWarnings("deprecation")
-    private final void setButtonData(ImageButton button, int bWidth, int bHeight,
-                                     int svgResId, SVG touched) {
-        SVG svg = SVGParser.getSVGFromResource(getResources(), svgResId);
-        button.setBackgroundDrawable(new SVGPictureDrawable(svg));
-
-        StateListDrawable sld = new StateListDrawable();
-        sld.addState(new int[]{android.R.attr.state_pressed}, new SVGPictureDrawable(touched));
-        button.setImageDrawable(sld);
-
-        LayoutParams lp = button.getLayoutParams();
-        lp.height = bHeight;
-        lp.width = bWidth;
-        button.setLayoutParams(lp);
-        button.setPadding(0, 0, 0, 0);
-        button.setScaleType(ScaleType.FIT_XY);
-    }
+// --Commented out by Inspection START (21/10/2016 11:33 PM):
+//    @SuppressWarnings("deprecation")
+//    private void setButtonData(ImageButton button, int bWidth, int bHeight,
+//            int svgResId, SVG touched) {
+//        SVG svg = SVGParser.getSVGFromResource(getResources(), svgResId);
+//        button.setBackgroundDrawable(new SVGPictureDrawable(svg));
+//
+//        StateListDrawable sld = new StateListDrawable();
+//        sld.addState(new int[]{android.R.attr.state_pressed}, new SVGPictureDrawable(touched));
+//        button.setImageDrawable(sld);
+//
+//        LayoutParams lp = button.getLayoutParams();
+//        lp.height = bHeight;
+//        lp.width = bWidth;
+//        button.setLayoutParams(lp);
+//        button.setPadding(0, 0, 0, 0);
+//        button.setScaleType(ScaleType.FIT_XY);
+//    }
+// --Commented out by Inspection STOP (21/10/2016 11:33 PM)
 
     @SuppressLint("Wakelock")
-    private synchronized final void setWakeLock(boolean enableLock) {
-        if (enableLock)
+    private synchronized void setWakeLock(boolean enableLock) {
+        if (enableLock) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        else
+        } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
     }
 
-    private final void setEngineStrength(String engine, int strength) {
+    private void setEngineStrength(String engine, int strength) {
         if (!storageAvailable()) {
-            if (!"stockfish".equals(engine) && !"cuckoochess".equals(engine))
+            if (!"stockfish".equals(engine) && !"cuckoochess".equals(engine)) {
                 engine = "stockfish";
+            }
         }
         ctrl.setEngineStrength(engine, strength);
         setEngineTitle(engine, strength);
     }
 
-    private final void setEngineTitle(String engine, int strength) {
+    private void setEngineTitle(String engine, int strength) {
         String eName = "";
         if (EngineUtil.isOpenExchangeEngine(engine)) {
             String engineFileName = new File(engine).getName();
@@ -1546,8 +1576,9 @@ public class MaterialChess extends AppCompatActivity
                     R.string.cuckoochess_engine :
                     R.string.stockfish_engine);
             boolean analysis = (ctrl != null) && ctrl.analysisMode();
-            if ((strength < 1000) && !analysis)
+            if ((strength < 1000) && !analysis) {
                 eName = String.format(Locale.US, "%s: %d%%", eName, strength / 10);
+            }
         }
         engineTitleText.setText(eName);
     }
@@ -1586,13 +1617,14 @@ public class MaterialChess extends AppCompatActivity
         blackFigText.setText(diff.black);
     }
 
-    private final void setBookOptions() {
+    private void setBookOptions() {
         BookOptions options = new BookOptions(bookOptions);
         if (options.filename.length() > 0) {
             String sep = File.separator;
             if (!options.filename.startsWith(sep)) {
                 File extDir = Environment.getExternalStorageDirectory();
-                options.filename = extDir.getAbsolutePath() + sep + bookDir + sep + options.filename;
+                options.filename =
+                        extDir.getAbsolutePath() + sep + bookDir + sep + options.filename;
             }
         }
         ctrl.setBookOptions(options);
@@ -1600,7 +1632,7 @@ public class MaterialChess extends AppCompatActivity
 
     private boolean egtbForceReload = false;
 
-    private final void setEngineOptions(boolean restart) {
+    private void setEngineOptions(boolean restart) {
         computeNetEngineID();
         ctrl.setEngineOptions(new EngineOptions(engineOptions), restart);
         Probe.getInstance().setPath(engineOptions.gtbPath, engineOptions.rtbPath,
@@ -1608,21 +1640,23 @@ public class MaterialChess extends AppCompatActivity
         egtbForceReload = false;
     }
 
-    private final void computeNetEngineID() {
+    private void computeNetEngineID() {
         String id = "";
         try {
             String engine = settings.getString("engine", "stockfish");
             if (EngineUtil.isNetEngine(engine)) {
                 String[] lines = Util.readFile(engine);
-                if (lines.length >= 3)
+                if (lines.length >= 3) {
                     id = lines[1] + ":" + lines[2];
+                }
             }
         } catch (IOException e) {
+            Log.d("Exception", e.toString());
         }
         engineOptions.networkID = id;
     }
 
-    private final void setEgtbHints(int sq) {
+    private void setEgtbHints(int sq) {
         if (!engineOptions.hints || (sq < 0)) {
             cb.setSquareDecorations(null);
             return;
@@ -1635,15 +1669,16 @@ public class MaterialChess extends AppCompatActivity
             return;
         }
 
-        ArrayList<SquareDecoration> sd = new ArrayList<SquareDecoration>();
-        for (Pair<Integer, ProbeResult> p : x)
+        ArrayList<SquareDecoration> sd = new ArrayList<>();
+        for (Pair<Integer, ProbeResult> p : x) {
             sd.add(new SquareDecoration(p.first, p.second));
+        }
         cb.setSquareDecorations(sd);
     }
 
     private class DrawerItem {
-        int id;
-        int itemId; // Item string resource id
+        final int id;
+        final int itemId; // Item string resource id
 
         DrawerItem(int id, int itemId) {
             this.id = id;
@@ -1673,8 +1708,8 @@ public class MaterialChess extends AppCompatActivity
      */
     private void initDrawers() {
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        leftDrawer = (ListView) findViewById(R.id.left_drawer);
-        rightDrawer = (ListView) findViewById(R.id.right_drawer);
+        maintDrawer = (ListView) findViewById(R.id.main_drawer);
+        //rightDrawer = (ListView) findViewById(R.id.right_drawer);
 
         final DrawerItem[] leftItems = new DrawerItem[]{
                 new DrawerItem(ITEM_EDIT_BOARD, R.string.option_edit_board),
@@ -1685,13 +1720,13 @@ public class MaterialChess extends AppCompatActivity
                 new DrawerItem(ITEM_SETTINGS, R.string.option_settings),
                 new DrawerItem(ITEM_ABOUT, R.string.option_about)
         };
-        leftDrawer.setAdapter(new ArrayAdapter<DrawerItem>(this,
+        maintDrawer.setAdapter(new ArrayAdapter<>(this,
                 R.layout.drawer_list_item,
                 leftItems));
-        leftDrawer.setOnItemClickListener(new OnItemClickListener() {
+        maintDrawer.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
+                    int position, long id) {
                 DrawerItem di = leftItems[position];
                 handleDrawerSelection(di.id);
             }
@@ -1703,22 +1738,26 @@ public class MaterialChess extends AppCompatActivity
                 new DrawerItem(ITEM_FORCE_MOVE, R.string.option_force_computer_move),
                 new DrawerItem(ITEM_DRAW, R.string.option_draw)
         };
-        rightDrawer.setAdapter(new ArrayAdapter<DrawerItem>(this,
+        /*rightDrawer.setAdapter(new ArrayAdapter<>(this,
                 R.layout.drawer_list_item,
                 rightItems));
         rightDrawer.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
+                    int position, long id) {
                 DrawerItem di = rightItems[position];
                 handleDrawerSelection(di.id);
             }
-        });
+        });*/
+
+
+
+
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        drawerLayout.openDrawer(Gravity.LEFT);
+        drawerLayout.openDrawer(GravityCompat.START);
         return false;
     }
 
@@ -1726,10 +1765,10 @@ public class MaterialChess extends AppCompatActivity
      * React to a selection in the left/right drawers.
      */
     private void handleDrawerSelection(int itemId) {
-        drawerLayout.closeDrawer(Gravity.LEFT);
-        drawerLayout.closeDrawer(Gravity.RIGHT);
-        leftDrawer.clearChoices();
-        rightDrawer.clearChoices();
+        drawerLayout.closeDrawer(GravityCompat.START);
+        drawerLayout.closeDrawer(GravityCompat.END);
+        maintDrawer.clearChoices();
+        //rightDrawer.clearChoices();
 
         setAutoMode(AutoMode.OFF);
 
@@ -1752,18 +1791,21 @@ public class MaterialChess extends AppCompatActivity
                 }
                 break;
             case ITEM_RESIGN:
-                if (ctrl.humansTurn())
+                if (ctrl.humansTurn()) {
                     ctrl.resignGame();
+                }
                 break;
             case ITEM_FORCE_MOVE:
                 ctrl.stopSearch();
                 break;
             case ITEM_DRAW:
                 if (ctrl.humansTurn()) {
-                    if (ctrl.claimDrawIfPossible())
+                    if (ctrl.claimDrawIfPossible()) {
                         ctrl.stopPonder();
-                    else
-                        Toast.makeText(getApplicationContext(), R.string.offer_draw, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), R.string.offer_draw,
+                                Toast.LENGTH_SHORT).show();
+                    }
                 }
                 break;
             case ITEM_SELECT_BOOK:
@@ -1820,6 +1862,7 @@ public class MaterialChess extends AppCompatActivity
                         ctrl.setFENOrPGN(fen);
                         setBoardFlip(false);
                     } catch (ChessParseError e) {
+                        Log.d("Exception", e.toString());
                     }
                 }
                 break;
@@ -1828,12 +1871,14 @@ public class MaterialChess extends AppCompatActivity
                     try {
                         String pgn = data.getAction();
                         int modeNr = ctrl.getGameMode().getModeNr();
-                        if ((modeNr != GameMode.ANALYSIS) && (modeNr != GameMode.EDIT_GAME))
-                            newGameMode(GameMode.EDIT_GAME);
+                        if ((modeNr != GameMode.ANALYSIS) && (modeNr != GameMode.EDIT_GAME)) {
+                            newGameMode();
+                        }
                         ctrl.setFENOrPGN(pgn);
                         setBoardFlip(true);
                     } catch (ChessParseError e) {
-                        Toast.makeText(getApplicationContext(), getParseErrString(e), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), getParseErrString(e),
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
                 break;
@@ -1844,7 +1889,7 @@ public class MaterialChess extends AppCompatActivity
                         Editor editor = settings.edit();
                         editor.putString("currentScidFile", pathName);
                         editor.putInt("currFT", FT_SCID);
-                        editor.commit();
+                        editor.apply();
                         Intent i = new Intent(MaterialChess.this, LoadScid.class);
                         i.setAction("org.mdc.chess.loadScid");
                         i.putExtra("org.mdc.chess.pathname", pathName);
@@ -1855,25 +1900,28 @@ public class MaterialChess extends AppCompatActivity
             case RESULT_OI_PGN_LOAD:
                 if (resultCode == RESULT_OK) {
                     String pathName = getFilePathFromUri(data.getData());
-                    if (pathName != null)
+                    if (pathName != null) {
                         loadPGNFromFile(pathName);
+                    }
                 }
                 break;
             case RESULT_OI_PGN_SAVE:
                 if (resultCode == RESULT_OK) {
                     String pathName = getFilePathFromUri(data.getData());
                     if (pathName != null) {
-                        if ((pathName.length() > 0) && !pathName.contains("."))
+                        if ((pathName.length() > 0) && !pathName.contains(".")) {
                             pathName += ".pgn";
-                        savePGNToFile(pathName, false);
+                        }
+                        savePGNToFile(pathName);
                     }
                 }
                 break;
             case RESULT_OI_FEN_LOAD:
                 if (resultCode == RESULT_OK) {
                     String pathName = getFilePathFromUri(data.getData());
-                    if (pathName != null)
+                    if (pathName != null) {
                         loadFENFromFile(pathName);
+                    }
                 }
                 break;
             case RESULT_GET_FEN:
@@ -1896,7 +1944,8 @@ public class MaterialChess extends AppCompatActivity
                 if (resultCode == RESULT_OK) {
                     @SuppressWarnings("unchecked")
                     Map<String, String> uciOpts =
-                            (Map<String, String>) data.getSerializableExtra("org.mdc.chess.ucioptions");
+                            (Map<String, String>) data.getSerializableExtra(
+                                    "org.mdc.chess.ucioptions");
                     ctrl.setEngineUCIOptions(uciOpts);
                 }
                 break;
@@ -1906,75 +1955,86 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Set new game mode.
      */
-    private final void newGameMode(int gameModeType) {
+    private void newGameMode() {
         Editor editor = settings.edit();
-        String gameModeStr = String.format(Locale.US, "%d", gameModeType);
+        String gameModeStr = String.format(Locale.US, "%d", GameMode.EDIT_GAME);
         editor.putString("gameMode", gameModeStr);
-        editor.commit();
-        gameMode = new GameMode(gameModeType);
+        editor.apply();
+        gameMode = new GameMode(GameMode.EDIT_GAME);
         maybeAutoModeOff(gameMode);
         ctrl.setGameMode(gameMode);
     }
 
     public static String getFilePathFromUri(Uri uri) {
-        if (uri == null)
+        if (uri == null) {
             return null;
+        }
         return uri.getPath();
     }
 
-    private final String getParseErrString(ChessParseError e) {
-        if (e.resourceId == -1)
+    private String getParseErrString(ChessParseError e) {
+        if (e.resourceId == -1) {
             return e.getMessage();
-        else
+        } else {
             return getString(e.resourceId);
+        }
     }
 
-    private final int nameMatchScore(String name, String match) {
-        if (name == null)
+    private int nameMatchScore(String name, String match) {
+        if (name == null) {
             return 0;
+        }
         String lName = name.toLowerCase(Locale.US);
         String lMatch = match.toLowerCase(Locale.US);
-        if (name.equals(match))
+        if (name.equals(match)) {
             return 6;
-        if (lName.equals(lMatch))
+        }
+        if (lName.equals(lMatch)) {
             return 5;
-        if (name.startsWith(match))
+        }
+        if (name.startsWith(match)) {
             return 4;
-        if (lName.startsWith(lMatch))
+        }
+        if (lName.startsWith(lMatch)) {
             return 3;
-        if (name.contains(match))
+        }
+        if (name.contains(match)) {
             return 2;
-        if (lName.contains(lMatch))
+        }
+        if (lName.contains(lMatch)) {
             return 1;
+        }
         return 0;
     }
 
-    private final void setBoardFlip() {
+    private void setBoardFlip() {
         setBoardFlip(false);
     }
 
     /**
      * Set a boolean preference setting.
      */
-    private final void setBooleanPref(String name, boolean value) {
+    private void setBooleanPref(boolean value) {
         Editor editor = settings.edit();
-        editor.putBoolean(name, value);
-        editor.commit();
+        editor.putBoolean("boardFlipped", value);
+        editor.apply();
     }
 
-    /**
-     * Toggle a boolean preference setting. Return new value.
-     */
-    private final boolean toggleBooleanPref(String name) {
-        boolean value = !settings.getBoolean(name, false);
-        setBooleanPref(name, value);
-        return value;
-    }
+// --Commented out by Inspection START (21/10/2016 11:35 PM):
+//    /**
+//     * Toggle a boolean preference setting. Return new value.
+//     */
+//    private boolean toggleBooleanPref(String name) {
+//        boolean value = !settings.getBoolean(name, false);
+//        setBooleanPref(name, value);
+//        return value;
+//    }
+// --Commented out by Inspection STOP (21/10/2016 11:35 PM)
 
-    private final void setBoardFlip(boolean matchPlayerNames) {
+    private void setBoardFlip(boolean matchPlayerNames) {
         boolean flipped = boardFlipped;
         if (playerNameFlip && matchPlayerNames && (ctrl != null)) {
-            final TreeMap<String, String> headers = new TreeMap<String, String>();
+            final TreeMap<String, String> headers = new TreeMap<>();
             ctrl.getHeaders(headers);
             int whiteMatch = nameMatchScore(headers.get("White"), playerName);
             int blackMatch = nameMatchScore(headers.get("Black"), playerName);
@@ -1982,7 +2042,7 @@ public class MaterialChess extends AppCompatActivity
                     (!flipped && (whiteMatch < blackMatch))) {
                 flipped = !flipped;
                 boardFlipped = flipped;
-                setBooleanPref("boardFlipped", flipped);
+                setBooleanPref(flipped);
             }
         }
         if (autoSwapSides) {
@@ -1990,13 +2050,12 @@ public class MaterialChess extends AppCompatActivity
                 flipped = !cb.pos.whiteMove;
             } else if (gameMode.playerWhite() && gameMode.playerBlack()) {
                 flipped = !cb.pos.whiteMove;
-            } else if (gameMode.playerWhite()) {
-                flipped = false;
-            } else if (gameMode.playerBlack()) {
-                flipped = true;
-            } else { // two computers
-                flipped = !cb.pos.whiteMove;
+            } else {
+                flipped = !gameMode.playerWhite() && (gameMode.playerBlack() || !cb.pos.whiteMove);
             }
+// two computers
+
+
         }
         cb.setFlipped(flipped);
     }
@@ -2014,10 +2073,11 @@ public class MaterialChess extends AppCompatActivity
         switch (s.state) {
             case ALIVE:
                 str = Integer.valueOf(s.moveNr).toString();
-                if (s.white)
+                if (s.white) {
                     str += ". " + getString(R.string.whites_move);
-                else
+                } else {
                     str += "... " + getString(R.string.blacks_move);
+                }
                 if (s.ponder) str += " (" + getString(R.string.ponder) + ")";
                 if (s.thinking) str += " (" + getString(R.string.thinking) + ")";
                 if (s.analyzing) str += " (" + getString(R.string.analyzing) + ")";
@@ -2034,14 +2094,16 @@ public class MaterialChess extends AppCompatActivity
                 break;
             case DRAW_REP: {
                 str = getString(R.string.draw_rep);
-                if (s.drawInfo.length() > 0)
+                if (s.drawInfo.length() > 0) {
                     str = str + " [" + s.drawInfo + "]";
+                }
                 break;
             }
             case DRAW_50: {
                 str = getString(R.string.draw_50);
-                if (s.drawInfo.length() > 0)
+                if (s.drawInfo.length() > 0) {
                     str = str + " [" + s.drawInfo + "]";
+                }
                 break;
             }
             case DRAW_NO_MATE:
@@ -2062,7 +2124,7 @@ public class MaterialChess extends AppCompatActivity
         setStatusString(str);
     }
 
-    private final void setStatusString(String str) {
+    private void setStatusString(String str) {
         status.setText(str);
     }
 
@@ -2106,8 +2168,9 @@ public class MaterialChess extends AppCompatActivity
      * Report a move made that is a candidate for GUI animation.
      */
     public void setAnimMove(Position sourcePos, Move move, boolean forward) {
-        if (animateMoves && (move != null))
+        if (animateMoves && (move != null)) {
             cb.setAnimMove(sourcePos, move, forward);
+        }
     }
 
     @Override
@@ -2124,7 +2187,7 @@ public class MaterialChess extends AppCompatActivity
     private String thinkingStr2 = "";
     private String bookInfoStr = "";
     private String variantStr = "";
-    private ArrayList<ArrayList<Move>> pvMoves = new ArrayList<ArrayList<Move>>();
+    private ArrayList<ArrayList<Move>> pvMoves = new ArrayList<>();
     private ArrayList<Move> bookMoves = null;
     private ArrayList<Move> variantMoves = null;
 
@@ -2145,7 +2208,7 @@ public class MaterialChess extends AppCompatActivity
         updateNotification();
     }
 
-    private final void updateThinkingInfo() {
+    private void updateThinkingInfo() {
         boolean thinkingEmpty = true;
         {
             String s = "";
@@ -2153,8 +2216,9 @@ public class MaterialChess extends AppCompatActivity
                 s = thinkingStr1;
                 if (s.length() > 0) thinkingEmpty = false;
                 if (mShowStats) {
-                    if (!thinkingEmpty)
+                    if (!thinkingEmpty) {
                         s += "\n";
+                    }
                     s += thinkingStr2;
                     if (s.length() > 0) thinkingEmpty = false;
                 }
@@ -2163,16 +2227,18 @@ public class MaterialChess extends AppCompatActivity
         }
         if (mShowBookHints && (bookInfoStr.length() > 0)) {
             String s = "";
-            if (!thinkingEmpty)
+            if (!thinkingEmpty) {
                 s += "<br>";
+            }
             s += Util.boldStart + getString(R.string.book) + Util.boldStop + bookInfoStr;
             thinking.append(Html.fromHtml(s));
             thinkingEmpty = false;
         }
         if (showVariationLine && (variantStr.indexOf(' ') >= 0)) {
             String s = "";
-            if (!thinkingEmpty)
+            if (!thinkingEmpty) {
                 s += "<br>";
+            }
             s += Util.boldStart + getString(R.string.variation) + Util.boldStop + variantStr;
             thinking.append(Html.fromHtml(s));
             thinkingEmpty = false;
@@ -2185,14 +2251,17 @@ public class MaterialChess extends AppCompatActivity
             if (pvMovesTmp.size() == 1) {
                 hints = pvMovesTmp.get(0);
             } else if (pvMovesTmp.size() > 1) {
-                hints = new ArrayList<Move>();
-                for (ArrayList<Move> pv : pvMovesTmp)
-                    if (!pv.isEmpty())
+                hints = new ArrayList<>();
+                for (ArrayList<Move> pv : pvMovesTmp) {
+                    if (!pv.isEmpty()) {
                         hints.add(pv.get(0));
+                    }
+                }
             }
         }
-        if ((hints == null) && mShowBookHints)
+        if ((hints == null) && mShowBookHints) {
             hints = bookMoves;
+        }
         if (((hints == null) || hints.isEmpty()) &&
                 (variantMoves != null) && variantMoves.size() > 1) {
             hints = variantMoves;
@@ -2220,9 +2289,12 @@ public class MaterialChess extends AppCompatActivity
     static private final int GO_FORWARD_MENU_DIALOG = 15;
     static private final int FILE_MENU_DIALOG = 16;
     static private final int NEW_GAME_DIALOG = 17;
-    static private final int CUSTOM1_BUTTON_DIALOG = 18;
-    static private final int CUSTOM2_BUTTON_DIALOG = 19;
-    static private final int CUSTOM3_BUTTON_DIALOG = 20;
+    // --Commented out by Inspection (21/10/2016 11:33 PM):static private final int
+    // CUSTOM1_BUTTON_DIALOG = 18;
+    // --Commented out by Inspection (21/10/2016 11:33 PM):static private final int
+    // CUSTOM2_BUTTON_DIALOG = 19;
+    // --Commented out by Inspection (21/10/2016 11:33 PM):static private final int
+    // CUSTOM3_BUTTON_DIALOG = 20;
     static private final int MANAGE_ENGINES_DIALOG = 21;
     static private final int NETWORK_ENGINE_DIALOG = 22;
     static private final int NEW_NETWORK_ENGINE_DIALOG = 23;
@@ -2268,12 +2340,12 @@ public class MaterialChess extends AppCompatActivity
                 return goBackMenuDialog();
             case GO_FORWARD_MENU_DIALOG:
                 return goForwardMenuDialog();
-            case CUSTOM1_BUTTON_DIALOG:
+            /*case CUSTOM1_BUTTON_DIALOG:
                 return makeButtonDialog(custom1ButtonActions);
             case CUSTOM2_BUTTON_DIALOG:
                 return makeButtonDialog(custom2ButtonActions);
             case CUSTOM3_BUTTON_DIALOG:
-                return makeButtonDialog(custom3ButtonActions);
+                return makeButtonDialog(custom3ButtonActions);*/
             case MANAGE_ENGINES_DIALOG:
                 return manageEnginesDialog();
             case NETWORK_ENGINE_DIALOG:
@@ -2292,7 +2364,7 @@ public class MaterialChess extends AppCompatActivity
         return null;
     }
 
-    private final Dialog newGameDialog() {
+    private Dialog newGameDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.option_new_game);
         builder.setMessage(R.string.start_new_game);
@@ -2317,13 +2389,13 @@ public class MaterialChess extends AppCompatActivity
         return builder.create();
     }
 
-    private final void startNewGame(int type) {
+    private void startNewGame(int type) {
         if (type != 2) {
             int gameModeType = (type == 0) ? GameMode.PLAYER_WHITE : GameMode.PLAYER_BLACK;
             Editor editor = settings.edit();
             String gameModeStr = String.format(Locale.US, "%d", gameModeType);
             editor.putString("gameMode", gameModeStr);
-            editor.commit();
+            editor.apply();
             gameMode = new GameMode(gameModeType);
         }
 //        savePGNToFile(".autosave.pgn", true);
@@ -2335,7 +2407,7 @@ public class MaterialChess extends AppCompatActivity
         updateEngineTitle();
     }
 
-    private final Dialog promoteDialog() {
+    private Dialog promoteDialog() {
         final CharSequence[] items = {
                 getString(R.string.queen), getString(R.string.rook),
                 getString(R.string.bishop), getString(R.string.knight)
@@ -2347,18 +2419,17 @@ public class MaterialChess extends AppCompatActivity
                 ctrl.reportPromotePiece(item);
             }
         });
-        AlertDialog alert = builder.create();
-        return alert;
+        return builder.create();
     }
 
-    private final Dialog clipBoardDialog() {
+    private Dialog clipBoardDialog() {
         final int COPY_GAME = 0;
         final int COPY_POSITION = 1;
         final int PASTE = 2;
 
         setAutoMode(AutoMode.OFF);
-        List<CharSequence> lst = new ArrayList<CharSequence>();
-        List<Integer> actions = new ArrayList<Integer>();
+        List<CharSequence> lst = new ArrayList<>();
+        List<Integer> actions = new ArrayList<>();
         lst.add(getString(R.string.copy_game));
         actions.add(COPY_GAME);
         lst.add(getString(R.string.copy_position));
@@ -2368,57 +2439,65 @@ public class MaterialChess extends AppCompatActivity
         final List<Integer> finalActions = actions;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.tools_menu);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                switch (finalActions.get(item)) {
-                    case COPY_GAME: {
-                        String pgn = ctrl.getPGN();
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                        clipboard.setPrimaryClip(new ClipData("MaterialChess game",
-                                new String[]{"application/x-chess-pgn", ClipDescription.MIMETYPE_TEXT_PLAIN},
-                                new ClipData.Item(pgn)));
-                        break;
-                    }
-                    case COPY_POSITION: {
-                        String fen = ctrl.getFEN() + "\n";
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                        clipboard.setPrimaryClip(new ClipData(fen,
-                                new String[]{"application/x-chess-fen", ClipDescription.MIMETYPE_TEXT_PLAIN},
-                                new ClipData.Item(fen)));
-                        break;
-                    }
-                    case PASTE: {
-                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                        if (clipboard.hasPrimaryClip()) {
-                            ClipData clip = clipboard.getPrimaryClip();
-                            StringBuilder fenPgn = new StringBuilder();
-                            for (int i = 0; i < clip.getItemCount(); i++)
-                                fenPgn.append(clip.getItemAt(i).coerceToText(getApplicationContext()));
-                            try {
-                                ctrl.setFENOrPGN(fenPgn.toString());
-                                setBoardFlip(true);
-                            } catch (ChessParseError e) {
-                                Toast.makeText(getApplicationContext(), getParseErrString(e), Toast.LENGTH_SHORT).show();
+        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (finalActions.get(item)) {
+                            case COPY_GAME: {
+                                String pgn = ctrl.getPGN();
+                                ClipboardManager clipboard = (ClipboardManager) getSystemService(
+                                        CLIPBOARD_SERVICE);
+                                clipboard.setPrimaryClip(new ClipData("MaterialChess game",
+                                        new String[]{"application/x-chess-pgn",
+                                                ClipDescription.MIMETYPE_TEXT_PLAIN},
+                                        new ClipData.Item(pgn)));
+                                break;
+                            }
+                            case COPY_POSITION: {
+                                String fen = ctrl.getFEN() + "\n";
+                                ClipboardManager clipboard = (ClipboardManager) getSystemService(
+                                        CLIPBOARD_SERVICE);
+                                clipboard.setPrimaryClip(new ClipData(fen,
+                                        new String[]{"application/x-chess-fen",
+                                                ClipDescription.MIMETYPE_TEXT_PLAIN},
+                                        new ClipData.Item(fen)));
+                                break;
+                            }
+                            case PASTE: {
+                                ClipboardManager clipboard = (ClipboardManager) getSystemService(
+                                        CLIPBOARD_SERVICE);
+                                if (clipboard.hasPrimaryClip()) {
+                                    ClipData clip = clipboard.getPrimaryClip();
+                                    StringBuilder fenPgn = new StringBuilder();
+                                    for (int i = 0; i < clip.getItemCount(); i++) {
+                                        fenPgn.append(clip.getItemAt(i).coerceToText(
+                                                getApplicationContext()));
+                                    }
+                                    try {
+                                        ctrl.setFENOrPGN(fenPgn.toString());
+                                        setBoardFlip(true);
+                                    } catch (ChessParseError e) {
+                                        Toast.makeText(getApplicationContext(),
+                                                getParseErrString(e), Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                                break;
                             }
                         }
-                        break;
                     }
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        return alert;
+                });
+        return builder.create();
     }
 
-    private final Dialog boardMenuDialog() {
+    private Dialog boardMenuDialog() {
         final int CLIPBOARD = 0;
         final int FILEMENU = 1;
         final int SHARE = 2;
         final int GET_FEN = 3;
 
         setAutoMode(AutoMode.OFF);
-        List<CharSequence> lst = new ArrayList<CharSequence>();
-        List<Integer> actions = new ArrayList<Integer>();
+        List<CharSequence> lst = new ArrayList<>();
+        List<Integer> actions = new ArrayList<>();
         lst.add(getString(R.string.clipboard));
         actions.add(CLIPBOARD);
         if (storageAvailable()) {
@@ -2434,33 +2513,33 @@ public class MaterialChess extends AppCompatActivity
         final List<Integer> finalActions = actions;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.tools_menu);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                switch (finalActions.get(item)) {
-                    case CLIPBOARD: {
-                        showDialog(CLIPBOARD_DIALOG);
-                        break;
+        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (finalActions.get(item)) {
+                            case CLIPBOARD: {
+                                showDialog(CLIPBOARD_DIALOG);
+                                break;
+                            }
+                            case FILEMENU: {
+                                removeDialog(FILE_MENU_DIALOG);
+                                showDialog(FILE_MENU_DIALOG);
+                                break;
+                            }
+                            case SHARE: {
+                                shareGame();
+                                break;
+                            }
+                            case GET_FEN:
+                                getFen();
+                                break;
+                        }
                     }
-                    case FILEMENU: {
-                        removeDialog(FILE_MENU_DIALOG);
-                        showDialog(FILE_MENU_DIALOG);
-                        break;
-                    }
-                    case SHARE: {
-                        shareGame();
-                        break;
-                    }
-                    case GET_FEN:
-                        getFen();
-                        break;
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        return alert;
+                });
+        return builder.create();
     }
 
-    private final void shareGame() {
+    private void shareGame() {
         Intent i = new Intent(Intent.ACTION_SEND);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
         i.setType("text/plain");
@@ -2472,7 +2551,7 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    private final Dialog fileMenuDialog() {
+    private Dialog fileMenuDialog() {
         final int LOAD_LAST_FILE = 0;
         final int LOAD_GAME = 1;
         final int LOAD_POS = 2;
@@ -2480,8 +2559,8 @@ public class MaterialChess extends AppCompatActivity
         final int SAVE_GAME = 4;
 
         setAutoMode(AutoMode.OFF);
-        List<CharSequence> lst = new ArrayList<CharSequence>();
-        List<Integer> actions = new ArrayList<Integer>();
+        List<CharSequence> lst = new ArrayList<>();
+        List<Integer> actions = new ArrayList<>();
         if (currFileType() != FT_NONE) {
             lst.add(getString(R.string.load_last_file));
             actions.add(LOAD_LAST_FILE);
@@ -2499,41 +2578,45 @@ public class MaterialChess extends AppCompatActivity
         final List<Integer> finalActions = actions;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.load_save_menu);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                switch (finalActions.get(item)) {
-                    case LOAD_LAST_FILE:
-                        loadLastFile();
-                        break;
-                    case LOAD_GAME:
-                        selectFile(R.string.select_pgn_file, R.string.pgn_load, "currentPGNFile", pgnDir,
-                                SELECT_PGN_FILE_DIALOG, RESULT_OI_PGN_LOAD);
-                        break;
-                    case SAVE_GAME:
-                        selectFile(R.string.select_pgn_file_save, R.string.pgn_save, "currentPGNFile", pgnDir,
-                                SELECT_PGN_FILE_SAVE_DIALOG, RESULT_OI_PGN_SAVE);
-                        break;
-                    case LOAD_POS:
-                        selectFile(R.string.select_fen_file, R.string.pgn_load, "currentFENFile", fenDir,
-                                SELECT_FEN_FILE_DIALOG, RESULT_OI_FEN_LOAD);
-                        break;
-                    case LOAD_SCID_GAME:
-                        selectScidFile();
-                        break;
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        return alert;
+        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (finalActions.get(item)) {
+                            case LOAD_LAST_FILE:
+                                loadLastFile();
+                                break;
+                            case LOAD_GAME:
+                                selectFile(R.string.select_pgn_file, R.string.pgn_load,
+                                        "currentPGNFile", pgnDir,
+                                        SELECT_PGN_FILE_DIALOG, RESULT_OI_PGN_LOAD);
+                                break;
+                            case SAVE_GAME:
+                                selectFile(R.string.select_pgn_file_save, R.string.pgn_save,
+                                        "currentPGNFile", pgnDir,
+                                        SELECT_PGN_FILE_SAVE_DIALOG, RESULT_OI_PGN_SAVE);
+                                break;
+                            case LOAD_POS:
+                                selectFile(R.string.select_fen_file, R.string.pgn_load,
+                                        "currentFENFile", fenDir,
+                                        SELECT_FEN_FILE_DIALOG, RESULT_OI_FEN_LOAD);
+                                break;
+                            case LOAD_SCID_GAME:
+                                selectScidFile();
+                                break;
+                        }
+                    }
+                });
+        return builder.create();
     }
 
     /**
      * Open dialog to select a game/position from the last used file.
      */
-    final private void loadLastFile() {
+    private void loadLastFile() {
         String path = currPathName();
-        if (path.length() == 0)
+        if (path.length() == 0) {
             return;
+        }
         setAutoMode(AutoMode.OFF);
         switch (currFileType()) {
             case FT_PGN:
@@ -2550,45 +2633,47 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    private final Dialog aboutDialog() {
+    private Dialog aboutDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         String title = getString(R.string.app_name);
         WebView wv = new WebView(this);
         builder.setView(wv);
         InputStream is = getResources().openRawResource(R.raw.about);
         String data = Util.readFromStream(is);
-        if (data == null)
+        if (data == null) {
             data = "";
+        }
         try {
             is.close();
         } catch (IOException e1) {
+            Log.d("Exception", e1.toString());
         }
         wv.loadDataWithBaseURL(null, data, "text/html", "utf-8", null);
         try {
             PackageInfo pi = getPackageManager().getPackageInfo("org.mdc.chess", 0);
             title += " " + pi.versionName;
         } catch (NameNotFoundException e) {
+            Log.d("Exception", e.toString());
         }
         builder.setTitle(title);
-        AlertDialog alert = builder.create();
-        return alert;
+        return builder.create();
     }
 
-    private final Dialog selectBookDialog() {
+    private Dialog selectBookDialog() {
         String[] fileNames = findFilesInDirectory(bookDir, new FileNameFilter() {
             @Override
             public boolean accept(String filename) {
                 int dotIdx = filename.lastIndexOf(".");
-                if (dotIdx < 0)
+                if (dotIdx < 0) {
                     return false;
+                }
                 String ext = filename.substring(dotIdx + 1);
                 return (ext.equals("ctg") || ext.equals("bin"));
             }
         });
         final int numFiles = fileNames.length;
         CharSequence[] items = new CharSequence[numFiles + 1];
-        for (int i = 0; i < numFiles; i++)
-            items[i] = fileNames[i];
+        System.arraycopy(fileNames, 0, items, 0, numFiles);
         items[numFiles] = getString(R.string.internal_book);
         final CharSequence[] finalItems = items;
         int defaultItem = numFiles;
@@ -2604,28 +2689,28 @@ public class MaterialChess extends AppCompatActivity
             public void onClick(DialogInterface dialog, int item) {
                 Editor editor = settings.edit();
                 String bookFile = "";
-                if (item < numFiles)
+                if (item < numFiles) {
                     bookFile = finalItems[item].toString();
+                }
                 editor.putString("bookFile", bookFile);
-                editor.commit();
+                editor.apply();
                 bookOptions.filename = bookFile;
                 setBookOptions();
                 dialog.dismiss();
             }
         });
-        AlertDialog alert = builder.create();
-        return alert;
+        return builder.create();
     }
 
-    private final static boolean reservedEngineName(String name) {
+    private static boolean reservedEngineName(String name) {
         return "cuckoochess".equals(name) ||
                 "stockfish".equals(name) ||
                 name.endsWith(".ini");
     }
 
-    private final Dialog selectEngineDialog(final boolean abortOnCancel) {
-        final ArrayList<String> items = new ArrayList<String>();
-        final ArrayList<String> ids = new ArrayList<String>();
+    private Dialog selectEngineDialog(final boolean abortOnCancel) {
+        final ArrayList<String> items = new ArrayList<>();
+        final ArrayList<String> ids = new ArrayList<>();
         ids.add("stockfish");
         items.add(getString(R.string.stockfish_engine));
         ids.add("cuckoochess");
@@ -2637,12 +2722,13 @@ public class MaterialChess extends AppCompatActivity
             {
                 ChessEngineResolver resolver = new ChessEngineResolver(this);
                 List<ChessEngine> engines = resolver.resolveEngines();
-                ArrayList<Pair<String, String>> oexEngines = new ArrayList<Pair<String, String>>();
+                ArrayList<Pair<String, String>> oexEngines = new ArrayList<>();
                 for (ChessEngine engine : engines) {
                     if ((engine.getName() != null) && (engine.getFileName() != null) &&
                             (engine.getPackageName() != null)) {
-                        oexEngines.add(new Pair<String, String>(EngineUtil.openExchangeFileName(engine),
-                                engine.getName()));
+                        oexEngines.add(
+                                new Pair<>(EngineUtil.openExchangeFileName(engine),
+                                        engine.getName()));
                     }
                 }
                 Collections.sort(oexEngines, new Comparator<Pair<String, String>>() {
@@ -2683,12 +2769,13 @@ public class MaterialChess extends AppCompatActivity
         builder.setSingleChoiceItems(items.toArray(new String[0]), defaultItem,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int item) {
-                        if ((item < 0) || (item >= nEngines))
+                        if ((item < 0) || (item >= nEngines)) {
                             return;
+                        }
                         Editor editor = settings.edit();
                         String engine = ids.get(item);
                         editor.putString("engine", engine);
-                        editor.commit();
+                        editor.apply();
                         dialog.dismiss();
                         int strength = settings.getInt("strength", 1000);
                         setEngineOptions(false);
@@ -2704,15 +2791,14 @@ public class MaterialChess extends AppCompatActivity
                 }
             }
         });
-        AlertDialog alert = builder.create();
-        return alert;
+        return builder.create();
     }
 
-    private static interface Loader {
+    private interface Loader {
         void load(String pathName);
     }
 
-    private final Dialog selectPgnFileDialog() {
+    private Dialog selectPgnFileDialog() {
         return selectFileDialog(pgnDir, R.string.select_pgn_file, R.string.no_pgn_files,
                 "currentPGNFile", new Loader() {
                     @Override
@@ -2722,7 +2808,7 @@ public class MaterialChess extends AppCompatActivity
                 });
     }
 
-    private final Dialog selectFenFileDialog() {
+    private Dialog selectFenFileDialog() {
         return selectFileDialog(fenDir, R.string.select_fen_file, R.string.no_fen_files,
                 "currentFENFile", new Loader() {
                     @Override
@@ -2732,16 +2818,16 @@ public class MaterialChess extends AppCompatActivity
                 });
     }
 
-    private final Dialog selectFileDialog(final String defaultDir, int selectFileMsg, int noFilesMsg,
-                                          String settingsName, final Loader loader) {
+    private Dialog selectFileDialog(final String defaultDir, int selectFileMsg,
+            int noFilesMsg,
+            String settingsName, final Loader loader) {
         setAutoMode(AutoMode.OFF);
         final String[] fileNames = findFilesInDirectory(defaultDir, null);
         final int numFiles = fileNames.length;
         if (numFiles == 0) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.app_name).setMessage(noFilesMsg);
-            AlertDialog alert = builder.create();
-            return alert;
+            return builder.create();
         }
         int defaultItem = 0;
         String currentFile = settings.getString(settingsName, "");
@@ -2758,16 +2844,16 @@ public class MaterialChess extends AppCompatActivity
             public void onClick(DialogInterface dialog, int item) {
                 dialog.dismiss();
                 String sep = File.separator;
-                String fn = fileNames[item].toString();
-                String pathName = Environment.getExternalStorageDirectory() + sep + defaultDir + sep + fn;
+                String fn = fileNames[item];
+                String pathName =
+                        Environment.getExternalStorageDirectory() + sep + defaultDir + sep + fn;
                 loader.load(pathName);
             }
         });
-        AlertDialog alert = builder.create();
-        return alert;
+        return builder.create();
     }
 
-    private final Dialog selectPgnFileSaveDialog() {
+    private Dialog selectPgnFileSaveDialog() {
         setAutoMode(AutoMode.OFF);
         final String[] fileNames = findFilesInDirectory(pgnDir, null);
         final int numFiles = fileNames.length;
@@ -2781,32 +2867,32 @@ public class MaterialChess extends AppCompatActivity
             }
         }
         CharSequence[] items = new CharSequence[numFiles + 1];
-        for (int i = 0; i < numFiles; i++)
-            items[i] = fileNames[i];
+        System.arraycopy(fileNames, 0, items, 0, numFiles);
         items[numFiles] = getString(R.string.new_file);
-        final CharSequence[] finalItems = items;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.select_pgn_file_save);
-        builder.setSingleChoiceItems(finalItems, defaultItem, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                String pgnFile;
-                if (item >= numFiles) {
-                    dialog.dismiss();
-                    showDialog(SELECT_PGN_SAVE_NEWFILE_DIALOG);
-                } else {
-                    dialog.dismiss();
-                    pgnFile = fileNames[item].toString();
-                    String sep = File.separator;
-                    String pathName = Environment.getExternalStorageDirectory() + sep + pgnDir + sep + pgnFile;
-                    savePGNToFile(pathName, false);
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        return alert;
+        builder.setSingleChoiceItems(items, defaultItem,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        String pgnFile;
+                        if (item >= numFiles) {
+                            dialog.dismiss();
+                            showDialog(SELECT_PGN_SAVE_NEWFILE_DIALOG);
+                        } else {
+                            dialog.dismiss();
+                            pgnFile = fileNames[item];
+                            String sep = File.separator;
+                            String pathName =
+                                    Environment.getExternalStorageDirectory() + sep + pgnDir + sep
+                                            + pgnFile;
+                            savePGNToFile(pathName);
+                        }
+                    }
+                });
+        return builder.create();
     }
 
-    private final Dialog selectPgnSaveNewFileDialog() {
+    private Dialog selectPgnSaveNewFileDialog() {
         setAutoMode(AutoMode.OFF);
         View content = View.inflate(this, R.layout.create_pgn_file, null);
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -2817,11 +2903,13 @@ public class MaterialChess extends AppCompatActivity
         final Runnable savePGN = new Runnable() {
             public void run() {
                 String pgnFile = fileNameView.getText().toString();
-                if ((pgnFile.length() > 0) && !pgnFile.contains("."))
+                if ((pgnFile.length() > 0) && !pgnFile.contains(".")) {
                     pgnFile += ".pgn";
+                }
                 String sep = File.separator;
-                String pathName = Environment.getExternalStorageDirectory() + sep + pgnDir + sep + pgnFile;
-                savePGNToFile(pathName, false);
+                String pathName =
+                        Environment.getExternalStorageDirectory() + sep + pgnDir + sep + pgnFile;
+                savePGNToFile(pathName);
             }
         };
         builder.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
@@ -2834,7 +2922,8 @@ public class MaterialChess extends AppCompatActivity
         final Dialog dialog = builder.create();
         fileNameView.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
+                        == KeyEvent.KEYCODE_ENTER)) {
                     savePGN.run();
                     dialog.cancel();
                     return true;
@@ -2845,12 +2934,13 @@ public class MaterialChess extends AppCompatActivity
         return dialog;
     }
 
-    private final Dialog setColorThemeDialog() {
+    private Dialog setColorThemeDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.select_color_theme);
         String[] themeNames = new String[ColorTheme.themeNames.length];
-        for (int i = 0; i < themeNames.length; i++)
+        for (int i = 0; i < themeNames.length; i++) {
             themeNames[i] = getString(ColorTheme.themeNames[i]);
+        }
         builder.setSingleChoiceItems(themeNames, -1, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 ColorTheme.instance().setTheme(settings, item);
@@ -2858,13 +2948,13 @@ public class MaterialChess extends AppCompatActivity
                 gameTextListener.clear();
                 ctrl.prefsChanged(false);
                 dialog.dismiss();
-                overrideViewAttribs();
+                //overrideViewAttribs();
             }
         });
         return builder.create();
     }
 
-    private final Dialog gameModeDialog() {
+    private Dialog gameModeDialog() {
         final CharSequence[] items = {
                 getString(R.string.analysis_mode),
                 getString(R.string.edit_replay_game),
@@ -2909,7 +2999,7 @@ public class MaterialChess extends AppCompatActivity
                     Editor editor = settings.edit();
                     String gameModeStr = String.format(Locale.US, "%d", gameModeType);
                     editor.putString("gameMode", gameModeStr);
-                    editor.commit();
+                    editor.apply();
                     gameMode = new GameMode(gameModeType);
                     maybeAutoModeOff(gameMode);
                     ctrl.setGameMode(gameMode);
@@ -2917,11 +3007,10 @@ public class MaterialChess extends AppCompatActivity
                 }
             }
         });
-        AlertDialog alert = builder.create();
-        return alert;
+        return builder.create();
     }
 
-    private final Dialog moveListMenuDialog() {
+    private Dialog moveListMenuDialog() {
         final int EDIT_HEADERS = 0;
         final int EDIT_COMMENTS = 1;
         final int REMOVE_SUBTREE = 2;
@@ -2930,8 +3019,8 @@ public class MaterialChess extends AppCompatActivity
         final int ADD_NULL_MOVE = 5;
 
         setAutoMode(AutoMode.OFF);
-        List<CharSequence> lst = new ArrayList<CharSequence>();
-        List<Integer> actions = new ArrayList<Integer>();
+        List<CharSequence> lst = new ArrayList<>();
+        List<Integer> actions = new ArrayList<>();
         lst.add(getString(R.string.edit_headers));
         actions.add(EDIT_HEADERS);
         if (ctrl.humansTurn()) {
@@ -2951,7 +3040,8 @@ public class MaterialChess extends AppCompatActivity
 
         boolean allowNullMove =
                 (gameMode.analysisMode() ||
-                        (gameMode.playerWhite() && gameMode.playerBlack() && !gameMode.clocksActive())) &&
+                        (gameMode.playerWhite() && gameMode.playerBlack()
+                                && !gameMode.clocksActive())) &&
                         !ctrl.inCheck();
         if (allowNullMove) {
             lst.add(getString(R.string.add_null_move));
@@ -2960,120 +3050,139 @@ public class MaterialChess extends AppCompatActivity
         final List<Integer> finalActions = actions;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.edit_game);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                switch (finalActions.get(item)) {
-                    case EDIT_HEADERS: {
-                        final TreeMap<String, String> headers = new TreeMap<String, String>();
-                        ctrl.getHeaders(headers);
+        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (finalActions.get(item)) {
+                            case EDIT_HEADERS: {
+                                final TreeMap<String, String> headers =
+                                        new TreeMap<>();
+                                ctrl.getHeaders(headers);
 
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MaterialChess.this);
-                        builder.setTitle(R.string.edit_headers);
-                        View content = View.inflate(MaterialChess.this, R.layout.edit_headers, null);
-                        builder.setView(content);
+                                AlertDialog.Builder builder = new AlertDialog.Builder(
+                                        MaterialChess.this);
+                                builder.setTitle(R.string.edit_headers);
+                                View content = View.inflate(MaterialChess.this,
+                                        R.layout.edit_headers, null);
+                                builder.setView(content);
 
-                        final TextView event, site, date, round, white, black;
+                                final TextView event, site, date, round, white, black;
 
-                        event = (TextView) content.findViewById(R.id.ed_header_event);
-                        site = (TextView) content.findViewById(R.id.ed_header_site);
-                        date = (TextView) content.findViewById(R.id.ed_header_date);
-                        round = (TextView) content.findViewById(R.id.ed_header_round);
-                        white = (TextView) content.findViewById(R.id.ed_header_white);
-                        black = (TextView) content.findViewById(R.id.ed_header_black);
+                                event = (TextView) content.findViewById(R.id.ed_header_event);
+                                site = (TextView) content.findViewById(R.id.ed_header_site);
+                                date = (TextView) content.findViewById(R.id.ed_header_date);
+                                round = (TextView) content.findViewById(R.id.ed_header_round);
+                                white = (TextView) content.findViewById(R.id.ed_header_white);
+                                black = (TextView) content.findViewById(R.id.ed_header_black);
 
-                        event.setText(headers.get("Event"));
-                        site.setText(headers.get("Site"));
-                        date.setText(headers.get("Date"));
-                        round.setText(headers.get("Round"));
-                        white.setText(headers.get("White"));
-                        black.setText(headers.get("Black"));
+                                event.setText(headers.get("Event"));
+                                site.setText(headers.get("Site"));
+                                date.setText(headers.get("Date"));
+                                round.setText(headers.get("Round"));
+                                white.setText(headers.get("White"));
+                                black.setText(headers.get("Black"));
 
-                        builder.setNegativeButton(R.string.cancel, null);
-                        builder.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                headers.put("Event", event.getText().toString().trim());
-                                headers.put("Site", site.getText().toString().trim());
-                                headers.put("Date", date.getText().toString().trim());
-                                headers.put("Round", round.getText().toString().trim());
-                                headers.put("White", white.getText().toString().trim());
-                                headers.put("Black", black.getText().toString().trim());
-                                ctrl.setHeaders(headers);
-                                setBoardFlip(true);
+                                builder.setNegativeButton(R.string.cancel, null);
+                                builder.setPositiveButton(android.R.string.ok,
+                                        new Dialog.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                headers.put("Event",
+                                                        event.getText().toString().trim());
+                                                headers.put("Site",
+                                                        site.getText().toString().trim());
+                                                headers.put("Date",
+                                                        date.getText().toString().trim());
+                                                headers.put("Round",
+                                                        round.getText().toString().trim());
+                                                headers.put("White",
+                                                        white.getText().toString().trim());
+                                                headers.put("Black",
+                                                        black.getText().toString().trim());
+                                                ctrl.setHeaders(headers);
+                                                setBoardFlip(true);
+                                            }
+                                        });
+
+                                builder.show();
+                                break;
                             }
-                        });
+                            case EDIT_COMMENTS: {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(
+                                        MaterialChess.this);
+                                builder.setTitle(R.string.edit_comments);
+                                View content = View.inflate(MaterialChess.this,
+                                        R.layout.edit_comments, null);
+                                builder.setView(content);
 
-                        builder.show();
-                        break;
-                    }
-                    case EDIT_COMMENTS: {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(MaterialChess.this);
-                        builder.setTitle(R.string.edit_comments);
-                        View content = View.inflate(MaterialChess.this, R.layout.edit_comments, null);
-                        builder.setView(content);
+                                DroidChessController.CommentInfo commInfo = ctrl.getComments();
 
-                        DroidChessController.CommentInfo commInfo = ctrl.getComments();
+                                final TextView preComment, moveView, nag, postComment;
+                                preComment = (TextView) content.findViewById(R.id.ed_comments_pre);
+                                moveView = (TextView) content.findViewById(R.id.ed_comments_move);
+                                nag = (TextView) content.findViewById(R.id.ed_comments_nag);
+                                postComment = (TextView) content.findViewById(
+                                        R.id.ed_comments_post);
 
-                        final TextView preComment, moveView, nag, postComment;
-                        preComment = (TextView) content.findViewById(R.id.ed_comments_pre);
-                        moveView = (TextView) content.findViewById(R.id.ed_comments_move);
-                        nag = (TextView) content.findViewById(R.id.ed_comments_nag);
-                        postComment = (TextView) content.findViewById(R.id.ed_comments_post);
+                                preComment.setText(commInfo.preComment);
+                                postComment.setText(commInfo.postComment);
+                                moveView.setText(commInfo.move);
+                                String nagStr = Node.nagStr(commInfo.nag).trim();
+                                if ((nagStr.length() == 0) && (commInfo.nag > 0)) {
+                                    nagStr = String.format(Locale.US, "%d", commInfo.nag);
+                                }
+                                nag.setText(nagStr);
 
-                        preComment.setText(commInfo.preComment);
-                        postComment.setText(commInfo.postComment);
-                        moveView.setText(commInfo.move);
-                        String nagStr = Node.nagStr(commInfo.nag).trim();
-                        if ((nagStr.length() == 0) && (commInfo.nag > 0))
-                            nagStr = String.format(Locale.US, "%d", commInfo.nag);
-                        nag.setText(nagStr);
+                                builder.setNegativeButton(R.string.cancel, null);
+                                builder.setPositiveButton(android.R.string.ok,
+                                        new Dialog.OnClickListener() {
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                String pre = preComment.getText().toString().trim();
+                                                String post =
+                                                        postComment.getText().toString().trim();
+                                                int nagVal = Node.strToNag(
+                                                        nag.getText().toString());
 
-                        builder.setNegativeButton(R.string.cancel, null);
-                        builder.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                String pre = preComment.getText().toString().trim();
-                                String post = postComment.getText().toString().trim();
-                                int nagVal = Node.strToNag(nag.getText().toString());
+                                                DroidChessController.CommentInfo commInfo =
+                                                        new DroidChessController.CommentInfo();
+                                                commInfo.preComment = pre;
+                                                commInfo.postComment = post;
+                                                commInfo.nag = nagVal;
+                                                ctrl.setComments(commInfo);
+                                            }
+                                        });
 
-                                DroidChessController.CommentInfo commInfo = new DroidChessController.CommentInfo();
-                                commInfo.preComment = pre;
-                                commInfo.postComment = post;
-                                commInfo.nag = nagVal;
-                                ctrl.setComments(commInfo);
+                                builder.show();
+                                break;
                             }
-                        });
-
-                        builder.show();
-                        break;
+                            case REMOVE_SUBTREE:
+                                ctrl.removeSubTree();
+                                break;
+                            case MOVE_VAR_UP:
+                                ctrl.moveVariation(-1);
+                                break;
+                            case MOVE_VAR_DOWN:
+                                ctrl.moveVariation(1);
+                                break;
+                            case ADD_NULL_MOVE:
+                                ctrl.makeHumanNullMove();
+                                break;
+                        }
+                        moveListMenuDlg = null;
                     }
-                    case REMOVE_SUBTREE:
-                        ctrl.removeSubTree();
-                        break;
-                    case MOVE_VAR_UP:
-                        ctrl.moveVariation(-1);
-                        break;
-                    case MOVE_VAR_DOWN:
-                        ctrl.moveVariation(1);
-                        break;
-                    case ADD_NULL_MOVE:
-                        ctrl.makeHumanNullMove();
-                        break;
-                }
-                moveListMenuDlg = null;
-            }
-        });
+                });
         AlertDialog alert = builder.create();
         moveListMenuDlg = alert;
         return alert;
     }
 
-    private final Dialog thinkingMenuDialog() {
+    private Dialog thinkingMenuDialog() {
         final int ADD_ANALYSIS = 0;
         final int MULTIPV_DEC = 1;
         final int MULTIPV_INC = 2;
         final int HIDE_STATISTICS = 3;
         final int SHOW_STATISTICS = 4;
-        List<CharSequence> lst = new ArrayList<CharSequence>();
-        List<Integer> actions = new ArrayList<Integer>();
+        List<CharSequence> lst = new ArrayList<>();
+        List<Integer> actions = new ArrayList<>();
         lst.add(getString(R.string.add_analysis));
         actions.add(ADD_ANALYSIS);
         int numPV = this.numPV;
@@ -3103,61 +3212,61 @@ public class MaterialChess extends AppCompatActivity
         final List<Integer> finalActions = actions;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.analysis);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                switch (finalActions.get(item)) {
-                    case ADD_ANALYSIS: {
-                        ArrayList<ArrayList<Move>> pvMovesTmp = pvMoves;
-                        String[] pvStrs = thinkingStr1.split("\n");
-                        for (int i = 0; i < pvMovesTmp.size(); i++) {
-                            ArrayList<Move> pv = pvMovesTmp.get(i);
-                            StringBuilder preComment = new StringBuilder();
-                            if (i < pvStrs.length) {
-                                String[] tmp = pvStrs[i].split(" ");
-                                for (int j = 0; j < 2; j++) {
-                                    if (j < tmp.length) {
-                                        if (j > 0) preComment.append(' ');
-                                        preComment.append(tmp[j]);
+        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (finalActions.get(item)) {
+                            case ADD_ANALYSIS: {
+                                ArrayList<ArrayList<Move>> pvMovesTmp = pvMoves;
+                                String[] pvStrs = thinkingStr1.split("\n");
+                                for (int i = 0; i < pvMovesTmp.size(); i++) {
+                                    ArrayList<Move> pv = pvMovesTmp.get(i);
+                                    StringBuilder preComment = new StringBuilder();
+                                    if (i < pvStrs.length) {
+                                        String[] tmp = pvStrs[i].split(" ");
+                                        for (int j = 0; j < 2; j++) {
+                                            if (j < tmp.length) {
+                                                if (j > 0) preComment.append(' ');
+                                                preComment.append(tmp[j]);
+                                            }
+                                        }
+                                        if (preComment.length() > 0) preComment.append(':');
                                     }
+                                    boolean updateDefault = (i == 0);
+                                    ctrl.addVariation(preComment.toString(), pv, updateDefault);
                                 }
-                                if (preComment.length() > 0) preComment.append(':');
+                                break;
                             }
-                            boolean updateDefault = (i == 0);
-                            ctrl.addVariation(preComment.toString(), pv, updateDefault);
+                            case MULTIPV_DEC:
+                                setMultiPVMode(numPVF - 1);
+                                break;
+                            case MULTIPV_INC:
+                                setMultiPVMode(numPVF + 1);
+                                break;
+                            case HIDE_STATISTICS:
+                            case SHOW_STATISTICS: {
+                                mShowStats = finalActions.get(item) == SHOW_STATISTICS;
+                                Editor editor = settings.edit();
+                                editor.putBoolean("showStats", mShowStats);
+                                editor.apply();
+                                updateThinkingInfo();
+                                break;
+                            }
                         }
-                        break;
                     }
-                    case MULTIPV_DEC:
-                        setMultiPVMode(numPVF - 1);
-                        break;
-                    case MULTIPV_INC:
-                        setMultiPVMode(numPVF + 1);
-                        break;
-                    case HIDE_STATISTICS:
-                    case SHOW_STATISTICS: {
-                        mShowStats = finalActions.get(item) == SHOW_STATISTICS;
-                        Editor editor = settings.edit();
-                        editor.putBoolean("showStats", mShowStats);
-                        editor.commit();
-                        updateThinkingInfo();
-                        break;
-                    }
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        return alert;
+                });
+        return builder.create();
     }
 
     private void setMultiPVMode(int nPV) {
         numPV = nPV;
         Editor editor = settings.edit();
         editor.putInt("numPV", numPV);
-        editor.commit();
+        editor.apply();
         ctrl.setMultiPVMode(numPV);
     }
 
-    private final Dialog goBackMenuDialog() {
+    private Dialog goBackMenuDialog() {
         final int GOTO_START_GAME = 0;
         final int GOTO_START_VAR = 1;
         final int GOTO_PREV_VAR = 2;
@@ -3165,8 +3274,8 @@ public class MaterialChess extends AppCompatActivity
         final int AUTO_BACKWARD = 4;
 
         setAutoMode(AutoMode.OFF);
-        List<CharSequence> lst = new ArrayList<CharSequence>();
-        List<Integer> actions = new ArrayList<Integer>();
+        List<CharSequence> lst = new ArrayList<>();
+        List<Integer> actions = new ArrayList<>();
         lst.add(getString(R.string.goto_start_game));
         actions.add(GOTO_START_GAME);
         lst.add(getString(R.string.goto_start_variation));
@@ -3188,56 +3297,56 @@ public class MaterialChess extends AppCompatActivity
         final List<Integer> finalActions = actions;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.go_back);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                switch (finalActions.get(item)) {
-                    case GOTO_START_GAME:
-                        ctrl.gotoMove(0);
-                        break;
-                    case GOTO_START_VAR:
-                        ctrl.gotoStartOfVariation();
-                        break;
-                    case GOTO_PREV_VAR:
-                        ctrl.changeVariation(-1);
-                        break;
-                    case LOAD_PREV_GAME:
-                        Intent i;
-                        if (currFT == FT_PGN) {
-                            i = new Intent(MaterialChess.this, EditPGNLoad.class);
-                            i.setAction("org.mdc.chess.loadFilePrevGame");
-                            i.putExtra("org.mdc.chess.pathname", currPathName);
-                            startActivityForResult(i, RESULT_LOAD_PGN);
-                        } else if (currFT == FT_SCID) {
-                            i = new Intent(MaterialChess.this, LoadScid.class);
-                            i.setAction("org.mdc.chess.loadScidPrevGame");
-                            i.putExtra("org.mdc.chess.pathname", currPathName);
-                            startActivityForResult(i, RESULT_LOAD_PGN);
-                        } else if (currFT == FT_FEN) {
-                            i = new Intent(MaterialChess.this, LoadFEN.class);
-                            i.setAction("org.mdc.chess.loadPrevFen");
-                            i.putExtra("org.mdc.chess.pathname", currPathName);
-                            startActivityForResult(i, RESULT_LOAD_FEN);
+        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (finalActions.get(item)) {
+                            case GOTO_START_GAME:
+                                ctrl.gotoMove(0);
+                                break;
+                            case GOTO_START_VAR:
+                                ctrl.gotoStartOfVariation();
+                                break;
+                            case GOTO_PREV_VAR:
+                                ctrl.changeVariation(-1);
+                                break;
+                            case LOAD_PREV_GAME:
+                                Intent i;
+                                if (currFT == FT_PGN) {
+                                    i = new Intent(MaterialChess.this, EditPGNLoad.class);
+                                    i.setAction("org.mdc.chess.loadFilePrevGame");
+                                    i.putExtra("org.mdc.chess.pathname", currPathName);
+                                    startActivityForResult(i, RESULT_LOAD_PGN);
+                                } else if (currFT == FT_SCID) {
+                                    i = new Intent(MaterialChess.this, LoadScid.class);
+                                    i.setAction("org.mdc.chess.loadScidPrevGame");
+                                    i.putExtra("org.mdc.chess.pathname", currPathName);
+                                    startActivityForResult(i, RESULT_LOAD_PGN);
+                                } else if (currFT == FT_FEN) {
+                                    i = new Intent(MaterialChess.this, LoadFEN.class);
+                                    i.setAction("org.mdc.chess.loadPrevFen");
+                                    i.putExtra("org.mdc.chess.pathname", currPathName);
+                                    startActivityForResult(i, RESULT_LOAD_FEN);
+                                }
+                                break;
+                            case AUTO_BACKWARD:
+                                setAutoMode(AutoMode.BACKWARD);
+                                break;
                         }
-                        break;
-                    case AUTO_BACKWARD:
-                        setAutoMode(AutoMode.BACKWARD);
-                        break;
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        return alert;
+                    }
+                });
+        return builder.create();
     }
 
-    private final Dialog goForwardMenuDialog() {
+    private Dialog goForwardMenuDialog() {
         final int GOTO_END_VAR = 0;
         final int GOTO_NEXT_VAR = 1;
         final int LOAD_NEXT_GAME = 2;
         final int AUTO_FORWARD = 3;
 
         setAutoMode(AutoMode.OFF);
-        List<CharSequence> lst = new ArrayList<CharSequence>();
-        List<Integer> actions = new ArrayList<Integer>();
+        List<CharSequence> lst = new ArrayList<>();
+        List<Integer> actions = new ArrayList<>();
         lst.add(getString(R.string.goto_end_variation));
         actions.add(GOTO_END_VAR);
         if (ctrl.currVariation() < ctrl.numVariations() - 1) {
@@ -3257,73 +3366,76 @@ public class MaterialChess extends AppCompatActivity
         final List<Integer> finalActions = actions;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.go_forward);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                switch (finalActions.get(item)) {
-                    case GOTO_END_VAR:
-                        ctrl.gotoMove(Integer.MAX_VALUE);
-                        break;
-                    case GOTO_NEXT_VAR:
-                        ctrl.changeVariation(1);
-                        break;
-                    case LOAD_NEXT_GAME:
-                        Intent i;
-                        if (currFT == FT_PGN) {
-                            i = new Intent(MaterialChess.this, EditPGNLoad.class);
-                            i.setAction("org.mdc.chess.loadFileNextGame");
-                            i.putExtra("org.mdc.chess.pathname", currPathName);
-                            startActivityForResult(i, RESULT_LOAD_PGN);
-                        } else if (currFT == FT_SCID) {
-                            i = new Intent(MaterialChess.this, LoadScid.class);
-                            i.setAction("org.mdc.chess.loadScidNextGame");
-                            i.putExtra("org.mdc.chess.pathname", currPathName);
-                            startActivityForResult(i, RESULT_LOAD_PGN);
-                        } else if (currFT == FT_FEN) {
-                            i = new Intent(MaterialChess.this, LoadFEN.class);
-                            i.setAction("org.mdc.chess.loadNextFen");
-                            i.putExtra("org.mdc.chess.pathname", currPathName);
-                            startActivityForResult(i, RESULT_LOAD_FEN);
+        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (finalActions.get(item)) {
+                            case GOTO_END_VAR:
+                                ctrl.gotoMove(Integer.MAX_VALUE);
+                                break;
+                            case GOTO_NEXT_VAR:
+                                ctrl.changeVariation(1);
+                                break;
+                            case LOAD_NEXT_GAME:
+                                Intent i;
+                                if (currFT == FT_PGN) {
+                                    i = new Intent(MaterialChess.this, EditPGNLoad.class);
+                                    i.setAction("org.mdc.chess.loadFileNextGame");
+                                    i.putExtra("org.mdc.chess.pathname", currPathName);
+                                    startActivityForResult(i, RESULT_LOAD_PGN);
+                                } else if (currFT == FT_SCID) {
+                                    i = new Intent(MaterialChess.this, LoadScid.class);
+                                    i.setAction("org.mdc.chess.loadScidNextGame");
+                                    i.putExtra("org.mdc.chess.pathname", currPathName);
+                                    startActivityForResult(i, RESULT_LOAD_PGN);
+                                } else if (currFT == FT_FEN) {
+                                    i = new Intent(MaterialChess.this, LoadFEN.class);
+                                    i.setAction("org.mdc.chess.loadNextFen");
+                                    i.putExtra("org.mdc.chess.pathname", currPathName);
+                                    startActivityForResult(i, RESULT_LOAD_FEN);
+                                }
+                                break;
+                            case AUTO_FORWARD:
+                                setAutoMode(AutoMode.FORWARD);
+                                break;
                         }
-                        break;
-                    case AUTO_FORWARD:
-                        setAutoMode(AutoMode.FORWARD);
-                        break;
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        return alert;
-    }
-
-    private Dialog makeButtonDialog(ButtonActions buttonActions) {
-        List<CharSequence> names = new ArrayList<CharSequence>();
-        final List<UIAction> actions = new ArrayList<UIAction>();
-
-        HashSet<String> used = new HashSet<String>();
-        for (UIAction a : buttonActions.getMenuActions()) {
-            if ((a != null) && a.enabled() && !used.contains(a.getId())) {
-                names.add(getString(a.getName()));
-                actions.add(a);
-                used.add(a.getId());
-            }
-        }
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(buttonActions.getMenuTitle());
-        builder.setItems(names.toArray(new CharSequence[names.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                UIAction a = actions.get(item);
-                a.run();
-            }
-        });
+                    }
+                });
         return builder.create();
     }
 
-    private final Dialog manageEnginesDialog() {
+// --Commented out by Inspection START (21/10/2016 11:33 PM):
+//    private Dialog makeButtonDialog(ButtonActions buttonActions) {
+//        List<CharSequence> names = new ArrayList<CharSequence>();
+//        final List<UIAction> actions = new ArrayList<UIAction>();
+//
+//        HashSet<String> used = new HashSet<String>();
+//        for (UIAction a : buttonActions.getMenuActions()) {
+//            if ((a != null) && a.enabled() && !used.contains(a.getId())) {
+//                names.add(getString(a.getName()));
+//                actions.add(a);
+//                used.add(a.getId());
+//            }
+//        }
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        builder.setTitle(buttonActions.getMenuTitle());
+//        builder.setItems(names.toArray(new CharSequence[names.size()]),
+//                new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int item) {
+//                        UIAction a = actions.get(item);
+//                        a.run();
+//                    }
+//                });
+//        return builder.create();
+//    }
+// --Commented out by Inspection STOP (21/10/2016 11:33 PM)
+
+    private Dialog manageEnginesDialog() {
         final int SELECT_ENGINE = 0;
         final int SET_ENGINE_OPTIONS = 1;
         final int CONFIG_NET_ENGINE = 2;
-        List<CharSequence> lst = new ArrayList<CharSequence>();
-        List<Integer> actions = new ArrayList<Integer>();
+        List<CharSequence> lst = new ArrayList<>();
+        List<Integer> actions = new ArrayList<>();
         lst.add(getString(R.string.select_engine));
         actions.add(SELECT_ENGINE);
         if (canSetEngineOptions()) {
@@ -3335,46 +3447,50 @@ public class MaterialChess extends AppCompatActivity
         final List<Integer> finalActions = actions;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.option_manage_engines);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                switch (finalActions.get(item)) {
-                    case SELECT_ENGINE:
-                        removeDialog(SELECT_ENGINE_DIALOG);
-                        showDialog(SELECT_ENGINE_DIALOG);
-                        break;
-                    case SET_ENGINE_OPTIONS:
-                        setEngineOptions();
-                        break;
-                    case CONFIG_NET_ENGINE:
-                        removeDialog(NETWORK_ENGINE_DIALOG);
-                        showDialog(NETWORK_ENGINE_DIALOG);
-                        break;
-                }
-            }
-        });
-        AlertDialog alert = builder.create();
-        return alert;
+        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (finalActions.get(item)) {
+                            case SELECT_ENGINE:
+                                removeDialog(SELECT_ENGINE_DIALOG);
+                                showDialog(SELECT_ENGINE_DIALOG);
+                                break;
+                            case SET_ENGINE_OPTIONS:
+                                setEngineOptions();
+                                break;
+                            case CONFIG_NET_ENGINE:
+                                removeDialog(NETWORK_ENGINE_DIALOG);
+                                showDialog(NETWORK_ENGINE_DIALOG);
+                                break;
+                        }
+                    }
+                });
+        return builder.create();
     }
 
     /**
      * Return true if engine UCI options can be set now.
      */
-    private final boolean canSetEngineOptions() {
-        if (!storageAvailable())
+    private boolean canSetEngineOptions() {
+        if (!storageAvailable()) {
             return false;
+        }
         UCIOptions uciOpts = ctrl.getUCIOptions();
-        if (uciOpts == null)
+        if (uciOpts == null) {
             return false;
-        for (String name : uciOpts.getOptionNames())
-            if (uciOpts.getOption(name).visible)
+        }
+        for (String name : uciOpts.getOptionNames()) {
+            if (uciOpts.getOption(name).visible) {
                 return true;
+            }
+        }
         return false;
     }
 
     /**
      * Start activity to set engine options.
      */
-    private final void setEngineOptions() {
+    private void setEngineOptions() {
         Intent i = new Intent(MaterialChess.this, EditOptions.class);
         UCIOptions uciOpts = ctrl.getUCIOptions();
         if (uciOpts != null) {
@@ -3384,13 +3500,11 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    private final Dialog networkEngineDialog() {
+    private Dialog networkEngineDialog() {
         String[] fileNames = findFilesInDirectory(engineDir, new FileNameFilter() {
             @Override
             public boolean accept(String filename) {
-                if (reservedEngineName(filename))
-                    return false;
-                return EngineUtil.isNetEngine(filename);
+                return !reservedEngineName(filename) && EngineUtil.isNetEngine(filename);
             }
         });
         final int numFiles = fileNames.length;
@@ -3400,27 +3514,29 @@ public class MaterialChess extends AppCompatActivity
         int idx = 0;
         String sep = File.separator;
         String base = Environment.getExternalStorageDirectory() + sep + engineDir + sep;
-        for (int i = 0; i < numFiles; i++) {
-            ids[idx] = base + fileNames[i];
-            items[idx] = fileNames[i];
+        for (String fileName : fileNames) {
+            ids[idx] = base + fileName;
+            items[idx] = fileName;
             idx++;
         }
         ids[idx] = "";
         items[idx] = getString(R.string.new_engine);
-        idx++;
+        //idx++;
         String currEngine = ctrl.getEngine();
         int defaultItem = 0;
-        for (int i = 0; i < numItems; i++)
+        for (int i = 0; i < numItems; i++) {
             if (ids[i].equals(currEngine)) {
                 defaultItem = i;
                 break;
             }
+        }
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.configure_network_engine);
         builder.setSingleChoiceItems(items, defaultItem, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
-                if ((item < 0) || (item >= numItems))
+                if ((item < 0) || (item >= numItems)) {
                     return;
+                }
                 dialog.dismiss();
                 if (item == numItems - 1) {
                     showDialog(NEW_NETWORK_ENGINE_DIALOG);
@@ -3438,15 +3554,14 @@ public class MaterialChess extends AppCompatActivity
                 showDialog(MANAGE_ENGINES_DIALOG);
             }
         });
-        AlertDialog alert = builder.create();
-        return alert;
+        return builder.create();
     }
 
     // Filename of network engine to configure
     private String networkEngineToConfig = "";
 
     // Ask for name of new network engine
-    private final Dialog newNetworkEngineDialog() {
+    private Dialog newNetworkEngineDialog() {
         View content = View.inflate(this, R.layout.create_network_engine, null);
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(content);
@@ -3457,7 +3572,8 @@ public class MaterialChess extends AppCompatActivity
             public void run() {
                 String engineName = engineNameView.getText().toString();
                 String sep = File.separator;
-                String pathName = Environment.getExternalStorageDirectory() + sep + engineDir + sep + engineName;
+                String pathName = Environment.getExternalStorageDirectory() + sep + engineDir + sep
+                        + engineName;
                 File file = new File(pathName);
                 boolean nameOk = true;
                 int errMsg = -1;
@@ -3502,7 +3618,8 @@ public class MaterialChess extends AppCompatActivity
         final Dialog dialog = builder.create();
         engineNameView.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
+                        == KeyEvent.KEYCODE_ENTER)) {
                     createEngine.run();
                     dialog.cancel();
                     return true;
@@ -3514,7 +3631,7 @@ public class MaterialChess extends AppCompatActivity
     }
 
     // Configure network engine settings
-    private final Dialog networkEngineConfigDialog() {
+    private Dialog networkEngineConfigDialog() {
         View content = View.inflate(this, R.layout.network_engine_config, null);
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(content);
@@ -3526,12 +3643,15 @@ public class MaterialChess extends AppCompatActivity
         try {
             if (EngineUtil.isNetEngine(networkEngineToConfig)) {
                 String[] lines = Util.readFile(networkEngineToConfig);
-                if (lines.length > 1)
+                if (lines.length > 1) {
                     hostName = lines[1];
-                if (lines.length > 2)
+                }
+                if (lines.length > 2) {
                     port = lines[2];
+                }
             }
         } catch (IOException e1) {
+            Log.d("Exception", e1.toString());
         }
         hostNameView.setText(hostName);
         portView.setText(port);
@@ -3549,7 +3669,8 @@ public class MaterialChess extends AppCompatActivity
                     fw.close();
                     setEngineOptions(true);
                 } catch (IOException e) {
-                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), e.getMessage(),
+                            Toast.LENGTH_LONG).show();
                 }
             }
         };
@@ -3586,7 +3707,8 @@ public class MaterialChess extends AppCompatActivity
         final Dialog dialog = builder.create();
         portView.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
+                        == KeyEvent.KEYCODE_ENTER)) {
                     writeConfig.run();
                     dialog.cancel();
                     removeDialog(NETWORK_ENGINE_DIALOG);
@@ -3603,18 +3725,20 @@ public class MaterialChess extends AppCompatActivity
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.delete_network_engine);
         String msg = networkEngineToConfig;
-        if (msg.lastIndexOf('/') >= 0)
+        if (msg.lastIndexOf('/') >= 0) {
             msg = msg.substring(msg.lastIndexOf('/') + 1);
+        }
         builder.setMessage(getString(R.string.network_engine) + ": " + msg);
         builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                new File(networkEngineToConfig).delete();
+                boolean result = new File(networkEngineToConfig).delete();
+                Log.d("Result delete", "" + result);
                 String engine = settings.getString("engine", "stockfish");
                 if (engine.equals(networkEngineToConfig)) {
                     engine = "stockfish";
                     Editor editor = settings.edit();
                     editor.putString("engine", engine);
-                    editor.commit();
+                    editor.apply();
                     dialog.dismiss();
                     int strength = settings.getInt("strength", 1000);
                     setEngineOptions(false);
@@ -3639,23 +3763,23 @@ public class MaterialChess extends AppCompatActivity
                 showDialog(NETWORK_ENGINE_DIALOG);
             }
         });
-        AlertDialog alert = builder.create();
-        return alert;
+        return builder.create();
     }
 
     /**
      * Open a load/save file dialog. Uses OI file manager if available.
      */
     private void selectFile(int titleMsg, int buttonMsg, String settingsName, String defaultDir,
-                            int dialog, int result) {
+            int dialog, int result) {
         setAutoMode(AutoMode.OFF);
         String action = "org.openintents.action.PICK_FILE";
         Intent i = new Intent(action);
         String currentFile = settings.getString(settingsName, "");
         String sep = File.separator;
-        if (!currentFile.contains(sep))
+        if (!currentFile.contains(sep)) {
             currentFile = Environment.getExternalStorageDirectory() +
                     sep + defaultDir + sep + currentFile;
+        }
         i.setData(Uri.fromFile(new File(currentFile)));
         i.putExtra("org.openintents.extra.TITLE", getString(titleMsg));
         i.putExtra("org.openintents.extra.BUTTON_TEXT", getString(buttonMsg));
@@ -3667,7 +3791,7 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    private final boolean hasScidProvider() {
+    private boolean hasScidProvider() {
         try {
             getPackageManager().getPackageInfo("org.scid.android", 0);
             return true;
@@ -3676,7 +3800,7 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    private final void selectScidFile() {
+    private void selectScidFile() {
         setAutoMode(AutoMode.OFF);
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("org.scid.android",
@@ -3689,14 +3813,14 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    public final static boolean hasFenProvider(PackageManager manager) {
+    public static boolean hasFenProvider(PackageManager manager) {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.setType("application/x-chess-fen");
         List<ResolveInfo> resolvers = manager.queryIntentActivities(i, 0);
         return (resolvers != null) && (resolvers.size() > 0);
     }
 
-    private final void getFen() {
+    private void getFen() {
         Intent i = new Intent(Intent.ACTION_GET_CONTENT);
         i.setType("application/x-chess-fen");
         try {
@@ -3706,26 +3830,27 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    final static int FT_NONE = 0;
-    final static int FT_PGN = 1;
-    final static int FT_SCID = 2;
-    final static int FT_FEN = 3;
+    private final static int FT_NONE = 0;
+    private final static int FT_PGN = 1;
+    private final static int FT_SCID = 2;
+    private final static int FT_FEN = 3;
 
-    private final int currFileType() {
+    private int currFileType() {
         return settings.getInt("currFT", FT_NONE);
     }
 
     /**
      * Return path name for the last used PGN or SCID file.
      */
-    private final String currPathName() {
+    private String currPathName() {
         int ft = settings.getInt("currFT", FT_NONE);
         switch (ft) {
             case FT_PGN: {
                 String ret = settings.getString("currentPGNFile", "");
                 String sep = File.separator;
-                if (!ret.contains(sep))
+                if (!ret.contains(sep)) {
                     ret = Environment.getExternalStorageDirectory() + sep + pgnDir + sep + ret;
+                }
                 return ret;
             }
             case FT_SCID:
@@ -3737,27 +3862,28 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    private static interface FileNameFilter {
+    private interface FileNameFilter {
         boolean accept(String filename);
     }
 
-    private final String[] findFilesInDirectory(String dirName, final FileNameFilter filter) {
+    private String[] findFilesInDirectory(String dirName, final FileNameFilter filter) {
         File extDir = Environment.getExternalStorageDirectory();
         String sep = File.separator;
         File dir = new File(extDir.getAbsolutePath() + sep + dirName);
         File[] files = dir.listFiles(new FileFilter() {
             public boolean accept(File pathname) {
-                if (!pathname.isFile())
-                    return false;
-                return (filter == null) || filter.accept(pathname.getAbsolutePath());
+                return pathname.isFile() && ((filter == null) || filter.accept(
+                        pathname.getAbsolutePath()));
             }
         });
-        if (files == null)
+        if (files == null) {
             files = new File[0];
+        }
         final int numFiles = files.length;
         String[] fileNames = new String[numFiles];
-        for (int i = 0; i < files.length; i++)
+        for (int i = 0; i < files.length; i++) {
             fileNames[i] = files[i].getName();
+        }
         Arrays.sort(fileNames, String.CASE_INSENSITIVE_ORDER);
         return fileNames;
     }
@@ -3765,28 +3891,28 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Save current game to a PGN file.
      */
-    private final void savePGNToFile(String pathName, boolean silent) {
+    private void savePGNToFile(String pathName) {
         String pgn = ctrl.getPGN();
         Editor editor = settings.edit();
         editor.putString("currentPGNFile", pathName);
         editor.putInt("currFT", FT_PGN);
-        editor.commit();
+        editor.apply();
         Intent i = new Intent(MaterialChess.this, EditPGNSave.class);
         i.setAction("org.mdc.chess.saveFile");
         i.putExtra("org.mdc.chess.pathname", pathName);
         i.putExtra("org.mdc.chess.pgn", pgn);
-        i.putExtra("org.mdc.chess.silent", silent);
+        i.putExtra("org.mdc.chess.silent", false);
         startActivity(i);
     }
 
     /**
      * Load a PGN game from a file.
      */
-    private final void loadPGNFromFile(String pathName) {
+    private void loadPGNFromFile(String pathName) {
         Editor editor = settings.edit();
         editor.putString("currentPGNFile", pathName);
         editor.putInt("currFT", FT_PGN);
-        editor.commit();
+        editor.apply();
         Intent i = new Intent(MaterialChess.this, EditPGNLoad.class);
         i.setAction("org.mdc.chess.loadFile");
         i.putExtra("org.mdc.chess.pathname", pathName);
@@ -3796,22 +3922,24 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Load a FEN position from a file.
      */
-    private final void loadFENFromFile(String pathName) {
-        if (pathName == null)
+    private void loadFENFromFile(String pathName) {
+        if (pathName == null) {
             return;
+        }
         Editor editor = settings.edit();
         editor.putString("currentFENFile", pathName);
         editor.putInt("currFT", FT_FEN);
-        editor.commit();
+        editor.apply();
         Intent i = new Intent(MaterialChess.this, LoadFEN.class);
         i.setAction("org.mdc.chess.loadFen");
         i.putExtra("org.mdc.chess.pathname", pathName);
         startActivityForResult(i, RESULT_LOAD_FEN);
     }
 
-    private final void setFenHelper(String fen) {
-        if (fen == null)
+    private void setFenHelper(String fen) {
+        if (fen == null) {
             return;
+        }
         try {
             ctrl.setFENOrPGN(fen);
         } catch (ChessParseError e) {
@@ -3819,8 +3947,9 @@ public class MaterialChess extends AppCompatActivity
             try {
                 TextIO.readFEN(fen);
             } catch (ChessParseError e2) {
-                if (e2.pos != null)
+                if (e2.pos != null) {
                     startEditBoard(fen);
+                }
             }
         }
     }
@@ -3855,13 +3984,16 @@ public class MaterialChess extends AppCompatActivity
     @Override
     public void computerMoveMade() {
         if (soundEnabled) {
-            if (moveSound != null)
+            if (moveSound != null) {
                 moveSound.release();
+            }
             try {
                 moveSound = MediaPlayer.create(this, R.raw.movesound);
-                if (moveSound != null)
+                if (moveSound != null) {
                     moveSound.start();
+                }
             } catch (NotFoundException ex) {
+                Log.d("Exception", ex.toString());
             }
         }
         if (vibrateEnabled) {
@@ -3878,7 +4010,7 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Decide if user should be warned about heavy CPU usage.
      */
-    private final void updateNotification() {
+    private void updateNotification() {
         boolean warn = false;
         if (lastVisibleMillis != 0) { // GUI not visible
             warn = lastComputationMillis >= lastVisibleMillis + 60000;
@@ -3891,9 +4023,10 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Set/clear the "heavy CPU usage" notification.
      */
-    private final void setNotification(boolean show) {
-        if (notificationActive == show)
+    private void setNotification(boolean show) {
+        if (notificationActive == show) {
             return;
+        }
         notificationActive = show;
         final int cpuUsage = 1;
         String ns = Context.NOTIFICATION_SERVICE;
@@ -3924,7 +4057,7 @@ public class MaterialChess extends AppCompatActivity
         }
     }
 
-    private final String timeToString(int time) {
+    private String timeToString(int time) {
         int secs = (int) Math.floor((time + 999) / 1000.0);
         boolean neg = false;
         if (secs < 0) {
@@ -3942,8 +4075,8 @@ public class MaterialChess extends AppCompatActivity
         return ret.toString();
     }
 
-    private Handler handlerTimer = new Handler();
-    private Runnable r = new Runnable() {
+    private final Handler handlerTimer = new Handler();
+    private final Runnable r = new Runnable() {
         public void run() {
             ctrl.updateRemainingTime();
         }
@@ -3952,21 +4085,24 @@ public class MaterialChess extends AppCompatActivity
     @Override
     public void setRemainingTime(int wTime, int bTime, int nextUpdate) {
         if (ctrl.getGameMode().clocksActive()) {
-            whiteTitleText.setText(getString(R.string.white_square_character) + " " + timeToString(wTime));
-            blackTitleText.setText(getString(R.string.black_square_character) + " " + timeToString(bTime));
+            whiteTitleText.setText(
+                    getString(R.string.white_square_character) + " " + timeToString(wTime));
+            blackTitleText.setText(
+                    getString(R.string.black_square_character) + " " + timeToString(bTime));
         } else {
-            TreeMap<String, String> headers = new TreeMap<String, String>();
+            TreeMap<String, String> headers = new TreeMap<>();
             ctrl.getHeaders(headers);
             whiteTitleText.setText(headers.get("White"));
             blackTitleText.setText(headers.get("Black"));
         }
         handlerTimer.removeCallbacks(r);
-        if (nextUpdate > 0)
+        if (nextUpdate > 0) {
             handlerTimer.postDelayed(r, nextUpdate);
+        }
     }
 
-    private Handler autoModeTimer = new Handler();
-    private Runnable amRunnable = new Runnable() {
+    private final Handler autoModeTimer = new Handler();
+    private final Runnable amRunnable = new Runnable() {
         @Override
         public void run() {
             switch (autoMode) {
@@ -3987,15 +4123,16 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Set automatic move forward/backward mode.
      */
-    void setAutoMode(AutoMode am) {
+    private void setAutoMode(AutoMode am) {
 //        System.out.printf("%.3f MaterialChess.setAutoMode(): %s\n",
 //                System.currentTimeMillis() * 1e-3, am.toString());
         autoMode = am;
         switch (am) {
             case BACKWARD:
             case FORWARD:
-                if (autoMoveDelay > 0)
+                if (autoMoveDelay > 0) {
                     autoModeTimer.postDelayed(amRunnable, autoMoveDelay);
+                }
                 break;
             case OFF:
                 autoModeTimer.removeCallbacks(amRunnable);
@@ -4006,9 +4143,10 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Disable automatic move mode if clocks are active.
      */
-    void maybeAutoModeOff(GameMode gm) {
-        if (gm.clocksActive())
+    private void maybeAutoModeOff(GameMode gm) {
+        if (gm.clocksActive()) {
             setAutoMode(AutoMode.OFF);
+        }
     }
 
     /**
@@ -4017,19 +4155,20 @@ public class MaterialChess extends AppCompatActivity
     static class PgnScreenText implements PgnToken.PgnTokenReceiver,
             MoveListView.OnLinkClickListener {
         private SpannableStringBuilder sb = new SpannableStringBuilder();
-        private TreeMap<Integer, Node> offs2Node = new TreeMap<Integer, Node>();
+        private final TreeMap<Integer, Node> offs2Node = new TreeMap<>();
         private int prevType = PgnToken.EOF;
         int nestLevel = 0;
         boolean col0 = true;
-        Node currNode = null;
+        // --Commented out by Inspection (21/10/2016 11:38 PM):Node currNode = null;
         final static int indentStep = 15;
         int currPos = 0, endPos = 0;
         boolean upToDate = false;
-        PGNOptions options;
-        MaterialChess df;
+        final PGNOptions options;
+        final MaterialChess df;
 
         private static class NodeInfo {
-            int l0, l1;
+            final int l0;
+            final int l1;
 
             NodeInfo(int ls, int le) {
                 l0 = ls;
@@ -4037,11 +4176,11 @@ public class MaterialChess extends AppCompatActivity
             }
         }
 
-        HashMap<Node, NodeInfo> nodeToCharPos;
+        final HashMap<Node, NodeInfo> nodeToCharPos;
 
         PgnScreenText(MaterialChess df, PGNOptions options) {
             this.df = df;
-            nodeToCharPos = new HashMap<Node, NodeInfo>();
+            nodeToCharPos = new HashMap<>();
             this.options = options;
         }
 
@@ -4061,11 +4200,11 @@ public class MaterialChess extends AppCompatActivity
         int paraIndent = 0;
         boolean paraBold = false;
 
-        private final void newLine() {
+        private void newLine() {
             newLine(false);
         }
 
-        private final void newLine(boolean eof) {
+        private void newLine(boolean eof) {
             if (!col0) {
                 if (paraIndent > 0) {
                     int paraEnd = sb.length();
@@ -4078,8 +4217,9 @@ public class MaterialChess extends AppCompatActivity
                     sb.setSpan(new StyleSpan(Typeface.BOLD), paraStart, paraEnd,
                             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
-                if (!eof)
+                if (!eof) {
                     sb.append('\n');
+                }
                 paraStart = sb.length();
                 paraIndent = nestLevel;
                 paraBold = false;
@@ -4096,19 +4236,23 @@ public class MaterialChess extends AppCompatActivity
 
         @Override
         public boolean onLinkClick(int offs) {
-            if (ctrl == null)
+            if (ctrl == null) {
                 return false;
+            }
             Map.Entry<Integer, Node> e = offs2Node.floorEntry(offs);
-            if (e == null)
+            if (e == null) {
                 return false;
+            }
             Node node = e.getValue();
             if (node == null && e.getKey() == offs) {
                 e = offs2Node.lowerEntry(e.getKey());
-                if (e != null)
+                if (e != null) {
                     node = e.getValue();
+                }
             }
-            if (node == null)
+            if (node == null) {
                 return false;
+            }
 
             // On android 4.1 this onClick method is called
             // even when you long click the move list. The test
@@ -4146,8 +4290,9 @@ public class MaterialChess extends AppCompatActivity
                     break;
                 case PgnToken.INTEGER:
                     if ((prevType != PgnToken.LEFT_PAREN) &&
-                            (prevType != PgnToken.RIGHT_BRACKET) && !col0)
+                            (prevType != PgnToken.RIGHT_BRACKET) && !col0) {
                         sb.append(' ');
+                    }
                     sb.append(token);
                     col0 = false;
                     break;
@@ -4169,8 +4314,9 @@ public class MaterialChess extends AppCompatActivity
                     break;
                 case PgnToken.LEFT_PAREN:
                     nestLevel++;
-                    if (col0)
+                    if (col0) {
                         paraIndent++;
+                    }
                     newLine();
                     sb.append('(');
                     col0 = false;
@@ -4185,8 +4331,10 @@ public class MaterialChess extends AppCompatActivity
                     col0 = false;
                     break;
                 case PgnToken.SYMBOL: {
-                    if ((prevType != PgnToken.RIGHT_BRACKET) && (prevType != PgnToken.LEFT_BRACKET) && !col0)
+                    if ((prevType != PgnToken.RIGHT_BRACKET) && (prevType != PgnToken.LEFT_BRACKET)
+                            && !col0) {
                         sb.append(' ');
+                    }
                     int l0 = sb.length();
                     sb.append(token);
                     int l1 = sb.length();
@@ -4199,6 +4347,7 @@ public class MaterialChess extends AppCompatActivity
                 }
                 case PgnToken.COMMENT:
                     if (prevType == PgnToken.RIGHT_BRACKET) {
+                        break;
                     } else if (nestLevel == 0) {
                         nestLevel++;
                         newLine();
@@ -4212,10 +4361,12 @@ public class MaterialChess extends AppCompatActivity
                     sb.append(token.replaceAll("[ \t\r\n]+", " ").trim());
                     int l1 = sb.length();
                     int color = ColorTheme.instance().getColor(ColorTheme.PGN_COMMENT);
-                    sb.setSpan(new ForegroundColorSpan(color), l0, l1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    sb.setSpan(new ForegroundColorSpan(color), l0, l1,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     col0 = false;
-                    if (nestLevel == 0)
+                    if (nestLevel == 0) {
                         newLine();
+                    }
                     break;
                 case PgnToken.EOF:
                     newLine(true);
@@ -4232,7 +4383,7 @@ public class MaterialChess extends AppCompatActivity
             prevType = PgnToken.EOF;
             nestLevel = 0;
             col0 = true;
-            currNode = null;
+            //currNode = null;
             currPos = 0;
             endPos = 0;
             nodeToCharPos.clear();
@@ -4250,17 +4401,18 @@ public class MaterialChess extends AppCompatActivity
         public void setCurrent(Node node) {
             sb.removeSpan(bgSpan);
             NodeInfo ni = nodeToCharPos.get(node);
-            if ((ni == null) && (node != null) && (node.getParent() != null))
+            if ((ni == null) && (node != null) && (node.getParent() != null)) {
                 ni = nodeToCharPos.get(node.getParent());
+            }
             if (ni != null) {
-                int color = ColorTheme.instance().getColor(ColorTheme.CURRENT_MOVE);
+                //int color = ColorTheme.instance().getColor(ColorTheme.CURRENT_MOVE);
                 bgSpan = new BackgroundColorSpan(Color.WHITE);
                 sb.setSpan(bgSpan, ni.l0, ni.l1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                 currPos = ni.l0;
             } else {
                 currPos = 0;
             }
-            currNode = node;
+            //currNode = node;
         }
     }
 }

@@ -113,6 +113,6 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"/>
 </LinearLayout>
-<include layout="@layout/left_drawer"/>
+<include layout="@layout/main_drawer"/>
 <include layout="@layout/right_drawer"/>
 </android.support.v4.widget.DrawerLayout>

@@ -6,6 +6,8 @@
     <color name="White">#FFFFFF</color>
 
     <color name="colorPrimary">#607D8B</color>
+    <color name="colorPrimaryDark">#455A64</color>
+    <color name="colorPrimaryLight">#ECEFF1</color>
 
     <!--
     final static int ARROW_0 = 7;
