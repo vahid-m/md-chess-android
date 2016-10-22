@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_new_game"
+            android:icon="@drawable/ic_gamepad"
+            android:title="@string/option_new_game" />
+        <item
+            android:id="@+id/nav_edit_board"
+            android:icon="@drawable/ic_mode_edit"
+            android:title="@string/option_edit_board" />
+        <item
+            android:id="@+id/nav_flip_board"
+            android:icon="@drawable/ic_swap"
+            android:title="@string/flip_board" />
+        <item
+            android:id="@+id/nav_load_pgn"
+            android:icon="@drawable/ic_file_upload"
+            android:title="@string/pgn_load" />
+        <item
+            android:id="@+id/nav_resign"
+            android:icon="@drawable/ic_exit"
+            android:title="@string/option_resign_game" />
+    </group>
+
+</menu>

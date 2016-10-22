@@ -106,11 +106,15 @@ import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
@@ -125,6 +129,7 @@ import android.text.style.StyleSpan;
 import android.util.Log;
 //import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.ViewConfiguration;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -148,7 +153,8 @@ import android.widget.Toast;
 @SuppressLint("ClickableViewAccessibility")
 public class MaterialChess extends AppCompatActivity
         implements GUIInterface,
-        ActivityCompat.OnRequestPermissionsResultCallback {
+        ActivityCompat.OnRequestPermissionsResultCallback,
+        NavigationView.OnNavigationItemSelectedListener{
     // FIXME!!! PGN view option: game continuation (for training)
     // FIXME!!! Remove invalid playerActions in PGN import (should be done in verifyChildren)
     // FIXME!!! Implement bookmark mechanism for positions in pgn files
@@ -210,9 +216,9 @@ public class MaterialChess extends AppCompatActivity
     private TextView whiteFigText, blackFigText, summaryTitleText;
     private static Dialog moveListMenuDlg;
 
-    private DrawerLayout drawerLayout;
+    //private DrawerLayout drawerLayout;
     // --Commented out by Inspection (22/10/2016 12:08 AM):private ActionBarDrawerToggle actionBarDrawerToggle;
-    private ListView maintDrawer;
+    //private ListView maintDrawer;
     //private ListView rightDrawer;
 
     private SharedPreferences settings;
@@ -582,8 +588,8 @@ public class MaterialChess extends AppCompatActivity
         String intentPgnOrFen = pair.first;
         String intentFilename = pair.second;
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        //setSupportActionBar(toolbar);
 
         createDirectories();
 
@@ -995,7 +1001,27 @@ public class MaterialChess extends AppCompatActivity
 
     private void initUI() {
         leftHanded = leftHandedView();
-        setContentView(leftHanded ? R.layout.main_left_handed : R.layout.main);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
+        setSupportActionBar(toolbar);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.main_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_main);
+        navigationView.setNavigationItemSelectedListener(this);
         //overrideViewAttribs();
 
         // title lines need to be regenerated every time due to layout changes (rotations)
@@ -1027,7 +1053,7 @@ public class MaterialChess extends AppCompatActivity
         moveList.setFocusable(false);
         thinking.setFocusable(false);
 
-        initDrawers();
+        //initDrawers();
 
         class ClickListener implements OnClickListener, OnTouchListener {
             private float touchX = -1;
@@ -1035,7 +1061,7 @@ public class MaterialChess extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 boolean left = touchX <= v.getWidth() / 2.0;
-                drawerLayout.openDrawer(left ? GravityCompat.START : GravityCompat.END);
+                //drawerLayout.openDrawer(left ? GravityCompat.START : GravityCompat.END);
                 touchX = -1;
             }
 
@@ -1288,6 +1314,63 @@ public class MaterialChess extends AppCompatActivity
             outState.putByteArray("gameState", data);
             outState.putInt("gameStateVersion", 3);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.main_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main_drawer, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        /*if (id == R.id.nav_camera) {
+            // Handle the camera action
+        } else if (id == R.id.nav_gallery) {
+
+        } else if (id == R.id.nav_slideshow) {
+
+        } else if (id == R.id.nav_manage) {
+
+        } else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_send) {
+
+        }*/
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.main_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 
     @Override
@@ -1706,7 +1789,7 @@ public class MaterialChess extends AppCompatActivity
     /**
      * Initialize the drawer part of the user interface.
      */
-    private void initDrawers() {
+    /*private void initDrawers() {
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         maintDrawer = (ListView) findViewById(R.id.main_drawer);
         //rightDrawer = (ListView) findViewById(R.id.right_drawer);
@@ -1753,18 +1836,18 @@ public class MaterialChess extends AppCompatActivity
 
 
 
-    }
+    //}*/
 
-    @Override
+    /*@Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         drawerLayout.openDrawer(GravityCompat.START);
         return false;
-    }
+    }*/
 
     /**
      * React to a selection in the left/right drawers.
      */
-    private void handleDrawerSelection(int itemId) {
+    /*private void handleDrawerSelection(int itemId) {
         drawerLayout.closeDrawer(GravityCompat.START);
         drawerLayout.closeDrawer(GravityCompat.END);
         maintDrawer.clearChoices();
@@ -1830,7 +1913,7 @@ public class MaterialChess extends AppCompatActivity
                 showDialog(ABOUT_DIALOG);
                 break;
         }
-    }
+    }*/
 
     static private final int RESULT_EDITBOARD = 0;
     static private final int RESULT_SETTINGS = 1;

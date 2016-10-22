@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_marginTop="?attr/actionBarSize"
+    android:background="@color/White"
+    android:orientation="vertical">
+
+    <include
+        layout="@layout/title"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"/>
+
+    <view
+        android:id="@+id/chessboard"
+        class="org.mdc.chess.ChessBoardPlay"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+
+        android:orientation="horizontal"
+        android:background="@color/White"
+        android:paddingTop="1dp">
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="monospace"
+            android:includeFontPadding="true"
+            android:textSize="12sp"
+            android:typeface="monospace" />
+
+        <LinearLayout
+            android:id="@+id/buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!--
+
+            <ImageButton
+                android:id="@+id/custom3Button"
+                android:layout_width="36dp"
+                android:layout_height="32dp"
+                android:contentDescription="@string/buttonDesc_custom3"/>
+
+            <ImageButton
+                android:id="@+id/custom2Button"
+                android:layout_width="36dp"
+                android:layout_height="32dp"
+                android:contentDescription="@string/buttonDesc_custom2"/>
+
+            <ImageButton
+                android:id="@+id/custom1Button"
+                android:layout_width="36dp"
+                android:layout_height="32dp"
+                android:contentDescription="@string/buttonDesc_custom1"/>
+
+            <ImageButton
+                android:id="@+id/modeButton"
+                android:layout_width="36dp"
+                android:layout_height="32dp"
+                android:contentDescription="@string/buttonDesc_mode"/>
+
+            <ImageButton
+                android:id="@+id/undoButton"
+                android:layout_width="36dp"
+                android:layout_height="32dp"
+                android:contentDescription="@string/buttonDesc_back"/>
+
+            <ImageButton
+                android:id="@+id/redoButton"
+                android:layout_width="36dp"
+                android:layout_height="32dp"
+                android:contentDescription="@string/buttonDesc_forward"/>
+            -->
+        </LinearLayout>
+    </LinearLayout>
+
+    <view
+        class="org.mdc.chess.MyRelativeLayout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/White"
+        android:orientation="vertical">
+
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <view
+                android:id="@+id/moveList"
+                class="org.mdc.chess.MoveListView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="true"
+                android:background="@color/White"
+                android:padding="0dp" />
+        </ScrollView>
+
+        <view
+            android:id="@+id/scrollViewBot"
+            class="org.mdc.chess.MyScrollView"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true">
+
+            <TextView
+                android:id="@+id/thinking"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:includeFontPadding="true"
+                android:tag="thinking"
+                android:textSize="12sp"
+                android:typeface="monospace" />
+        </view>
+    </view>
+</LinearLayout>
