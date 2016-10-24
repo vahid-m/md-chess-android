@@ -1250,7 +1250,7 @@ public class MaterialChess extends AppCompatActivity
             }
         });
 
-        buttons = findViewById(R.id.buttons);
+        //buttons = findViewById(R.id.buttons);
         /*custom1Button = (ImageButton) findViewById(R.id.custom1Button);
         custom1ButtonActions.setImageButton(custom1Button, this);
         custom2Button = (ImageButton) findViewById(R.id.custom2Button);
@@ -1342,6 +1342,8 @@ public class MaterialChess extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent i = new Intent(MaterialChess.this, Preferences.class);
+            startActivityForResult(i, RESULT_SETTINGS);
             return true;
         }
 
@@ -1354,11 +1356,11 @@ public class MaterialChess extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        /*if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
+        if (id == R.id.nav_new_game) {
+            showDialog(NEW_GAME_DIALOG);
+        } else if (id == R.id.nav_edit_board) {
+            startEditBoard(ctrl.getFEN());
+        } /*else if (id == R.id.nav_slideshow) {
 
         } else if (id == R.id.nav_manage) {
 

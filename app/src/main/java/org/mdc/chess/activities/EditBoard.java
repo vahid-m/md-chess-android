@@ -56,10 +56,13 @@ import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -77,12 +80,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 @SuppressLint("ClickableViewAccessibility")
-public class EditBoard extends Activity {
+public class EditBoard extends AppCompatActivity {
     private ChessBoardEdit cb;
     private TextView status;
     private Button okButton;
     private Button cancelButton;
 
+    static private final int RESULT_SETTINGS = 1;
     private boolean egtbHints;
     private boolean autoScrollTitle;
     private TextView whiteFigText;
@@ -135,8 +139,34 @@ public class EditBoard extends Activity {
         checkValidAndUpdateMaterialDiff();
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Intent i = new Intent(EditBoard.this, Preferences.class);
+            startActivityForResult(i, RESULT_SETTINGS);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main_drawer, menu);
+        return true;
+    }
+
     private final void initUI() {
-        setContentView(R.layout.editboard);
+        setContentView(R.layout.app_bar_edit_board);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_edit);
+        setSupportActionBar(toolbar);
         //Util.overrideViewAttribs(findViewById(R.id.main));
 
         View firstTitleLine = findViewById(R.id.first_title_line);
@@ -246,11 +276,6 @@ public class EditBoard extends Activity {
         });
     }
 
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        drawerLayout.openDrawer(Gravity.LEFT);
-        return false;
-    }
 
     private final void setSelection(int sq) {
         cb.setSelection(sq);
