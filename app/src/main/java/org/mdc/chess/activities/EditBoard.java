@@ -39,6 +39,7 @@ import org.mdc.chess.tb.ProbeResult;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -248,20 +249,19 @@ public class EditBoard extends AppCompatActivity {
     private static final int EP_DIALOG = 3;
     private static final int MOVCNT_DIALOG = 4;
 
-// --Commented out by Inspection START (24/10/2016 10:36 PM):
-//    /** Test if a position is valid. */
-//    private boolean checkValid() {
-//        try {
-//            String fen = TextIO.toFEN(cb.pos);
-//            TextIO.readFEN(fen);
-//            status.setText("");
-//            return true;
-//        } catch (ChessParseError e) {
-//            status.setText(e.getMessage());
-//        }
-//        return false;
-//    }
-// --Commented out by Inspection STOP (24/10/2016 10:36 PM)
+
+    private boolean checkValid() {
+        try {
+            String fen = TextIO.toFEN(cb.pos);
+            TextIO.readFEN(fen);
+            status.setText("");
+            return true;
+        } catch (ChessParseError e) {
+            status.setText(e.getMessage());
+        }
+        return false;
+    }
+
 
 
     private void setSelection(int sq) {
@@ -397,33 +397,114 @@ public class EditBoard extends AppCompatActivity {
     @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {
+            case EDIT_DIALOG: {
+                final CharSequence[] items = {
+                        getString(R.string.side_to_move),
+                        getString(R.string.clear_board), getString(R.string.initial_position),
+                        getString(R.string.castling_flags), getString(R.string.en_passant_file),
+                        getString(R.string.move_counters),
+                        getString(R.string.copy_position), getString(R.string.paste_position)
+                };
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(R.string.edit_board);
+                builder.setItems(items, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (item) {
+                            case 0: // Edit side to move
+                                showDialog(SIDE_DIALOG);
+                                cb.setSelection(-1);
+                                checkValid();
+                                break;
+                            case 1: { // Clear board
+                                Position pos = new Position();
+                                cb.setPosition(pos);
+                                cb.setSelection(-1);
+                                checkValid();
+                                break;
+                            }
+                            case 2: { // Set initial position
+                                try {
+                                    Position pos = TextIO.readFEN(TextIO.startPosFEN);
+                                    cb.setPosition(pos);
+                                    cb.setSelection(-1);
+                                    checkValid();
+                                } catch (ChessParseError e) {
+                                }
+                                break;
+                            }
+                            case 3: // Edit castling flags
+                                removeDialog(CASTLE_DIALOG);
+                                showDialog(CASTLE_DIALOG);
+                                cb.setSelection(-1);
+                                checkValid();
+                                break;
+                            case 4: // Edit en passant file
+                                removeDialog(EP_DIALOG);
+                                showDialog(EP_DIALOG);
+                                cb.setSelection(-1);
+                                checkValid();
+                                break;
+                            case 5: // Edit move counters
+                                removeDialog(MOVCNT_DIALOG);
+                                showDialog(MOVCNT_DIALOG);
+                                cb.setSelection(-1);
+                                checkValid();
+                                break;
+                            case 6: { // Copy position
+                                setPosFields();
+                                String fen = TextIO.toFEN(cb.pos) + "\n";
+                                ClipboardManager clipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                                clipboard.setText(fen);
+                                cb.setSelection(-1);
+                                break;
+                            }
+                            case 7: { // Paste position
+                                ClipboardManager clipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                                if (clipboard.hasText()) {
+                                    String fen = clipboard.getText().toString();
+                                    try {
+                                        Position pos = TextIO.readFEN(fen);
+                                        cb.setPosition(pos);
+                                    } catch (ChessParseError e) {
+                                        if (e.pos != null)
+                                            cb.setPosition(e.pos);
+                                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                    cb.setSelection(-1);
+                                    checkValid();
+                                }
+                                break;
+                            }
+                        }
+                    }
+                });
+                AlertDialog alert = builder.create();
+                return alert;
+            }
             case SIDE_DIALOG: {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle(R.string.select_side_to_move_first);
-                final int selectedItem = (cb.pos.whiteMove) ? 0 : 1;
-                builder.setSingleChoiceItems(
-                        new String[]{getString(R.string.white), getString(R.string.black)},
-                        selectedItem, new Dialog.OnClickListener() {
+                builder.setMessage(R.string.select_side_to_move_first)
+                        .setPositiveButton(R.string.white, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                if (id == 0) { // white to move
-                                    cb.pos.setWhiteMove(true);
-                                    checkValidAndUpdateMaterialDiff();
-                                    dialog.cancel();
-                                } else {
-                                    cb.pos.setWhiteMove(false);
-                                    checkValidAndUpdateMaterialDiff();
-                                    dialog.cancel();
-                                }
+                                cb.pos.setWhiteMove(true);
+                                checkValid();
+                                dialog.cancel();
+                            }
+                        })
+                        .setNegativeButton(R.string.black, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                cb.pos.setWhiteMove(false);
+                                checkValid();
+                                dialog.cancel();
                             }
                         });
-                return builder.create();
+                AlertDialog alert = builder.create();
+                return alert;
             }
             case CASTLE_DIALOG: {
                 final CharSequence[] items = {
-                        getString(R.string.white_king_castle), getString(
-                        R.string.white_queen_castle),
-                        getString(R.string.black_king_castle), getString(
-                        R.string.black_queen_castle)
+                        getString(R.string.white_king_castle), getString(R.string.white_queen_castle),
+                        getString(R.string.black_king_castle), getString(R.string.black_queen_castle)
                 };
                 boolean[] checkedItems = {
                         cb.pos.h1Castle(), cb.pos.a1Castle(),
@@ -431,41 +512,32 @@ public class EditBoard extends AppCompatActivity {
                 };
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.castling_flags);
-                builder.setMultiChoiceItems(items, checkedItems,
-                        new DialogInterface.OnMultiChoiceClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which,
-                                    boolean isChecked) {
-                                Position pos = new Position(cb.pos);
-                                boolean a1Castle = pos.a1Castle();
-                                boolean h1Castle = pos.h1Castle();
-                                boolean a8Castle = pos.a8Castle();
-                                boolean h8Castle = pos.h8Castle();
-                                switch (which) {
-                                    case 0:
-                                        h1Castle = isChecked;
-                                        break;
-                                    case 1:
-                                        a1Castle = isChecked;
-                                        break;
-                                    case 2:
-                                        h8Castle = isChecked;
-                                        break;
-                                    case 3:
-                                        a8Castle = isChecked;
-                                        break;
-                                }
-                                int castleMask = 0;
-                                if (a1Castle) castleMask |= 1;
-                                if (h1Castle) castleMask |= 1 << Position.H1_CASTLE;
-                                if (a8Castle) castleMask |= 1 << Position.A8_CASTLE;
-                                if (h8Castle) castleMask |= 1 << Position.H8_CASTLE;
-                                pos.setCastleMask(castleMask);
-                                cb.setPosition(pos);
-                                checkValidAndUpdateMaterialDiff();
-                            }
-                        });
-                return builder.create();
+                builder.setMultiChoiceItems(items, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                        Position pos = new Position(cb.pos);
+                        boolean a1Castle = pos.a1Castle();
+                        boolean h1Castle = pos.h1Castle();
+                        boolean a8Castle = pos.a8Castle();
+                        boolean h8Castle = pos.h8Castle();
+                        switch (which) {
+                            case 0: h1Castle = isChecked; break;
+                            case 1: a1Castle = isChecked; break;
+                            case 2: h8Castle = isChecked; break;
+                            case 3: a8Castle = isChecked; break;
+                        }
+                        int castleMask = 0;
+                        if (a1Castle) castleMask |= 1 << Position.A1_CASTLE;
+                        if (h1Castle) castleMask |= 1 << Position.H1_CASTLE;
+                        if (a8Castle) castleMask |= 1 << Position.A8_CASTLE;
+                        if (h8Castle) castleMask |= 1 << Position.H8_CASTLE;
+                        pos.setCastleMask(castleMask);
+                        cb.setPosition(pos);
+                        checkValid();
+                    }
+                });
+                AlertDialog alert = builder.create();
+                return alert;
             }
             case EP_DIALOG: {
                 final CharSequence[] items = {
@@ -473,27 +545,24 @@ public class EditBoard extends AppCompatActivity {
                 };
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.select_en_passant_file);
-                builder.setSingleChoiceItems(items, getEPFile(),
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int item) {
-                                setEPFile(item);
-                                dialog.cancel();
-                            }
-                        });
-                return builder.create();
+                builder.setSingleChoiceItems(items, getEPFile(), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+                        setEPFile(item);
+                    }
+                });
+                AlertDialog alert = builder.create();
+                return alert;
             }
             case MOVCNT_DIALOG: {
-                View content = View.inflate(this, R.layout.edit_move_counters, null);
-                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-                builder.setView(content);
-                builder.setTitle(R.string.edit_move_counters);
-                final EditText halfMoveClock = (EditText) content.findViewById(
-                        R.id.ed_cnt_halfmove);
-                final EditText fullMoveCounter = (EditText) content.findViewById(
-                        R.id.ed_cnt_fullmove);
-                halfMoveClock.setText(String.format(Locale.US, "%d", cb.pos.halfMoveClock));
-                fullMoveCounter.setText(String.format(Locale.US, "%d", cb.pos.fullMoveCounter));
+                final Dialog dialog = new Dialog(this);
+                dialog.setContentView(R.layout.edit_move_counters);
+                dialog.setTitle(R.string.edit_move_counters);
+                final EditText halfMoveClock = (EditText)dialog.findViewById(R.id.ed_cnt_halfmove);
+                final EditText fullMoveCounter = (EditText)dialog.findViewById(R.id.ed_cnt_fullmove);
+                Button ok = (Button)dialog.findViewById(R.id.ed_cnt_ok);
+                Button cancel = (Button)dialog.findViewById(R.id.ed_cnt_cancel);
+                halfMoveClock.setText(String.format("%d", cb.pos.halfMoveClock));
+                fullMoveCounter.setText(String.format("%d", cb.pos.fullMoveCounter));
                 final Runnable setCounters = new Runnable() {
                     public void run() {
                         try {
@@ -501,35 +570,35 @@ public class EditBoard extends AppCompatActivity {
                             int fullCount = Integer.parseInt(fullMoveCounter.getText().toString());
                             cb.pos.halfMoveClock = halfClock;
                             cb.pos.fullMoveCounter = fullCount;
+                            dialog.cancel();
                         } catch (NumberFormatException nfe) {
-                            Toast.makeText(getApplicationContext(), R.string.invalid_number_format,
-                                    Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), R.string.invalid_number_format, Toast.LENGTH_SHORT).show();
                         }
                     }
                 };
-                builder.setPositiveButton("Ok", new Dialog.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        setCounters.run();
-                    }
-                });
-                builder.setNegativeButton("Cancel", null);
-
-                final Dialog dialog = builder.create();
-
                 fullMoveCounter.setOnKeyListener(new OnKeyListener() {
                     public boolean onKey(View v, int keyCode, KeyEvent event) {
-                        if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
-                                == KeyEvent.KEYCODE_ENTER)) {
+                        if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
                             setCounters.run();
-                            dialog.cancel();
                             return true;
                         }
                         return false;
                     }
                 });
+                ok.setOnClickListener(new OnClickListener() {
+                    public void onClick(View v) {
+                        setCounters.run();
+                    }
+                });
+                cancel.setOnClickListener(new OnClickListener() {
+                    public void onClick(View v) {
+                        dialog.cancel();
+                    }
+                });
                 return dialog;
             }
         }
+
         return null;
     }
 

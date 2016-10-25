@@ -154,7 +154,7 @@ import android.widget.Toast;
 public class MaterialChess extends AppCompatActivity
         implements GUIInterface,
         ActivityCompat.OnRequestPermissionsResultCallback,
-        NavigationView.OnNavigationItemSelectedListener{
+        NavigationView.OnNavigationItemSelectedListener {
     // FIXME!!! PGN view option: game continuation (for training)
     // FIXME!!! Remove invalid playerActions in PGN import (should be done in verifyChildren)
     // FIXME!!! Implement bookmark mechanism for positions in pgn files
@@ -217,7 +217,8 @@ public class MaterialChess extends AppCompatActivity
     private static Dialog moveListMenuDlg;
 
     //private DrawerLayout drawerLayout;
-    // --Commented out by Inspection (22/10/2016 12:08 AM):private ActionBarDrawerToggle actionBarDrawerToggle;
+    // --Commented out by Inspection (22/10/2016 12:08 AM):private ActionBarDrawerToggle
+    // actionBarDrawerToggle;
     //private ListView maintDrawer;
     //private ListView rightDrawer;
 
@@ -1016,7 +1017,8 @@ public class MaterialChess extends AppCompatActivity
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.main_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, toolbar, R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
@@ -1360,9 +1362,10 @@ public class MaterialChess extends AppCompatActivity
             showDialog(NEW_GAME_DIALOG);
         } else if (id == R.id.nav_edit_board) {
             startEditBoard(ctrl.getFEN());
-        } /*else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_flip_board) {
+            boardFlipped = !cb.flipped;
+            cb.setFlipped(boardFlipped);
+        } /*else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_share) {
 
@@ -1834,8 +1837,6 @@ public class MaterialChess extends AppCompatActivity
                 handleDrawerSelection(di.id);
             }
         });*/
-
-
 
 
     //}*/

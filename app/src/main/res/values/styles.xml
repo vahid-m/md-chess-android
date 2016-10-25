@@ -32,6 +32,14 @@
 
     <style name="AppTheme.Button.Flat" parent="AppTheme">
         <item name="colorControlHighlight">@color/colorPrimaryLight</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/button_height</item>
+        <item name="android:paddingStart">@dimen/standard_padding_2</item>
+        <item name="android:paddingEnd">@dimen/standard_padding_2</item>
+        <item name="android:radius">@dimen/standard_radius</item>
+        <item name="android:background">@color/White</item>
+        <item name="android:textColor">@color/colorPrimaryDark</item>
+        <item name="android:typeface">monospace</item>
     </style>
 
     <style name="AppTheme.SubHeader" parent="AppTheme">
