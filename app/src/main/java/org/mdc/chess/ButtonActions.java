@@ -134,8 +134,8 @@ public class ButtonActions {
         int ret = -1;
         if (mainAction != null)
             ret = mainAction.getIcon();
-        if (ret == -1)
-            ret = R.raw.custom;
+        //if (ret == -1)
+            //ret = R.raw.custom;
         return ret;
     }
 }

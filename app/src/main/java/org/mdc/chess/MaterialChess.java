@@ -212,8 +212,8 @@ public class MaterialChess extends AppCompatActivity
     //private ImageButton modeButton, undoButton, redoButton;
     //private ButtonActions custom1ButtonActions, custom2ButtonActions, custom3ButtonActions;
     private TextView whiteTitleText, blackTitleText, engineTitleText;
-    private View secondTitleLine;
-    private TextView whiteFigText, blackFigText, summaryTitleText;
+    //private View secondTitleLine;
+    //private TextView whiteFigText, blackFigText, summaryTitleText;
     private static Dialog moveListMenuDlg;
 
     //private DrawerLayout drawerLayout;
@@ -1026,13 +1026,13 @@ public class MaterialChess extends AppCompatActivity
 
         // title lines need to be regenerated every time due to layout changes (rotations)
         View firstTitleLine = findViewById(R.id.first_title_line);
-        secondTitleLine = findViewById(R.id.second_title_line);
+        //secondTitleLine = findViewById(R.id.second_title_line);
         whiteTitleText = (TextView) findViewById(R.id.white_clock);
         whiteTitleText.setSelected(true);
         blackTitleText = (TextView) findViewById(R.id.black_clock);
         blackTitleText.setSelected(true);
         engineTitleText = (TextView) findViewById(R.id.title_text);
-        whiteFigText = (TextView) findViewById(R.id.white_pieces);
+        /*whiteFigText = (TextView) findViewById(R.id.white_pieces);
         whiteFigText.setTypeface(figNotation);
         whiteFigText.setSelected(true);
         whiteFigText.setTextColor(whiteTitleText.getTextColors());
@@ -1040,7 +1040,7 @@ public class MaterialChess extends AppCompatActivity
         blackFigText.setTypeface(figNotation);
         blackFigText.setSelected(true);
         blackFigText.setTextColor(blackTitleText.getTextColors());
-        summaryTitleText = (TextView) findViewById(R.id.title_text_summary);
+        summaryTitleText = (TextView) findViewById(R.id.title_text_summary);*/
 
         status = (TextView) findViewById(R.id.status);
         moveListScroll = (ScrollView) findViewById(R.id.scrollView);
@@ -1074,8 +1074,8 @@ public class MaterialChess extends AppCompatActivity
         ClickListener listener = new ClickListener();
         firstTitleLine.setOnClickListener(listener);
         firstTitleLine.setOnTouchListener(listener);
-        secondTitleLine.setOnClickListener(listener);
-        secondTitleLine.setOnTouchListener(listener);
+        //secondTitleLine.setOnClickListener(listener);
+        //secondTitleLine.setOnTouchListener(listener);
 
         cb = (ChessBoardPlay) findViewById(R.id.chessboard);
         cb.setFocusable(true);
@@ -1547,7 +1547,7 @@ public class MaterialChess extends AppCompatActivity
         setFigurineNotation(pgnOptions.view.pieceType == PGNOptions.PT_FIGURINE, fontSize);
 
         boolean showMaterialDiff = settings.getBoolean("materialDiff", false);
-        secondTitleLine.setVisibility(showMaterialDiff ? View.VISIBLE : View.GONE);
+        //secondTitleLine.setVisibility(showMaterialDiff ? View.VISIBLE : View.GONE);
     }
 
 // --Commented out by Inspection START (22/10/2016 12:10 AM):
@@ -1581,8 +1581,8 @@ public class MaterialChess extends AppCompatActivity
                 : TextUtils.TruncateAt.END;
         whiteTitleText.setEllipsize(where);
         blackTitleText.setEllipsize(where);
-        whiteFigText.setEllipsize(where);
-        blackFigText.setEllipsize(where);
+        //whiteFigText.setEllipsize(where);
+        //blackFigText.setEllipsize(where);
     }
 
     //private void updateButtons() {
@@ -1686,7 +1686,7 @@ public class MaterialChess extends AppCompatActivity
             sb.append("+");
             sb.append(tmpInfo[2] / 1000);
         }
-        summaryTitleText.setText(sb.toString());
+        //summaryTitleText.setText(sb.toString());
     }
 
     @Override
@@ -1698,8 +1698,8 @@ public class MaterialChess extends AppCompatActivity
 
     @Override
     public void updateMaterialDifferenceTitle(Util.MaterialDiff diff) {
-        whiteFigText.setText(diff.white);
-        blackFigText.setText(diff.black);
+        //whiteFigText.setText(diff.white);
+        //blackFigText.setText(diff.black);
     }
 
     private void setBookOptions() {

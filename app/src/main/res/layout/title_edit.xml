@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/first_title_line"
+    android:id="@+id/second_title_line"
     style="@style/AppTheme.LayoutSubHeader">
 
     <TextView
-        android:id="@+id/white_clock"
+        android:id="@+id/white_pieces"
         style="@style/AppTheme.SubHeader"
         android:layout_marginStart="@dimen/standard_margin_1"
         android:focusable="true"
         android:focusableInTouchMode="true"
-        android:gravity="start" />
+        android:gravity="start"/>
 
     <TextView
-        android:id="@+id/title_text"
+        android:id="@+id/title_text_summary"
         style="@style/AppTheme.SubHeader"
         android:gravity="center"
-        android:text="@string/app_name" />
+        android:text=""/>
 
     <TextView
-        android:id="@+id/black_clock"
+        android:id="@+id/black_pieces"
         style="@style/AppTheme.SubHeader"
         android:layout_marginEnd="@dimen/standard_margin_1"
         android:focusable="true"
         android:focusableInTouchMode="true"
-        android:gravity="end" />
+        android:gravity="end"/>
 
 </LinearLayout>

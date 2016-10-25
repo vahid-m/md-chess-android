@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="AppTheme.Base"/>
+    <style name="AppTheme" parent="AppTheme.Base" />
 
     <style name="AppTheme.Base" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
@@ -22,11 +22,35 @@
     <style name="AppTheme.Button" parent="AppTheme">
         <item name="android:textColor">@android:color/white</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">@dimen/standard_margin_1</item>
-        <item name="android:padding">@dimen/standard_padding</item>
+        <item name="android:layout_height">@dimen/button_height</item>
+        <item name="android:paddingStart">@dimen/standard_padding_2</item>
+        <item name="android:paddingEnd">@dimen/standard_padding_2</item>
         <item name="android:radius">@dimen/standard_radius</item>
         <item name="android:background">@drawable/btn_primary_background</item>
         <item name="android:typeface">monospace</item>
+    </style>
+
+    <style name="AppTheme.Button.Flat" parent="AppTheme">
+        <item name="colorControlHighlight">@color/colorPrimaryLight</item>
+    </style>
+
+    <style name="AppTheme.SubHeader" parent="AppTheme">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_marginTop">@dimen/standard_margin_1</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:tag">title</item>
+        <item name="android:textColor">@color/White</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="AppTheme.LayoutSubHeader" parent="AppTheme">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">@dimen/sub_header_height</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:tag">title</item>
     </style>
 </resources>
