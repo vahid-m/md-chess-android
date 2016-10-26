@@ -6,9 +6,9 @@ This project is based on Material Chess - Chesstastic & Droidfish. I'm developin
 
 #Donate
 
-```html
+
 <a href='https://pledgie.com/campaigns/32796'><img alt='Click here to lend your support to: Material Chess and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/32796.png?skin_name=chrome' border='0' ></a>
-```
+
 
 #Goals:
 
