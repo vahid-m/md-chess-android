@@ -66,7 +66,7 @@ public class ChessBoardPlay extends ChessBoard {
     protected int getSqSizeH(int height) { return (height) / 8; }
     @Override
     protected int getMaxHeightPercentage() { return 75; }
-    @Override
+
     protected int getMaxWidthPercentage() { return 65; }
 
     @Override

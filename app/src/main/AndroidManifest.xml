@@ -16,9 +16,10 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MaterialChess"
+            android:name=".SplashActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -285,6 +286,10 @@
                 <data android:mimeType="application/x-chess-fen" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MaterialChess"
+            android:label="@string/app_name" />
+        <activity android:name=".activities.EditPGN" />
         <activity
             android:name=".activities.Preferences"
             android:label="@string/preferences" />

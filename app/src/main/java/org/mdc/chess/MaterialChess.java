@@ -59,11 +59,11 @@ import org.mdc.chess.gamelogic.TimeControlData;
 import org.mdc.chess.tb.Probe;
 import org.mdc.chess.tb.ProbeResult;
 
-import tourguide.tourguide.Overlay;
+/*import tourguide.tourguide.Overlay;
 import tourguide.tourguide.Pointer;
 import tourguide.tourguide.Sequence;
 import tourguide.tourguide.ToolTip;
-import tourguide.tourguide.TourGuide;
+import tourguide.tourguide.TourGuide;*/
 
 import com.kalab.chess.enginesupport.ChessEngine;
 import com.kalab.chess.enginesupport.ChessEngineResolver;
@@ -128,7 +128,6 @@ import android.text.style.LeadingMarginSpan;
 import android.text.style.StyleSpan;
 import android.util.Log;
 //import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.ViewConfiguration;
 import android.view.KeyEvent;
@@ -141,11 +140,7 @@ import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.webkit.WebView;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -277,7 +272,7 @@ public class MaterialChess extends AppCompatActivity
     private Typeface defaultThinkingListTypeFace;
 
     private boolean guideShowOnStart;
-    private TourGuide tourGuide;
+    //private TourGuide tourGuide;
 
 
 // --Commented out by Inspection START (21/10/2016 11:33 PM):
@@ -667,10 +662,10 @@ public class MaterialChess extends AppCompatActivity
         }
 
 
-        startTourGuide();
+        //startTourGuide();
     }
 
-    private void startTourGuide() {
+    /*private void startTourGuide() {
         if (!guideShowOnStart) {
             return;
         }
@@ -755,8 +750,8 @@ public class MaterialChess extends AppCompatActivity
                 .setDefaultPointer(new Pointer())
                 .setContinueMethod(Sequence.ContinueMethod.OverlayListener)
                 .build();
-        tourGuide.playInSequence(sequence);
-    }
+        //tourGuide.playInSequence(sequence);
+    }*/
 
     // Unicode code points for chess pieces
     private static final String figurinePieceNames = Piece.NOTATION_PAWN + " " +
@@ -967,10 +962,10 @@ public class MaterialChess extends AppCompatActivity
         updateThinkingInfo();
         ctrl.updateRemainingTime();
         ctrl.updateMaterialDiffList();
-        if (tourGuide != null) {
+        /*if (tourGuide != null) {
             tourGuide.cleanUp();
             tourGuide = null;
-        }
+        }*/
     }
 
     /**

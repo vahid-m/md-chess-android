@@ -19,7 +19,6 @@
 package org.mdc.chess.activities;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 import org.mdc.chess.ChessBoard;
 import org.mdc.chess.MaterialChess;

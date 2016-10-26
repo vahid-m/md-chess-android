@@ -63,7 +63,7 @@ public class ChessBoardEdit extends ChessBoard {
     }
     @Override
     protected int getMaxHeightPercentage() { return 85; }
-    @Override
+
     protected int getMaxWidthPercentage() { return 75; }
 
     @Override
@@ -189,9 +189,7 @@ public class ChessBoardEdit extends ChessBoard {
         }
     }
 
-    @Override
-    public
-    Move mousePressed(int sq) {
+    public Move mousePressed(int sq) {
         if (sq == -1)
             return null;
         cursorVisible = false;

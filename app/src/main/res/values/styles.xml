@@ -61,4 +61,9 @@
         <item name="android:orientation">horizontal</item>
         <item name="android:tag">title</item>
     </style>
+
+    <style name="AppTheme.SplashTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/background_splash</item>
+    </style>
+
 </resources>
