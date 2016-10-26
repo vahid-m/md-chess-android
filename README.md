@@ -1,4 +1,4 @@
-![MaterialChess Icon](http://i.imgur.com/7IYtrB9.png)
+![MaterialChess Icon](http://i.imgur.com/H8FFmV6.png)
 
 #Material Chess 
 
@@ -10,6 +10,8 @@ This project is based on Material Chess - Chesstastic & Droidfish. I'm developin
 2. Develop multiplayer using Play Games
 
 #Preview:
+
+
 
 ![Preview image 1](http://i.imgur.com/hZXi5Aq.png)
 ![Preview image 1](http://i.imgur.com/pWxus74.png)
