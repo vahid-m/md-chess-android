@@ -4,6 +4,12 @@
 
 This project is based on Material Chess - Chesstastic & Droidfish. I'm developing this as a hobby.
 
+#Donate
+
+```html
+<a href='https://pledgie.com/campaigns/32796'><img alt='Click here to lend your support to: Material Chess and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/32796.png?skin_name=chrome' border='0' ></a>
+```
+
 #Goals:
 
 1. Get a minimum viable game
