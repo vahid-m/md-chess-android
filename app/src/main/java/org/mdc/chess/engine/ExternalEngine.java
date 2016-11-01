@@ -176,7 +176,7 @@ public class ExternalEngine extends UCIEngineBase {
             java.lang.reflect.Field f = engineProc.getClass().getDeclaredField("pid");
             f.setAccessible(true);
             int pid = f.getInt(engineProc);
-            EngineUtil.reNice(pid, 10);
+            //EngineUtil.reNice(pid, 10);
         } catch (Throwable t) {
         }
     }
@@ -323,7 +323,7 @@ public class ExternalEngine extends UCIEngineBase {
     }
 
     private final void chmod(String exePath) throws IOException {
-        if (!EngineUtil.chmod(exePath))
-            throw new IOException("chmod failed");
+        //if (!EngineUtil.chmod(exePath))
+        //    throw new IOException("chmod failed");
     }
 }

@@ -49,7 +49,7 @@ public class EngineUtil {
         } else {
             abi = "armeabi"; // Unknown ABI, assume original ARM
         }
-        return "stockfish-" + abi + (noPIE ? "-nopie" : "");
+        return "stockfish";
     }
 
     /** Return true if file "engine" is a network engine. */
@@ -59,8 +59,9 @@ public class EngineUtil {
             InputStream inStream = new FileInputStream(engine);
             InputStreamReader inFile = new InputStreamReader(inStream);
             char[] buf = new char[4];
-            if ((inFile.read(buf) == 4) && "NETE".equals(new String(buf)))
+            if ((inFile.read(buf) == 4) && "NETE".equals(new String(buf))) {
                 netEngine = true;
+            }
             inFile.close();
         } catch (IOException e) {
         }
@@ -72,8 +73,9 @@ public class EngineUtil {
     /** Return true if file "engine" is an open exchange engine. */
     public static boolean isOpenExchangeEngine(String engine) {
         File parent = new File(engine).getParentFile();
-        if (parent == null)
+        if (parent == null) {
             return false;
+        }
         String parentDir = parent.getName();
         return openExchangeDir.equals(parentDir);
     }
@@ -81,11 +83,13 @@ public class EngineUtil {
     /** Return a filename (without path) representing an open exchange engine. */
     public static String openExchangeFileName(ChessEngine engine) {
         String ret = "";
-        if (engine.getPackageName() != null)
+        if (engine.getPackageName() != null) {
             ret += sanitizeString(engine.getPackageName());
+        }
         ret += "-";
-        if (engine.getFileName() != null)
+        if (engine.getFileName() != null) {
             ret += sanitizeString(engine.getFileName());
+        }
         return ret;
     }
 
@@ -95,20 +99,21 @@ public class EngineUtil {
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
             if (((ch >= 'A') && (ch <= 'Z')) ||
-                ((ch >= 'a') && (ch <= 'z')) ||
-                ((ch >= '0') && (ch <= '9')))
+                    ((ch >= 'a') && (ch <= 'z')) ||
+                    ((ch >= '0') && (ch <= '9'))) {
                 sb.append(ch);
-            else
+            } else {
                 sb.append('_');
+            }
         }
         return sb.toString();
     }
 
     /** Executes chmod 744 exePath. */
-    final static native boolean chmod(String exePath);
+    //final static native boolean chmod(String exePath);
 
     /** Change the priority of a process. */
-    final static native void reNice(int pid, int prio);
+    //final static native void reNice(int pid, int prio);
 
     /** For synchronizing non thread safe native calls. */
     public static Object nativeLock = new Object();

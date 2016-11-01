@@ -46,6 +46,8 @@ import android.content.res.Configuration;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -129,12 +131,12 @@ public class EditBoard extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent i = new Intent(EditBoard.this, Preferences.class);
             startActivityForResult(i, RESULT_SETTINGS);
             return true;
         }
+
 
         return super.onOptionsItemSelected(item);
     }
@@ -142,13 +144,13 @@ public class EditBoard extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main_drawer, menu);
+        getMenuInflater().inflate(R.menu.edit_options, menu);
         return true;
     }
 
     private void initUI() {
         setContentView(R.layout.app_bar_edit_board);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_edit);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         //Util.overrideViewAttribs(findViewById(R.id.main));
 
@@ -166,15 +168,15 @@ public class EditBoard extends AppCompatActivity {
         TextView engineTitleText = (TextView) findViewById(R.id.title_text);
         engineTitleText.setVisibility(View.GONE);
         */
-        whiteFigText = (TextView) findViewById(R.id.white_pieces);
+        whiteFigText = (TextView) findViewById(R.id.txt_first);
         whiteFigText.setTypeface(figNotation);
         whiteFigText.setSelected(true);
         //whiteFigText.setTextColor(whiteTitleText.getTextColors());
-        blackFigText = (TextView) findViewById(R.id.black_pieces);
+        blackFigText = (TextView) findViewById(R.id.txt_third);
         blackFigText.setTypeface(figNotation);
         blackFigText.setSelected(true);
         //blackFigText.setTextColor(blackTitleText.getTextColors());
-        TextView summaryTitleText = (TextView) findViewById(R.id.title_text_summary);
+        TextView summaryTitleText = (TextView) findViewById(R.id.txt_second);
         summaryTitleText.setText(R.string.edit_board);
 
         TextUtils.TruncateAt where = autoScrollTitle ? TextUtils.TruncateAt.MARQUEE
@@ -260,7 +262,6 @@ public class EditBoard extends AppCompatActivity {
         }
         return false;
     }
-
 
 
     private void setSelection(int sq) {
@@ -452,22 +453,26 @@ public class EditBoard extends AppCompatActivity {
                             case 6: { // Copy position
                                 setPosFields();
                                 String fen = TextIO.toFEN(cb.pos) + "\n";
-                                ClipboardManager clipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                                ClipboardManager clipboard = (ClipboardManager) getSystemService(
+                                        CLIPBOARD_SERVICE);
                                 clipboard.setText(fen);
                                 cb.setSelection(-1);
                                 break;
                             }
                             case 7: { // Paste position
-                                ClipboardManager clipboard = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                                ClipboardManager clipboard = (ClipboardManager) getSystemService(
+                                        CLIPBOARD_SERVICE);
                                 if (clipboard.hasText()) {
                                     String fen = clipboard.getText().toString();
                                     try {
                                         Position pos = TextIO.readFEN(fen);
                                         cb.setPosition(pos);
                                     } catch (ChessParseError e) {
-                                        if (e.pos != null)
+                                        if (e.pos != null) {
                                             cb.setPosition(e.pos);
-                                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                                        }
+                                        Toast.makeText(getApplicationContext(), e.getMessage(),
+                                                Toast.LENGTH_SHORT).show();
                                     }
                                     cb.setSelection(-1);
                                     checkValid();
@@ -502,8 +507,10 @@ public class EditBoard extends AppCompatActivity {
             }
             case CASTLE_DIALOG: {
                 final CharSequence[] items = {
-                        getString(R.string.white_king_castle), getString(R.string.white_queen_castle),
-                        getString(R.string.black_king_castle), getString(R.string.black_queen_castle)
+                        getString(R.string.white_king_castle), getString(
+                        R.string.white_queen_castle),
+                        getString(R.string.black_king_castle), getString(
+                        R.string.black_queen_castle)
                 };
                 boolean[] checkedItems = {
                         cb.pos.h1Castle(), cb.pos.a1Castle(),
@@ -511,30 +518,40 @@ public class EditBoard extends AppCompatActivity {
                 };
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.castling_flags);
-                builder.setMultiChoiceItems(items, checkedItems, new DialogInterface.OnMultiChoiceClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                        Position pos = new Position(cb.pos);
-                        boolean a1Castle = pos.a1Castle();
-                        boolean h1Castle = pos.h1Castle();
-                        boolean a8Castle = pos.a8Castle();
-                        boolean h8Castle = pos.h8Castle();
-                        switch (which) {
-                            case 0: h1Castle = isChecked; break;
-                            case 1: a1Castle = isChecked; break;
-                            case 2: h8Castle = isChecked; break;
-                            case 3: a8Castle = isChecked; break;
-                        }
-                        int castleMask = 0;
-                        if (a1Castle) castleMask |= 1 << Position.A1_CASTLE;
-                        if (h1Castle) castleMask |= 1 << Position.H1_CASTLE;
-                        if (a8Castle) castleMask |= 1 << Position.A8_CASTLE;
-                        if (h8Castle) castleMask |= 1 << Position.H8_CASTLE;
-                        pos.setCastleMask(castleMask);
-                        cb.setPosition(pos);
-                        checkValid();
-                    }
-                });
+                builder.setMultiChoiceItems(items, checkedItems,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which,
+                                    boolean isChecked) {
+                                Position pos = new Position(cb.pos);
+                                boolean a1Castle = pos.a1Castle();
+                                boolean h1Castle = pos.h1Castle();
+                                boolean a8Castle = pos.a8Castle();
+                                boolean h8Castle = pos.h8Castle();
+                                switch (which) {
+                                    case 0:
+                                        h1Castle = isChecked;
+                                        break;
+                                    case 1:
+                                        a1Castle = isChecked;
+                                        break;
+                                    case 2:
+                                        h8Castle = isChecked;
+                                        break;
+                                    case 3:
+                                        a8Castle = isChecked;
+                                        break;
+                                }
+                                int castleMask = 0;
+                                if (a1Castle) castleMask |= 1 << Position.A1_CASTLE;
+                                if (h1Castle) castleMask |= 1 << Position.H1_CASTLE;
+                                if (a8Castle) castleMask |= 1 << Position.A8_CASTLE;
+                                if (h8Castle) castleMask |= 1 << Position.H8_CASTLE;
+                                pos.setCastleMask(castleMask);
+                                cb.setPosition(pos);
+                                checkValid();
+                            }
+                        });
                 AlertDialog alert = builder.create();
                 return alert;
             }
@@ -544,11 +561,12 @@ public class EditBoard extends AppCompatActivity {
                 };
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.select_en_passant_file);
-                builder.setSingleChoiceItems(items, getEPFile(), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        setEPFile(item);
-                    }
-                });
+                builder.setSingleChoiceItems(items, getEPFile(),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int item) {
+                                setEPFile(item);
+                            }
+                        });
                 AlertDialog alert = builder.create();
                 return alert;
             }
@@ -556,10 +574,11 @@ public class EditBoard extends AppCompatActivity {
                 final Dialog dialog = new Dialog(this);
                 dialog.setContentView(R.layout.edit_move_counters);
                 dialog.setTitle(R.string.edit_move_counters);
-                final EditText halfMoveClock = (EditText)dialog.findViewById(R.id.ed_cnt_halfmove);
-                final EditText fullMoveCounter = (EditText)dialog.findViewById(R.id.ed_cnt_fullmove);
-                Button ok = (Button)dialog.findViewById(R.id.ed_cnt_ok);
-                Button cancel = (Button)dialog.findViewById(R.id.ed_cnt_cancel);
+                final EditText halfMoveClock = (EditText) dialog.findViewById(R.id.ed_cnt_halfmove);
+                final EditText fullMoveCounter = (EditText) dialog.findViewById(
+                        R.id.ed_cnt_fullmove);
+                Button ok = (Button) dialog.findViewById(R.id.ed_cnt_ok);
+                Button cancel = (Button) dialog.findViewById(R.id.ed_cnt_cancel);
                 halfMoveClock.setText(String.format("%d", cb.pos.halfMoveClock));
                 fullMoveCounter.setText(String.format("%d", cb.pos.fullMoveCounter));
                 final Runnable setCounters = new Runnable() {
@@ -571,13 +590,15 @@ public class EditBoard extends AppCompatActivity {
                             cb.pos.fullMoveCounter = fullCount;
                             dialog.cancel();
                         } catch (NumberFormatException nfe) {
-                            Toast.makeText(getApplicationContext(), R.string.invalid_number_format, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), R.string.invalid_number_format,
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
                 };
                 fullMoveCounter.setOnKeyListener(new OnKeyListener() {
                     public boolean onKey(View v, int keyCode, KeyEvent event) {
-                        if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                        if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
+                                == KeyEvent.KEYCODE_ENTER)) {
                             setCounters.run();
                             return true;
                         }

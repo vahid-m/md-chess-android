@@ -46,7 +46,7 @@ import org.mdc.chess.gamelogic.GameTree.Node;
  * The glue between the chess engine and the GUI.
  * @author petero
  */
-public class DroidChessController {
+public class MaterialChessController {
     private MaterialComputerPlayer computerPlayer = null;
     private PgnToken.PgnTokenReceiver gameTextListener = null;
     private BookOptions bookOptions = new BookOptions();
@@ -71,7 +71,7 @@ public class DroidChessController {
     private volatile ThinkingInfo latestThinkingInfo = null;
 
     /** Constructor. */
-    public DroidChessController(GUIInterface gui, PgnToken.PgnTokenReceiver gameTextListener, PGNOptions options) {
+    public MaterialChessController(GUIInterface gui, PgnToken.PgnTokenReceiver gameTextListener, PGNOptions options) {
         this.gui = gui;
         this.gameTextListener = gameTextListener;
         gameMode = new GameMode(GameMode.TWO_PLAYERS);

@@ -46,7 +46,7 @@ import org.mdc.chess.activities.Preferences;
 import org.mdc.chess.book.BookOptions;
 import org.mdc.chess.engine.EngineUtil;
 import org.mdc.chess.engine.UCIOptions;
-import org.mdc.chess.gamelogic.DroidChessController;
+import org.mdc.chess.gamelogic.MaterialChessController;
 import org.mdc.chess.gamelogic.ChessParseError;
 import org.mdc.chess.gamelogic.Move;
 import org.mdc.chess.gamelogic.Pair;
@@ -106,9 +106,7 @@ import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -177,7 +175,7 @@ public class MaterialChess extends AppCompatActivity
     // FIXME!!! Use two engines in engine/engine games
 
     private ChessBoardPlay cb;
-    private static DroidChessController ctrl = null;
+    private static MaterialChessController ctrl = null;
     private boolean mShowThinking;
     private boolean mShowStats;
     private int numPV;
@@ -200,7 +198,6 @@ public class MaterialChess extends AppCompatActivity
     private TextView status;
     private ScrollView moveListScroll;
     private MoveListView moveList;
-    private View thinkingScroll;
     private TextView thinking;
     private View buttons;
     //private ImageButton custom1Button, custom2Button, custom3Button;
@@ -271,7 +268,6 @@ public class MaterialChess extends AppCompatActivity
     private Typeface figNotation;
     private Typeface defaultThinkingListTypeFace;
 
-    private boolean guideShowOnStart;
     //private TourGuide tourGuide;
 
 
@@ -611,7 +607,7 @@ public class MaterialChess extends AppCompatActivity
         if (ctrl != null) {
             ctrl.shutdownEngine();
         }
-        ctrl = new DroidChessController(this, gameTextListener, pgnOptions);
+        ctrl = new MaterialChessController(this, gameTextListener, pgnOptions);
         egtbForceReload = true;
         readPrefs();
         TimeControlData tcData = new TimeControlData();
@@ -998,17 +994,8 @@ public class MaterialChess extends AppCompatActivity
     private void initUI() {
         leftHanded = leftHandedView();
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.main_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -1022,13 +1009,13 @@ public class MaterialChess extends AppCompatActivity
         //overrideViewAttribs();
 
         // title lines need to be regenerated every time due to layout changes (rotations)
-        View firstTitleLine = findViewById(R.id.first_title_line);
+        View firstTitleLine = findViewById(R.id.title_line);
         //secondTitleLine = findViewById(R.id.second_title_line);
-        whiteTitleText = (TextView) findViewById(R.id.white_clock);
+        whiteTitleText = (TextView) findViewById(R.id.txt_first);
         whiteTitleText.setSelected(true);
-        blackTitleText = (TextView) findViewById(R.id.black_clock);
+        blackTitleText = (TextView) findViewById(R.id.txt_third);
         blackTitleText.setSelected(true);
-        engineTitleText = (TextView) findViewById(R.id.title_text);
+        engineTitleText = (TextView) findViewById(R.id.txt_second);
         /*whiteFigText = (TextView) findViewById(R.id.white_pieces);
         whiteFigText.setTypeface(figNotation);
         whiteFigText.setSelected(true);
@@ -1042,7 +1029,7 @@ public class MaterialChess extends AppCompatActivity
         status = (TextView) findViewById(R.id.status);
         moveListScroll = (ScrollView) findViewById(R.id.scrollView);
         moveList = (MoveListView) findViewById(R.id.moveList);
-        thinkingScroll = findViewById(R.id.scrollViewBot);
+        View thinkingScroll = findViewById(R.id.scrollViewBot);
         thinking = (TextView) findViewById(R.id.thinking);
         defaultThinkingListTypeFace = thinking.getTypeface();
         status.setFocusable(false);
@@ -1338,10 +1325,12 @@ public class MaterialChess extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Intent i = new Intent(MaterialChess.this, Preferences.class);
-            startActivityForResult(i, RESULT_SETTINGS);
-            return true;
+        if (id == R.id.action_undo) {
+            setAutoMode(AutoMode.OFF);
+            ctrl.undoMove();
+        } else if (id == R.id.action_redo) {
+            setAutoMode(AutoMode.OFF);
+            ctrl.redoMove();
         }
 
         return super.onOptionsItemSelected(item);
@@ -1360,13 +1349,37 @@ public class MaterialChess extends AppCompatActivity
         } else if (id == R.id.nav_flip_board) {
             boardFlipped = !cb.flipped;
             cb.setFlipped(boardFlipped);
-        } /*else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }*/
+        } else if (id == R.id.nav_load_pgn) {
+            removeDialog(SELECT_PGN_FILE_DIALOG);
+            showDialog(SELECT_PGN_FILE_DIALOG);
+        } else if (id == R.id.nav_resign) {
+            if (ctrl.humansTurn()) {
+                removeDialog(CONFIRM_RESIGN_DIALOG);
+                showDialog(CONFIRM_RESIGN_DIALOG);
+            }
+        } else if (id == R.id.nav_force_computer) {
+            ctrl.stopSearch();
+        } else if(id == R.id.nav_open_book) {
+            if (storageAvailable()) {
+                removeDialog(SELECT_BOOK_DIALOG);
+                showDialog(SELECT_BOOK_DIALOG);
+            }
+        } else if(id == R.id.nav_theme) {
+            showDialog(SET_COLOR_THEME_DIALOG);
+        } else if (id == R.id.nav_about) {
+            showDialog(ABOUT_DIALOG);
+        } else if (id == R.id.nav_engine){
+            if (storageAvailable()) {
+                removeDialog(MANAGE_ENGINES_DIALOG);
+                showDialog(MANAGE_ENGINES_DIALOG);
+            } else {
+                removeDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
+                showDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
+            }
+        } else if (id == R.id.nav_settings){
+            Intent i = new Intent(MaterialChess.this, Preferences.class);
+            startActivityForResult(i, RESULT_SETTINGS);
+        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.main_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -1440,7 +1453,7 @@ public class MaterialChess extends AppCompatActivity
         maxNumArrows = getIntSetting("thinkingArrows", 2);
         mShowBookHints = settings.getBoolean("bookHints", false);
 
-        String engine = settings.getString("engine", "stockfish");
+        String engine = settings.getString("engine", "cuckoochess");
         int strength = settings.getInt("strength", 1000);
         setEngineStrength(engine, strength);
 
@@ -1480,7 +1493,7 @@ public class MaterialChess extends AppCompatActivity
         custom3ButtonActions.readPrefs(settings, actionFactory);*/
         //updateButtons();
 
-        guideShowOnStart = settings.getBoolean("guideShowOnStart", true);
+        boolean guideShowOnStart = settings.getBoolean("guideShowOnStart", true);
 
         bookOptions.filename = settings.getString("bookFile", "");
         bookOptions.maxLength = getIntSetting("bookMaxLength", 1000000);
@@ -1657,7 +1670,8 @@ public class MaterialChess extends AppCompatActivity
         } else {
             eName = getString(engine.equals("cuckoochess") ?
                     R.string.cuckoochess_engine :
-                    R.string.stockfish_engine);
+                    R.string.cuckoochess_engine);
+            //R.string.stockfish_engine);
             boolean analysis = (ctrl != null) && ctrl.analysisMode();
             if ((strength < 1000) && !analysis) {
                 eName = String.format(Locale.US, "%s: %d%%", eName, strength / 10);
@@ -1785,6 +1799,7 @@ public class MaterialChess extends AppCompatActivity
     static private final int ITEM_MANAGE_ENGINES = 8;
     static private final int ITEM_SET_COLOR_THEME = 9;
     static private final int ITEM_ABOUT = 10;
+
 
     /**
      * Initialize the drawer part of the user interface.
@@ -2383,10 +2398,13 @@ public class MaterialChess extends AppCompatActivity
     static private final int DELETE_NETWORK_ENGINE_DIALOG = 25;
     static private final int CLIPBOARD_DIALOG = 26;
     static private final int SELECT_FEN_FILE_DIALOG = 27;
+    static private final int CONFIRM_RESIGN_DIALOG = 28;
 
     @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {
+            case CONFIRM_RESIGN_DIALOG:
+                return newResignDialog();
             case NEW_GAME_DIALOG:
                 return newGameDialog();
             case PROMOTE_DIALOG:
@@ -2465,6 +2483,27 @@ public class MaterialChess extends AppCompatActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 startNewGame(1);
+            }
+        });
+        return builder.create();
+    }
+
+    private Dialog newResignDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        //builder.setTitle(R.string.option_new_game);
+        builder.setMessage(R.string.option_resign_game);
+        builder.setNegativeButton(R.string.no, new Dialog.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.setPositiveButton(R.string.yes, new Dialog.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (ctrl.humansTurn()) {
+                    ctrl.resignGame();
+                }
             }
         });
         return builder.create();
@@ -2792,8 +2831,8 @@ public class MaterialChess extends AppCompatActivity
     private Dialog selectEngineDialog(final boolean abortOnCancel) {
         final ArrayList<String> items = new ArrayList<>();
         final ArrayList<String> ids = new ArrayList<>();
-        ids.add("stockfish");
-        items.add(getString(R.string.stockfish_engine));
+        //ids.add("stockfish");
+        //items.add(getString(R.string.stockfish_engine));
         ids.add("cuckoochess");
         items.add(getString(R.string.cuckoochess_engine));
 
@@ -3195,7 +3234,7 @@ public class MaterialChess extends AppCompatActivity
                                         R.layout.edit_comments, null);
                                 builder.setView(content);
 
-                                DroidChessController.CommentInfo commInfo = ctrl.getComments();
+                                MaterialChessController.CommentInfo commInfo = ctrl.getComments();
 
                                 final TextView preComment, moveView, nag, postComment;
                                 preComment = (TextView) content.findViewById(R.id.ed_comments_pre);
@@ -3223,8 +3262,8 @@ public class MaterialChess extends AppCompatActivity
                                                 int nagVal = Node.strToNag(
                                                         nag.getText().toString());
 
-                                                DroidChessController.CommentInfo commInfo =
-                                                        new DroidChessController.CommentInfo();
+                                                MaterialChessController.CommentInfo commInfo =
+                                                        new MaterialChessController.CommentInfo();
                                                 commInfo.preComment = pre;
                                                 commInfo.postComment = post;
                                                 commInfo.nag = nagVal;

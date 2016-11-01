@@ -6,8 +6,7 @@
     android:layout_marginTop="?attr/actionBarSize"
     android:orientation="vertical">
 
-    <include
-        layout="@layout/title_edit"/>
+    <include layout="@layout/title"/>
 
     <view
         android:id="@+id/eb_chessboard"

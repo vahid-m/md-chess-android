@@ -7,10 +7,7 @@
     android:background="@color/White"
     android:orientation="vertical">
 
-    <include
-        layout="@layout/title"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+    <include layout="@layout/title"/>
 
     <view
         android:id="@+id/chessboard"
@@ -75,4 +72,5 @@
                 android:typeface="monospace" />
         </view>
     </view>
+
 </LinearLayout>
