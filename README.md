@@ -1,13 +1,27 @@
-![Chesstastic Icon](http://i.imgur.com/ELIf2Bd.png)
+![MaterialChess Icon](http://i.imgur.com/H8FFmV6.png)
 
 #Material Chess 
 
 This project is based on Material Chess - Chesstastic & Droidfish. I'm developing this as a hobby.
 
+#Donate
+
+
+<a href='https://pledgie.com/campaigns/32796'><img alt='Click here to lend your support to: Material Chess and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/32796.png?skin_name=chrome' border='0' ></a>
+
+
 #Goals:
 
 1. Get a minimum viable game
 2. Develop multiplayer using Play Games
+
+#Preview:
+
+
+
+![Preview image 1](http://i.imgur.com/hZXi5Aq.png)
+![Preview image 1](http://i.imgur.com/pWxus74.png)
+![Preview image 1](http://i.imgur.com/RB35JZ8.png)
 
 #License
 
