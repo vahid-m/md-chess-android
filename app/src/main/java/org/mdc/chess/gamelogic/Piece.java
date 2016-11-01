@@ -21,6 +21,7 @@ package org.mdc.chess.gamelogic;
 
 /**
  * Constants for different piece types.
+ *
  * @author petero
  */
 public class Piece {
@@ -73,21 +74,25 @@ public class Piece {
     public static boolean isWhite(int pType) {
         return pType < BKING;
     }
+
     public static int makeWhite(int pType) {
         return pType < BKING ? pType : pType - (BKING - WKING);
     }
+
     public static int makeBlack(int pType) {
         return ((pType >= WKING) && (pType <= WPAWN)) ? pType + (BKING - WKING) : pType;
     }
+
     public static int swapColor(int pType) {
-        if (pType == EMPTY)
+        if (pType == EMPTY) {
             return EMPTY;
+        }
         return isWhite(pType) ? pType + (BKING - WKING) : pType - (BKING - WKING);
     }
 
     /** Converts the piece into a character for the material diff. */
     public final static char toUniCode(int p) {
         // As we assume, the coding of the pieces is sequential, lets do some math.
-        return (char)(WHITE_KING + p - 1);
+        return (char) (WHITE_KING + p - 1);
     }
 }

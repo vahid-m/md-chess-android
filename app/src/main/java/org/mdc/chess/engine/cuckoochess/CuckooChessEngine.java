@@ -19,21 +19,24 @@
 package org.mdc.chess.engine.cuckoochess;
 
 import android.os.Environment;
-import chess.ChessParseError;
-import chess.ComputerPlayer;
-import chess.Move;
-import chess.Position;
-import chess.TextIO;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Locale;
 
 import org.mdc.chess.EngineOptions;
 import org.mdc.chess.engine.LocalPipe;
 import org.mdc.chess.engine.UCIEngineBase;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Locale;
+
+import chess.ChessParseError;
+import chess.ComputerPlayer;
+import chess.Move;
+import chess.Position;
+import chess.TextIO;
+
 /**
  * UCI interface to cuckoochess engine.
+ *
  * @author petero
  */
 public class CuckooChessEngine extends UCIEngineBase {
@@ -54,7 +57,7 @@ public class CuckooChessEngine extends UCIEngineBase {
 
     public CuckooChessEngine(Report report) {
         pos = null;
-        moves = new ArrayList<Move>();
+        moves = new ArrayList<>();
         quit = false;
         guiToEngine = new LocalPipe();
         engineToGui = new LocalPipe();
@@ -84,10 +87,12 @@ public class CuckooChessEngine extends UCIEngineBase {
     @Override
     protected boolean configurableOption(String name) {
         name = name.toLowerCase(Locale.US);
-        if (!super.configurableOption(name))
+        if (!super.configurableOption(name)) {
             return false;
-        if (name.equals("strength"))
+        }
+        if (name.equals("strength")) {
             return false;
+        }
         return true;
     }
 
@@ -122,11 +127,13 @@ public class CuckooChessEngine extends UCIEngineBase {
     /** @inheritDoc */
     @Override
     public final String readLineFromEngine(int timeoutMillis) {
-        if ((engineThread != null) && !engineThread.isAlive())
+        if ((engineThread != null) && !engineThread.isAlive()) {
             return null;
+        }
         String ret = engineToGui.readLine(timeoutMillis);
-        if (ret == null)
+        if (ret == null) {
             return null;
+        }
         if (ret.length() > 0) {
 //            System.out.printf("Engine -> GUI: %s\n", ret);
         }
@@ -144,127 +151,140 @@ public class CuckooChessEngine extends UCIEngineBase {
         String[] tokens = tokenize(cmdLine);
         try {
             String cmd = tokens[0];
-            if (cmd.equals("uci")) {
-                os.printLine("id name %s", ComputerPlayer.engineName);
-                os.printLine("id author Peter Osterlund");
-                MaterialEngineControl.printOptions(os);
-                os.printLine("uciok");
-            } else if (cmd.equals("isready")) {
-                initEngine(os);
-                os.printLine("readyok");
-            } else if (cmd.equals("setoption")) {
-                initEngine(os);
-                StringBuilder optionName = new StringBuilder();
-                StringBuilder optionValue = new StringBuilder();
-                if (tokens[1].endsWith("name")) {
-                    int idx = 2;
-                    while ((idx < tokens.length) && !tokens[idx].equals("value")) {
-                        optionName.append(tokens[idx++].toLowerCase(Locale.US));
-                        optionName.append(' ');
-                    }
-                    if ((idx < tokens.length) && tokens[idx++].equals("value")) {
-                        while ((idx < tokens.length)) {
-                            optionValue.append(tokens[idx++].toLowerCase(Locale.US));
-                            optionValue.append(' ');
+            switch (cmd) {
+                case "uci":
+                    os.printLine("id name %s", ComputerPlayer.engineName);
+                    os.printLine("id author Peter Osterlund");
+                    MaterialEngineControl.printOptions(os);
+                    os.printLine("uciok");
+                    break;
+                case "isready":
+                    initEngine(os);
+                    os.printLine("readyok");
+                    break;
+                case "setoption":
+                    initEngine(os);
+                    StringBuilder optionName = new StringBuilder();
+                    StringBuilder optionValue = new StringBuilder();
+                    if (tokens[1].endsWith("name")) {
+                        int idx = 2;
+                        while ((idx < tokens.length) && !tokens[idx].equals("value")) {
+                            optionName.append(tokens[idx++].toLowerCase(Locale.US));
+                            optionName.append(' ');
                         }
+                        if ((idx < tokens.length) && tokens[idx++].equals("value")) {
+                            while ((idx < tokens.length)) {
+                                optionValue.append(tokens[idx++].toLowerCase(Locale.US));
+                                optionValue.append(' ');
+                            }
+                        }
+                        engine.setOption(optionName.toString().trim(),
+                                optionValue.toString().trim());
                     }
-                    engine.setOption(optionName.toString().trim(), optionValue.toString().trim());
-                }
-            } else if (cmd.equals("ucinewgame")) {
-                if (engine != null) {
-                    engine.newGame();
-                }
-            } else if (cmd.equals("position")) {
-                String fen = null;
-                int idx = 1;
-                if (tokens[idx].equals("startpos")) {
-                    idx++;
-                    fen = TextIO.startPosFEN;
-                } else if (tokens[idx].equals("fen")) {
-                    idx++;
-                    StringBuilder sb = new StringBuilder();
-                    while ((idx < tokens.length) && !tokens[idx].equals("moves")) {
-                        sb.append(tokens[idx++]);
-                        sb.append(' ');
+                    break;
+                case "ucinewgame":
+                    if (engine != null) {
+                        engine.newGame();
                     }
-                    fen = sb.toString().trim();
-                }
-                if (fen != null) {
-                    pos = TextIO.readFEN(fen);
-                    moves.clear();
-                    if ((idx < tokens.length) && tokens[idx++].equals("moves")) {
-                        for (int i = idx; i < tokens.length; i++) {
-                            Move m = TextIO.uciStringToMove(tokens[i]);
-                            if (m != null) {
-                                moves.add(m);
-                            } else {
-                                break;
+                    break;
+                case "position": {
+                    String fen = null;
+                    int idx = 1;
+                    if (tokens[idx].equals("startpos")) {
+                        idx++;
+                        fen = TextIO.startPosFEN;
+                    } else if (tokens[idx].equals("fen")) {
+                        idx++;
+                        StringBuilder sb = new StringBuilder();
+                        while ((idx < tokens.length) && !tokens[idx].equals("moves")) {
+                            sb.append(tokens[idx++]);
+                            sb.append(' ');
+                        }
+                        fen = sb.toString().trim();
+                    }
+                    if (fen != null) {
+                        pos = TextIO.readFEN(fen);
+                        moves.clear();
+                        if ((idx < tokens.length) && tokens[idx++].equals("moves")) {
+                            for (int i = idx; i < tokens.length; i++) {
+                                Move m = TextIO.uciStringToMove(tokens[i]);
+                                if (m != null) {
+                                    moves.add(m);
+                                } else {
+                                    break;
+                                }
                             }
                         }
                     }
+                    break;
                 }
-            } else if (cmd.equals("go")) {
-                initEngine(os);
-                int idx = 1;
-                SearchParams sPar = new SearchParams();
-                boolean ponder = false;
-                while (idx < tokens.length) {
-                    String subCmd = tokens[idx++];
-                    if (subCmd.equals("searchmoves")) {
-                        while (idx < tokens.length) {
-                            Move m = TextIO.uciStringToMove(tokens[idx]);
-                            if (m != null) {
-                                sPar.searchMoves.add(m);
-                                idx++;
-                            } else {
-                                break;
+                case "go": {
+                    initEngine(os);
+                    int idx = 1;
+                    SearchParams sPar = new SearchParams();
+                    boolean ponder = false;
+                    while (idx < tokens.length) {
+                        String subCmd = tokens[idx++];
+                        if (subCmd.equals("searchmoves")) {
+                            while (idx < tokens.length) {
+                                Move m = TextIO.uciStringToMove(tokens[idx]);
+                                if (m != null) {
+                                    sPar.searchMoves.add(m);
+                                    idx++;
+                                } else {
+                                    break;
+                                }
                             }
+                        } else if (subCmd.equals("ponder")) {
+                            ponder = true;
+                        } else if (subCmd.equals("wtime")) {
+                            sPar.wTime = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("btime")) {
+                            sPar.bTime = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("winc")) {
+                            sPar.wInc = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("binc")) {
+                            sPar.bInc = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("movestogo")) {
+                            sPar.movesToGo = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("depth")) {
+                            sPar.depth = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("nodes")) {
+                            sPar.nodes = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("mate")) {
+                            sPar.mate = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("movetime")) {
+                            sPar.moveTime = Integer.parseInt(tokens[idx++]);
+                        } else if (subCmd.equals("infinite")) {
+                            sPar.infinite = true;
                         }
-                    } else if (subCmd.equals("ponder")) {
-                        ponder = true;
-                    } else if (subCmd.equals("wtime")) {
-                        sPar.wTime = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("btime")) {
-                        sPar.bTime = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("winc")) {
-                        sPar.wInc = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("binc")) {
-                        sPar.bInc = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("movestogo")) {
-                        sPar.movesToGo = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("depth")) {
-                        sPar.depth = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("nodes")) {
-                        sPar.nodes = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("mate")) {
-                        sPar.mate = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("movetime")) {
-                        sPar.moveTime = Integer.parseInt(tokens[idx++]);
-                    } else if (subCmd.equals("infinite")) {
-                        sPar.infinite = true;
                     }
-                }
-                if (pos == null) {
-                    try {
-                        pos = TextIO.readFEN(TextIO.startPosFEN);
-                    } catch (ChessParseError ex) {
-                        throw new RuntimeException();
+                    if (pos == null) {
+                        try {
+                            pos = TextIO.readFEN(TextIO.startPosFEN);
+                        } catch (ChessParseError ex) {
+                            throw new RuntimeException();
+                        }
                     }
+                    if (ponder) {
+                        engine.startPonder(pos, moves, sPar);
+                    } else {
+                        engine.startSearch(pos, moves, sPar);
+                    }
+                    break;
                 }
-                if (ponder) {
-                    engine.startPonder(pos, moves, sPar);
-                } else {
-                    engine.startSearch(pos, moves, sPar);
-                }
-            } else if (cmd.equals("stop")) {
-                engine.stopSearch();
-            } else if (cmd.equals("ponderhit")) {
-                engine.ponderHit();
-            } else if (cmd.equals("quit")) {
-                if (engine != null) {
+                case "stop":
                     engine.stopSearch();
-                }
-                quit = true;
+                    break;
+                case "ponderhit":
+                    engine.ponderHit();
+                    break;
+                case "quit":
+                    if (engine != null) {
+                        engine.stopSearch();
+                    }
+                    quit = true;
+                    break;
             }
         } catch (ChessParseError ex) {
         } catch (ArrayIndexOutOfBoundsException e) {

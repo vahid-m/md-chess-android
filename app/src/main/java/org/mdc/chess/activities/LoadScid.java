@@ -18,14 +18,6 @@
 
 package org.mdc.chess.activities;
 
-import java.io.File;
-import java.util.Locale;
-import java.util.Vector;
-import java.util.concurrent.CountDownLatch;
-
-import org.mdc.chess.ColorTheme;
-import org.mdc.chess.Util;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -46,49 +38,35 @@ import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemClickListener;
 
+import org.mdc.chess.ColorTheme;
 import org.mdc.chess.R;
 
-public class LoadScid extends ListActivity {
-    private static final class GameInfo {
-        String summary = "";
-        int gameId = -1;
-        public String toString() {
-            StringBuilder sb = new StringBuilder(128);
-            sb.append(gameId+1);
-            sb.append(". ");
-            sb.append(summary);
-            return sb.toString();
-        }
-    }
+import java.io.File;
+import java.util.Locale;
+import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 
-    private static Vector<GameInfo> gamesInFile = new Vector<GameInfo>();
+public class LoadScid extends ListActivity {
+    private static Vector<GameInfo> gamesInFile = new Vector<>();
     private static boolean cacheValid = false;
     private String fileName;
     private ProgressDialog progress;
-
     private SharedPreferences settings;
     private int defaultItem = 0;
     private String lastFileName = "";
     private long lastModTime = -1;
-
     private Thread workThread = null;
     private CountDownLatch progressLatch = null;
-
     private int idIdx;
     private int summaryIdx;
     private boolean resultSentBack = false;
 
-
-    private interface OnCursorReady {
-        void run(Cursor cursor);
-    }
-    
     private void startReadFile(final OnCursorReady r) {
         getLoaderManager().restartLoader(0, null, new LoaderManager.LoaderCallbacks<Cursor>() {
             @Override
@@ -96,9 +74,10 @@ public class LoadScid extends ListActivity {
                 String scidFileName = fileName.substring(0, fileName.indexOf("."));
                 String[] proj = new String[]{"_id", "summary"};
                 return new CursorLoader(getApplicationContext(),
-                                        Uri.parse("content://org.scid.database.scidprovider/games"),
-                                        proj, scidFileName, null, null);
+                        Uri.parse("content://org.scid.database.scidprovider/games"),
+                        proj, scidFileName, null, null);
             }
+
             @Override
             public void onLoadFinished(Loader<Cursor> loader, final Cursor cursor) {
                 idIdx = cursor.getColumnIndex("_id");
@@ -110,6 +89,7 @@ public class LoadScid extends ListActivity {
                 });
                 workThread.start();
             }
+
             @Override
             public void onLoaderReset(Loader<Cursor> loader) {
             }
@@ -136,63 +116,70 @@ public class LoadScid extends ListActivity {
         String action = i.getAction();
         fileName = i.getStringExtra("org.petero.MaterialChess.pathname");
         resultSentBack = false;
-        if (action.equals("org.petero.MaterialChess.loadScid")) {
-            progressLatch = new CountDownLatch(1);
-            showProgressDialog();
-            final LoadScid lpgn = this;
-            startReadFile(new OnCursorReady() {
-                @Override
-                public void run(Cursor cursor) {
-                    try {
-                        progressLatch.await();
-                    } catch (InterruptedException e) {
-                        setResult(RESULT_CANCELED);
-                        finish();
-                        return;
-                    }
-                    if (!readFile(cursor))
-                        return;
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            lpgn.showList();
-                        }
-                    });
-                }
-            });
-        } else if (action.equals("org.petero.MaterialChess.loadScidNextGame") ||
-                   action.equals("org.petero.MaterialChess.loadScidPrevGame")) {
-            boolean next = action.equals("org.petero.MaterialChess.loadScidNextGame");
-            final int loadItem = defaultItem + (next ? 1 : -1);
-            if (loadItem < 0) {
-                Toast.makeText(getApplicationContext(), R.string.no_prev_game,
-                               Toast.LENGTH_SHORT).show();
-                setResult(RESULT_CANCELED);
-                finish();
-            } else {
+        switch (action) {
+            case "org.petero.MaterialChess.loadScid":
+                progressLatch = new CountDownLatch(1);
+                showProgressDialog();
+                final LoadScid lpgn = this;
                 startReadFile(new OnCursorReady() {
                     @Override
                     public void run(Cursor cursor) {
-                        if (!readFile(cursor))
+                        try {
+                            progressLatch.await();
+                        } catch (InterruptedException e) {
+                            setResult(RESULT_CANCELED);
+                            finish();
                             return;
+                        }
+                        if (!readFile(cursor)) {
+                            return;
+                        }
                         runOnUiThread(new Runnable() {
                             public void run() {
-                                if (loadItem >= gamesInFile.size()) {
-                                    Toast.makeText(getApplicationContext(), R.string.no_next_game,
-                                                   Toast.LENGTH_SHORT).show();
-                                    setResult(RESULT_CANCELED);
-                                    finish();
-                                } else {
-                                    defaultItem = loadItem;
-                                    sendBackResult(gamesInFile.get(loadItem));
-                                }
+                                lpgn.showList();
                             }
                         });
                     }
                 });
-            }
-        } else { // Unsupported action
-            setResult(RESULT_CANCELED);
-            finish();
+                break;
+            case "org.petero.MaterialChess.loadScidNextGame":
+            case "org.petero.MaterialChess.loadScidPrevGame":
+                boolean next = action.equals("org.petero.MaterialChess.loadScidNextGame");
+                final int loadItem = defaultItem + (next ? 1 : -1);
+                if (loadItem < 0) {
+                    Toast.makeText(getApplicationContext(), R.string.no_prev_game,
+                            Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_CANCELED);
+                    finish();
+                } else {
+                    startReadFile(new OnCursorReady() {
+                        @Override
+                        public void run(Cursor cursor) {
+                            if (!readFile(cursor)) {
+                                return;
+                            }
+                            runOnUiThread(new Runnable() {
+                                public void run() {
+                                    if (loadItem >= gamesInFile.size()) {
+                                        Toast.makeText(getApplicationContext(),
+                                                R.string.no_next_game,
+                                                Toast.LENGTH_SHORT).show();
+                                        setResult(RESULT_CANCELED);
+                                        finish();
+                                    } else {
+                                        defaultItem = loadItem;
+                                        sendBackResult(gamesInFile.get(loadItem));
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+                break;
+            default:  // Unsupported action
+                setResult(RESULT_CANCELED);
+                finish();
+                break;
         }
     }
 
@@ -210,7 +197,7 @@ public class LoadScid extends ListActivity {
         editor.putInt("defaultScidItem", defaultItem);
         editor.putString("lastScidFileName", lastFileName);
         editor.putLong("lastScidModTime", lastModTime);
-        editor.commit();
+        editor.apply();
         super.onPause();
     }
 
@@ -231,17 +218,17 @@ public class LoadScid extends ListActivity {
         progress = null;
         removeProgressDialog();
         final ArrayAdapter<GameInfo> aa =
-            new ArrayAdapter<GameInfo>(this, R.layout.select_game_list_item, gamesInFile) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                if (view instanceof TextView) {
-                    int fg = ColorTheme.instance().getColor(ColorTheme.FONT_FOREGROUND);
-                    ((TextView) view).setTextColor(fg);
-                }
-                return view;
-            }
-        };
+                new ArrayAdapter<GameInfo>(this, R.layout.select_game_list_item, gamesInFile) {
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        View view = super.getView(position, convertView, parent);
+                        if (view instanceof TextView) {
+                            int fg = ColorTheme.instance().getColor(ColorTheme.FONT_FOREGROUND);
+                            ((TextView) view).setTextColor(fg);
+                        }
+                        return view;
+                    }
+                };
         setListAdapter(aa);
         ListView lv = getListView();
         //Util.overrideViewAttribs(lv);
@@ -256,29 +243,6 @@ public class LoadScid extends ListActivity {
         });
     }
 
-    public static class ProgressFragment extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            LoadScid a = (LoadScid)getActivity();
-            ProgressDialog progress = new ProgressDialog(a);
-            progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progress.setTitle(R.string.reading_scid_file);
-            a.progress = progress;
-            a.progressLatch.countDown();
-            return progress;
-        }
-        @Override
-        public void onCancel(DialogInterface dialog) {
-            super.onCancel(dialog);
-            Activity a = getActivity();
-            if (a instanceof LoadScid) {
-                Thread thr = ((LoadScid)a).workThread;
-                if (thr != null)
-                    thr.interrupt();
-            }
-        }
-    }
-
     private void showProgressDialog() {
         ProgressFragment f = new ProgressFragment();
         f.show(getFragmentManager(), "progress");
@@ -286,16 +250,19 @@ public class LoadScid extends ListActivity {
 
     private void removeProgressDialog() {
         Fragment f = getFragmentManager().findFragmentByTag("progress");
-        if (f instanceof DialogFragment)
-            ((DialogFragment)f).dismiss();
+        if (f instanceof DialogFragment) {
+            ((DialogFragment) f).dismiss();
+        }
     }
 
     private final boolean readFile(Cursor cursor) {
-        if (!fileName.equals(lastFileName))
+        if (!fileName.equals(lastFileName)) {
             defaultItem = 0;
+        }
         long modTime = new File(fileName).lastModified();
-        if (cacheValid && (modTime == lastModTime) && fileName.equals(lastFileName))
+        if (cacheValid && (modTime == lastModTime) && fileName.equals(lastFileName)) {
             return true;
+        }
         lastModTime = modTime;
         lastFileName = fileName;
 
@@ -315,7 +282,7 @@ public class LoadScid extends ListActivity {
                     }
                     addGameInfo(cursor);
                     gameNo++;
-                    final int newPercent = (int)(gameNo * 100 / noGames);
+                    final int newPercent = gameNo * 100 / noGames;
                     if (newPercent > percent) {
                         percent = newPercent;
                         if (progress != null) {
@@ -341,8 +308,9 @@ public class LoadScid extends ListActivity {
     }
 
     private final void sendBackResult(final GameInfo gi) {
-        if (resultSentBack)
+        if (resultSentBack) {
             return;
+        }
         resultSentBack = true;
         if (gi.gameId < 0) {
             setResult(RESULT_CANCELED);
@@ -354,12 +322,14 @@ public class LoadScid extends ListActivity {
             public Loader<Cursor> onCreateLoader(int id, Bundle args) {
                 String scidFileName = fileName.substring(0, fileName.indexOf("."));
                 String[] proj = new String[]{"pgn"};
-                String uri = String.format(Locale.US, "content://org.scid.database.scidprovider/games/%d",
-                                           gi.gameId);
+                String uri = String.format(Locale.US,
+                        "content://org.scid.database.scidprovider/games/%d",
+                        gi.gameId);
                 return new CursorLoader(getApplicationContext(),
-                                        Uri.parse(uri),
-                                        proj, scidFileName, null, null);                        
+                        Uri.parse(uri),
+                        proj, scidFileName, null, null);
             }
+
             @Override
             public void onLoadFinished(Loader<Cursor> loader, final Cursor cursor) {
                 if (cursor != null && cursor.moveToFirst()) {
@@ -373,9 +343,51 @@ public class LoadScid extends ListActivity {
                 setResult(RESULT_CANCELED);
                 finish();
             }
+
             @Override
             public void onLoaderReset(Loader<Cursor> loader) {
             }
         });
+    }
+
+    private interface OnCursorReady {
+        void run(Cursor cursor);
+    }
+
+    private static final class GameInfo {
+        String summary = "";
+        int gameId = -1;
+
+        public String toString() {
+            String sb = String.valueOf(gameId + 1) +
+                    ". " +
+                    summary;
+            return sb;
+        }
+    }
+
+    public static class ProgressFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            LoadScid a = (LoadScid) getActivity();
+            ProgressDialog progress = new ProgressDialog(a);
+            progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progress.setTitle(R.string.reading_scid_file);
+            a.progress = progress;
+            a.progressLatch.countDown();
+            return progress;
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            super.onCancel(dialog);
+            Activity a = getActivity();
+            if (a instanceof LoadScid) {
+                Thread thr = ((LoadScid) a).workThread;
+                if (thr != null) {
+                    thr.interrupt();
+                }
+            }
+        }
     }
 }

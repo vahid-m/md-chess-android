@@ -18,6 +18,13 @@
 
 package org.mdc.chess.engine.cuckoochess;
 
+import org.mdc.chess.engine.LocalPipe;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
 import chess.Book;
 import chess.ComputerPlayer;
 import chess.History;
@@ -31,22 +38,15 @@ import chess.TranspositionTable;
 import chess.TranspositionTable.TTEntry;
 import chess.UndoInfo;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
-import org.mdc.chess.engine.LocalPipe;
-
 /**
  * Control the search thread.
+ *
  * @author petero
  */
 public class MaterialEngineControl {
-    LocalPipe os;
-
-    Thread engineThread;
     private final Object threadMutex;
+    LocalPipe os;
+    Thread engineThread;
     Search sc;
     TranspositionTable tt;
     History ht;
@@ -76,52 +76,63 @@ public class MaterialEngineControl {
     private long randomSeed = 0;
     private Random rndGen = new Random();
 
-    /**
-     * This class is responsible for sending "info" strings during search.
-     */
-    static class SearchListener implements Search.Listener {
-        LocalPipe os;
-
-        SearchListener(LocalPipe os) {
-            this.os = os;
-        }
-
-        public void notifyDepth(int depth) {
-            os.printLine("info depth %d", depth);
-        }
-
-        public void notifyCurrMove(Move m, int moveNr) {
-            os.printLine("info currmove %s currmovenumber %d", moveToString(m), moveNr);
-        }
-
-        public void notifyPV(int depth, int score, int time, long nodes, int nps, boolean isMate,
-                boolean upperBound, boolean lowerBound, ArrayList<Move> pv) {
-            StringBuilder pvBuf = new StringBuilder();
-            for (Move m : pv) {
-                pvBuf.append(" ");
-                pvBuf.append(moveToString(m));
-            }
-            String bound = "";
-            if (upperBound) {
-                bound = " upperbound";
-            } else if (lowerBound) {
-                bound = " lowerbound";
-            }
-            os.printLine("info depth %d score %s %d%s time %d nodes %d nps %d pv%s",
-                    depth, isMate ? "mate" : "cp", score, bound, time, nodes, nps, pvBuf.toString());
-        }
-
-        public void notifyStats(long nodes, int nps, int time) {
-            os.printLine("info nodes %d nps %d time %d", nodes, nps, time);
-        }
-    }
-
     public MaterialEngineControl(LocalPipe os) {
         this.os = os;
         threadMutex = new Object();
         setupTT();
         ht = new History();
         moveGen = new MoveGen();
+    }
+
+    static final int clamp(int val, int min, int max) {
+        if (val < min) {
+            return min;
+        } else if (val > max) {
+            return max;
+        } else {
+            return val;
+        }
+    }
+
+    static final String moveToString(Move m) {
+        if (m == null) {
+            return "0000";
+        }
+        String ret = TextIO.squareToString(m.from);
+        ret += TextIO.squareToString(m.to);
+        switch (m.promoteTo) {
+            case Piece.WQUEEN:
+            case Piece.BQUEEN:
+                ret += "q";
+                break;
+            case Piece.WROOK:
+            case Piece.BROOK:
+                ret += "r";
+                break;
+            case Piece.WBISHOP:
+            case Piece.BBISHOP:
+                ret += "b";
+                break;
+            case Piece.WKNIGHT:
+            case Piece.BKNIGHT:
+                ret += "n";
+                break;
+            default:
+                break;
+        }
+        return ret;
+    }
+
+    static void printOptions(LocalPipe os) {
+        os.printLine("option name Hash type spin default 2 min 1 max 2048");
+        os.printLine("option name OwnBook type check default false");
+        os.printLine("option name Ponder type check default true");
+        os.printLine("option name UCI_AnalyseMode type check default false");
+        os.printLine(
+                "option name UCI_EngineAbout type string default %s by Peter Osterlund, see "
+                        + "http://web.comhem.se/petero2home/javachess/index.html",
+                ComputerPlayer.engineName);
+        os.printLine("option name Strength type spin default 1000 min 0 max 1000");
     }
 
     final public void startSearch(Position pos, ArrayList<Move> moves, SearchParams sPar) {
@@ -195,15 +206,15 @@ public class MaterialEngineControl {
             moves = Math.min(moves, 45); // Assume 45 more moves until end of game
             if (ponderMode) {
                 final double ponderHitRate = 0.35;
-                moves = (int)Math.ceil(moves * (1 - ponderHitRate));
+                moves = (int) Math.ceil(moves * (1 - ponderHitRate));
             }
             boolean white = pos.whiteMove;
             int time = white ? sPar.wTime : sPar.bTime;
-            int inc  = white ? sPar.wInc : sPar.bInc;
+            int inc = white ? sPar.wInc : sPar.bInc;
             final int margin = Math.min(1000, time * 9 / 10);
             int timeLimit = (time + inc * (moves - 1) - margin) / moves;
-            minTimeLimit = (int)(timeLimit * 0.85);
-            maxTimeLimit = (int)(minTimeLimit * (Math.max(2.5, Math.min(4.0, moves / 2.0))));
+            minTimeLimit = (int) (timeLimit * 0.85);
+            maxTimeLimit = (int) (minTimeLimit * (Math.max(2.5, Math.min(4.0, moves / 2.0))));
 
             // Leave at least 1s on the clock, but can't use negative time
             minTimeLimit = clamp(minTimeLimit, 1, time - margin);
@@ -211,19 +222,10 @@ public class MaterialEngineControl {
         }
     }
 
-    static final int clamp(int val, int min, int max) {
-        if (val < min) {
-            return min;
-        } else if (val > max) {
-            return max;
-        } else {
-            return val;
-        }
-    }
-
     final private void startThread(final int minTimeLimit, final int maxTimeLimit,
-                                   int maxDepth, final int maxNodes) {
-        synchronized (threadMutex) {} // Must not start new search until old search is finished
+            int maxDepth, final int maxNodes) {
+        synchronized (threadMutex) {
+        } // Must not start new search until old search is finished
         sc = new Search(pos, posHashList, posHashListSize, tt, ht);
         sc.timeLimit(minTimeLimit, maxTimeLimit);
         sc.setListener(new SearchListener(os));
@@ -231,8 +233,9 @@ public class MaterialEngineControl {
         sc.nodesBetweenTimeCheck = 500;
         MoveGen.MoveList moves = moveGen.pseudoLegalMoves(pos);
         MoveGen.removeIllegal(pos, moves);
-        if ((searchMoves != null) && (searchMoves.size() > 0))
+        if ((searchMoves != null) && (searchMoves.size() > 0)) {
             moves.filter(searchMoves);
+        }
         final MoveGen.MoveList srchMoves = moves;
         onePossibleMove = false;
         if ((srchMoves.size < 2) && !infinite) {
@@ -265,7 +268,8 @@ public class MaterialEngineControl {
                 Move ponderMove = getPonderMove(pos, m);
                 synchronized (threadMutex) {
                     if (ponderMove != null) {
-                        os.printLine("bestmove %s ponder %s", moveToString(m), moveToString(ponderMove));
+                        os.printLine("bestmove %s ponder %s", moveToString(m),
+                                moveToString(ponderMove));
                     } else {
                         os.printLine("bestmove %s", moveToString(m));
                     }
@@ -298,7 +302,6 @@ public class MaterialEngineControl {
         }
     }
 
-
     private final void setupTT() {
         int nEntries = hashSizeMB > 0 ? hashSizeMB * (1 << 20) / 24 : 1024;
         int logSize = (int) Math.floor(Math.log(nEntries) / Math.log(2));
@@ -320,8 +323,9 @@ public class MaterialEngineControl {
      * Try to find a move to ponder from the transposition table.
      */
     final Move getPonderMove(Position pos, Move m) {
-        if (m == null)
+        if (m == null) {
             return null;
+        }
         Move ret = null;
         UndoInfo ui = new UndoInfo();
         pos.makeMove(m, ui);
@@ -339,59 +343,68 @@ public class MaterialEngineControl {
         return ret;
     }
 
-    static final String moveToString(Move m) {
-        if (m == null)
-            return "0000";
-        String ret = TextIO.squareToString(m.from);
-        ret += TextIO.squareToString(m.to);
-        switch (m.promoteTo) {
-            case Piece.WQUEEN:
-            case Piece.BQUEEN:
-                ret += "q";
-                break;
-            case Piece.WROOK:
-            case Piece.BROOK:
-                ret += "r";
-                break;
-            case Piece.WBISHOP:
-            case Piece.BBISHOP:
-                ret += "b";
-                break;
-            case Piece.WKNIGHT:
-            case Piece.BKNIGHT:
-                ret += "n";
-                break;
-            default:
-                break;
-        }
-        return ret;
-    }
-
-    static void printOptions(LocalPipe os) {
-        os.printLine("option name Hash type spin default 2 min 1 max 2048");
-        os.printLine("option name OwnBook type check default false");
-        os.printLine("option name Ponder type check default true");
-        os.printLine("option name UCI_AnalyseMode type check default false");
-        os.printLine("option name UCI_EngineAbout type string default %s by Peter Osterlund, see http://web.comhem.se/petero2home/javachess/index.html",
-                ComputerPlayer.engineName);
-        os.printLine("option name Strength type spin default 1000 min 0 max 1000");
-    }
-
     final void setOption(String optionName, String optionValue) {
         try {
-            if (optionName.equals("hash")) {
-                hashSizeMB = Integer.parseInt(optionValue);
-                setupTT();
-            } else if (optionName.equals("ownbook")) {
-                ownBook = Boolean.parseBoolean(optionValue);
-            } else if (optionName.equals("ponder")) {
-                ponderMode = Boolean.parseBoolean(optionValue);
-            } else if (optionName.equals("uci_analysemode")) {
-                analyseMode = Boolean.parseBoolean(optionValue);
-            } else if (optionName.equals("strength")) {
-                strength = Integer.parseInt(optionValue);
+            switch (optionName) {
+                case "hash":
+                    hashSizeMB = Integer.parseInt(optionValue);
+                    setupTT();
+                    break;
+                case "ownbook":
+                    ownBook = Boolean.parseBoolean(optionValue);
+                    break;
+                case "ponder":
+                    ponderMode = Boolean.parseBoolean(optionValue);
+                    break;
+                case "uci_analysemode":
+                    analyseMode = Boolean.parseBoolean(optionValue);
+                    break;
+                case "strength":
+                    strength = Integer.parseInt(optionValue);
+                    break;
             }
         } catch (NumberFormatException nfe) {
+        }
+    }
+
+    /**
+     * This class is responsible for sending "info" strings during search.
+     */
+    static class SearchListener implements Search.Listener {
+        LocalPipe os;
+
+        SearchListener(LocalPipe os) {
+            this.os = os;
+        }
+
+        public void notifyDepth(int depth) {
+            os.printLine("info depth %d", depth);
+        }
+
+        public void notifyCurrMove(Move m, int moveNr) {
+            os.printLine("info currmove %s currmovenumber %d", moveToString(m), moveNr);
+        }
+
+        public void notifyPV(int depth, int score, int time, long nodes, int nps, boolean isMate,
+                boolean upperBound, boolean lowerBound, ArrayList<Move> pv) {
+            StringBuilder pvBuf = new StringBuilder();
+            for (Move m : pv) {
+                pvBuf.append(" ");
+                pvBuf.append(moveToString(m));
+            }
+            String bound = "";
+            if (upperBound) {
+                bound = " upperbound";
+            } else if (lowerBound) {
+                bound = " lowerbound";
+            }
+            os.printLine("info depth %d score %s %d%s time %d nodes %d nps %d pv%s",
+                    depth, isMate ? "mate" : "cp", score, bound, time, nodes, nps,
+                    pvBuf.toString());
+        }
+
+        public void notifyStats(long nodes, int nps, int time) {
+            os.printLine("info nodes %d nps %d time %d", nodes, nps, time);
         }
     }
 }

@@ -18,8 +18,6 @@
 
 package org.mdc.chess.activities;
 
-import org.mdc.chess.Util;
-
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
@@ -27,8 +25,19 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
 import org.mdc.chess.R;
+import org.mdc.chess.Util;
 
 public class Preferences extends PreferenceActivity {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getFragmentManager().beginTransaction()
+                .replace(android.R.id.content, new Fragment())
+                .commit();
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        Util.setFullScreenMode(this, settings);
+    }
 
     public static class Fragment extends PreferenceFragment {
         @Override
@@ -36,15 +45,5 @@ public class Preferences extends PreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
         }
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        getFragmentManager().beginTransaction()
-                            .replace(android.R.id.content, new Fragment())
-                            .commit();
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        Util.setFullScreenMode(this, settings);
     }
 }

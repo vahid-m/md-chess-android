@@ -18,23 +18,20 @@
 
 package org.mdc.chess.gamelogic;
 
+import org.mdc.chess.gamelogic.TimeControlData.TimeControlField;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.mdc.chess.gamelogic.TimeControlData.TimeControlField;
-
 /** Keep track of time control information for both players. */
 public class TimeControl {
     TimeControlData tcData;
-
-    private int whiteBaseTime; // Current remaining time, or remaining time when clock started
-    private int blackBaseTime; // Current remaining time, or remaining time when clock started
-
     int currentMove;
     boolean whiteToMove;
-
+    private int whiteBaseTime; // Current remaining time, or remaining time when clock started
+    private int blackBaseTime; // Current remaining time, or remaining time when clock started
     private int elapsed;  // Accumulated elapsed time for this move.
     private long timerT0; // Time when timer started. 0 if timer is stopped.
 
@@ -57,7 +54,8 @@ public class TimeControl {
         this.tcData = tcData;
     }
 
-    public final void setCurrentMove(int move, boolean whiteToMove, int whiteBaseTime, int blackBaseTime) {
+    public final void setCurrentMove(int move, boolean whiteToMove, int whiteBaseTime,
+            int blackBaseTime) {
         currentMove = move;
         this.whiteToMove = whiteToMove;
         this.whiteBaseTime = whiteBaseTime;
@@ -69,15 +67,17 @@ public class TimeControl {
     /** Move current move "delta" half-moves forward. */
     public final void advanceMove(int delta) {
         while (delta > 0) {
-            if (!whiteToMove)
+            if (!whiteToMove) {
                 currentMove++;
+            }
             whiteToMove = !whiteToMove;
             delta--;
         }
         while (delta < 0) {
             whiteToMove = !whiteToMove;
-            if (!whiteToMove)
+            if (!whiteToMove) {
                 currentMove--;
+            }
             delta++;
         }
     }
@@ -94,10 +94,11 @@ public class TimeControl {
 
     public final void stopTimer(long now) {
         if (clockRunning()) {
-            int currElapsed = (int)(now - timerT0);
+            int currElapsed = (int) (now - timerT0);
             timerT0 = 0;
-            if (currElapsed > 0)
+            if (currElapsed > 0) {
                 elapsed += currElapsed;
+            }
         }
     }
 
@@ -106,7 +107,7 @@ public class TimeControl {
         stopTimer(now);
 
         ArrayList<TimeControlField> tc = tcData.getTC(whiteToMove);
-        Pair<Integer,Integer> tcInfo = getCurrentTC(whiteToMove);
+        Pair<Integer, Integer> tcInfo = getCurrentTC(whiteToMove);
         int tcIdx = tcInfo.first;
         int movesToTc = tcInfo.second;
 
@@ -114,8 +115,9 @@ public class TimeControl {
         if (useIncrement) {
             remaining += tc.get(tcIdx).increment;
             if (movesToTc == 1) {
-                if (tcIdx+1 < tc.size())
+                if (tcIdx + 1 < tc.size()) {
                     tcIdx++;
+                }
                 remaining += tc.get(tcIdx).timeControl;
             }
         }
@@ -128,8 +130,9 @@ public class TimeControl {
         int remaining = whiteToMove ? whiteBaseTime : blackBaseTime;
         if (whiteToMove == this.whiteToMove) {
             remaining -= elapsed;
-            if (timerT0 != 0)
+            if (timerT0 != 0) {
                 remaining -= now - timerT0;
+            }
         }
         return remaining;
     }
@@ -161,24 +164,28 @@ public class TimeControl {
     }
 
     /** Return the current active time control index and number of moves to next time control. */
-    private Pair<Integer,Integer> getCurrentTC(boolean whiteMove) {
+    private Pair<Integer, Integer> getCurrentTC(boolean whiteMove) {
         ArrayList<TimeControlField> tc = tcData.getTC(whiteMove);
         int tcIdx = 0;
         final int lastTcIdx = tc.size() - 1;
         int nextTC = 1;
         int currMove = currentMove;
-        if (!whiteToMove && whiteMove)
+        if (!whiteToMove && whiteMove) {
             currMove++;
-        while (true) {
-            if (tc.get(tcIdx).movesPerSession <= 0)
-                return new Pair<Integer,Integer>(tcIdx, 0);
-            nextTC += tc.get(tcIdx).movesPerSession;
-            if (nextTC > currMove)
-                break;
-            if (tcIdx < lastTcIdx)
-                tcIdx++;
         }
-        return new Pair<Integer,Integer>(tcIdx, nextTC - currMove);
+        while (true) {
+            if (tc.get(tcIdx).movesPerSession <= 0) {
+                return new Pair<>(tcIdx, 0);
+            }
+            nextTC += tc.get(tcIdx).movesPerSession;
+            if (nextTC > currMove) {
+                break;
+            }
+            if (tcIdx < lastTcIdx) {
+                tcIdx++;
+            }
+        }
+        return new Pair<>(tcIdx, nextTC - currMove);
     }
 
     /** De-serialize from input stream. */

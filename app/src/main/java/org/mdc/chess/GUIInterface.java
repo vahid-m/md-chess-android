@@ -18,13 +18,13 @@
 
 package org.mdc.chess;
 
-import java.util.ArrayList;
+import android.content.Context;
 
 import org.mdc.chess.gamelogic.Game;
 import org.mdc.chess.gamelogic.Move;
 import org.mdc.chess.gamelogic.Position;
 
-import android.content.Context;
+import java.util.ArrayList;
 
 /** Interface between the GUI and the ChessController. */
 public interface GUIInterface {
@@ -35,31 +35,11 @@ public interface GUIInterface {
     /** Mark square sq as selected. Set to -1 to clear selection. */
     public void setSelection(int sq);
 
-    final static class GameStatus {
-        public Game.GameState state = Game.GameState.ALIVE;
-        public int moveNr = 0;
-        /** Move required to claim draw, or empty string. */
-        public String drawInfo = "";
-        public boolean white = false;
-        public boolean ponder = false;
-        public boolean thinking = false;
-        public boolean analyzing = false;
-    }
-
     /** Set the status text. */
     public void setStatus(GameStatus status);
 
     /** Update the list of moves. */
     public void moveListUpdated();
-
-    final public static class ThinkingInfo {
-        public int id;
-        public String pvStr;
-        public String statStr;
-        public String bookInfo;
-        public ArrayList<ArrayList<Move>> pvMoves;
-        public ArrayList<Move> bookMoves;
-    }
 
     /** Update the computer thinking information. */
     public void setThinkingInfo(ThinkingInfo ti);
@@ -111,4 +91,24 @@ public interface GUIInterface {
 
     /** Return true if only main-line moves are to be kept. */
     public boolean discardVariations();
+
+    final static class GameStatus {
+        public Game.GameState state = Game.GameState.ALIVE;
+        public int moveNr = 0;
+        /** Move required to claim draw, or empty string. */
+        public String drawInfo = "";
+        public boolean white = false;
+        public boolean ponder = false;
+        public boolean thinking = false;
+        public boolean analyzing = false;
+    }
+
+    final public static class ThinkingInfo {
+        public int id;
+        public String pvStr;
+        public String statStr;
+        public String bookInfo;
+        public ArrayList<ArrayList<Move>> pvMoves;
+        public ArrayList<Move> bookMoves;
+    }
 }

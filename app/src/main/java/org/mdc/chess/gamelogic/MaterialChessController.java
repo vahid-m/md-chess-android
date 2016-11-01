@@ -18,6 +18,20 @@
 
 package org.mdc.chess.gamelogic;
 
+import org.mdc.chess.EngineOptions;
+import org.mdc.chess.GUIInterface;
+import org.mdc.chess.GUIInterface.ThinkingInfo;
+import org.mdc.chess.GameMode;
+import org.mdc.chess.PGNOptions;
+import org.mdc.chess.Util;
+import org.mdc.chess.book.BookOptions;
+import org.mdc.chess.engine.MaterialComputerPlayer;
+import org.mdc.chess.engine.MaterialComputerPlayer.SearchRequest;
+import org.mdc.chess.engine.MaterialComputerPlayer.SearchType;
+import org.mdc.chess.engine.UCIOptions;
+import org.mdc.chess.gamelogic.Game.GameState;
+import org.mdc.chess.gamelogic.GameTree.Node;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -28,22 +42,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.mdc.chess.EngineOptions;
-import org.mdc.chess.GUIInterface;
-import org.mdc.chess.GUIInterface.ThinkingInfo;
-import org.mdc.chess.GameMode;
-import org.mdc.chess.PGNOptions;
-import org.mdc.chess.Util;
-import org.mdc.chess.book.BookOptions;
-import org.mdc.chess.engine.MaterialComputerPlayer;
-import org.mdc.chess.engine.UCIOptions;
-import org.mdc.chess.engine.MaterialComputerPlayer.SearchRequest;
-import org.mdc.chess.engine.MaterialComputerPlayer.SearchType;
-import org.mdc.chess.gamelogic.Game.GameState;
-import org.mdc.chess.gamelogic.GameTree.Node;
-
 /**
  * The glue between the chess engine and the GUI.
+ *
  * @author petero
  */
 public class MaterialChessController {
@@ -71,7 +72,8 @@ public class MaterialChessController {
     private volatile ThinkingInfo latestThinkingInfo = null;
 
     /** Constructor. */
-    public MaterialChessController(GUIInterface gui, PgnToken.PgnTokenReceiver gameTextListener, PGNOptions options) {
+    public MaterialChessController(GUIInterface gui, PgnToken.PgnTokenReceiver gameTextListener,
+            PGNOptions options) {
         this.gui = gui;
         this.gameTextListener = gameTextListener;
         gameMode = new GameMode(GameMode.TWO_PLAYERS);
@@ -83,8 +85,9 @@ public class MaterialChessController {
     /** Start a new game. */
     public final synchronized void newGame(GameMode gameMode, TimeControlData tcData) {
         boolean updateGui = abortSearch();
-        if (updateGui)
+        if (updateGui) {
             updateGUI();
+        }
         this.gameMode = gameMode;
         if (computerPlayer == null) {
             computerPlayer = new MaterialComputerPlayer(gui.getContext(), listener);
@@ -109,9 +112,10 @@ public class MaterialChessController {
 
     /** @return Array containing time control, moves per session and time increment. */
     public final int[] getTimeLimit() {
-        if (game != null)
+        if (game != null) {
             return game.timeController.getTimeLimit(game.currPos().whiteMove);
-        return new int[]{5*60*1000, 60, 0};
+        }
+        return new int[]{5 * 60 * 1000, 60, 0};
     }
 
     /** The chess clocks are stopped when the GUI is paused. */
@@ -120,24 +124,26 @@ public class MaterialChessController {
         updateGameMode();
     }
 
+    public GameMode getGameMode() {
+        return gameMode;
+    }
+
     /** Set game mode. */
     public final synchronized void setGameMode(GameMode newMode) {
         if (!gameMode.equals(newMode)) {
-            if (newMode.humansTurn(game.currPos().whiteMove))
+            if (newMode.humansTurn(game.currPos().whiteMove)) {
                 searchId++;
+            }
             gameMode = newMode;
-            if (!gameMode.playerWhite() || !gameMode.playerBlack())
+            if (!gameMode.playerWhite() || !gameMode.playerBlack()) {
                 setPlayerNames(game); // If computer player involved, set player names
+            }
             updateGameMode();
             abortSearch();
             updateComputeThreads();
             gui.updateEngineTitle();
             updateGUI();
         }
-    }
-
-    public GameMode getGameMode() {
-        return gameMode;
     }
 
     /** Return true if game mode is analysis. */
@@ -160,8 +166,9 @@ public class MaterialChessController {
     public final synchronized void setEngineOptions(EngineOptions options, boolean restart) {
         if (!engineOptions.equals(options)) {
             engineOptions = options;
-            if (computerPlayer != null)
+            if (computerPlayer != null) {
                 computerPlayer.setEngineOptions(engineOptions);
+            }
             if (restart && (game != null)) {
                 abortSearch();
                 updateComputeThreads();
@@ -170,9 +177,12 @@ public class MaterialChessController {
         }
     }
 
-    /** Set engine and engine strength. Restart computer thinking if appropriate.
-     * @param engine Name of engine.
-     * @param strength Engine strength, 0 - 1000. */
+    /**
+     * Set engine and engine strength. Restart computer thinking if appropriate.
+     *
+     * @param engine   Name of engine.
+     * @param strength Engine strength, 0 - 1000.
+     */
     public final synchronized void setEngineStrength(String engine, int strength) {
         boolean newEngine = !engine.equals(this.engine);
         if (newEngine || (strength != this.strength)) {
@@ -187,9 +197,10 @@ public class MaterialChessController {
     }
 
     /** Set engine UCI options. */
-    public final synchronized void setEngineUCIOptions(Map<String,String> uciOptions) {
-        if (computerPlayer != null)
+    public final synchronized void setEngineUCIOptions(Map<String, String> uciOptions) {
+        if (computerPlayer != null) {
             computerPlayer.setEngineUCIOptions(uciOptions);
+        }
     }
 
     /** Return current engine identifier. */
@@ -199,15 +210,18 @@ public class MaterialChessController {
 
     /** Notify controller that preferences has changed. */
     public final synchronized void prefsChanged(boolean translateMoves) {
-        if (game == null)
+        if (game == null) {
             translateMoves = false;
-        if (translateMoves)
+        }
+        if (translateMoves) {
             game.tree.translateMoves();
+        }
         updateBookHints();
         updateMoveList();
         listener.prefsChanged(searchId, translateMoves);
-        if (translateMoves)
+        if (translateMoves) {
             updateGUI();
+        }
     }
 
     /** De-serialize from byte array. */
@@ -222,10 +236,18 @@ public class MaterialChessController {
         } catch (IOException e) {
         } catch (ChessParseError e) {
         } finally {
-            if (dis != null)
-                try { dis.close(); } catch (IOException ex) {}
-            if (bais != null)
-                try { bais.close(); } catch (IOException ex) {}
+            if (dis != null) {
+                try {
+                    dis.close();
+                } catch (IOException ex) {
+                }
+            }
+            if (bais != null) {
+                try {
+                    bais.close();
+                } catch (IOException ex) {
+                }
+            }
         }
     }
 
@@ -242,10 +264,18 @@ public class MaterialChessController {
         } catch (IOException e) {
             return null;
         } finally {
-            if (dos != null)
-                try { dos.close(); } catch (IOException ex) {}
-            if (baos != null)
-                try { baos.close(); } catch (IOException ex) {}
+            if (dos != null) {
+                try {
+                    dos.close();
+                } catch (IOException ex) {
+                }
+            }
+            if (baos != null) {
+                try {
+                    baos.close();
+                } catch (IOException ex) {
+                }
+            }
         }
     }
 
@@ -268,8 +298,9 @@ public class MaterialChessController {
             setPlayerNames(newGame);
         } catch (ChessParseError e) {
             // Try read as PGN instead
-            if (!newGame.readPGN(fenPgn, pgnOptions))
+            if (!newGame.readPGN(fenPgn, pgnOptions)) {
                 throw e;
+            }
             newGame.tree.translateMoves();
         }
         searchId++;
@@ -285,9 +316,7 @@ public class MaterialChessController {
 
     /** True if human's turn to make a move. (True in analysis mode.) */
     public final synchronized boolean humansTurn() {
-        if (game == null)
-            return false;
-        return gameMode.humansTurn(game.currPos().whiteMove);
+        return game != null && gameMode.humansTurn(game.currPos().whiteMove);
     }
 
     /** Return true if computer player is using CPU power. */
@@ -295,18 +324,22 @@ public class MaterialChessController {
         return (computerPlayer != null) && computerPlayer.computerBusy();
     }
 
-    /** Return engine UCI options if an engine has been loaded and has
-     *  reported its UCI options. */
+    /**
+     * Return engine UCI options if an engine has been loaded and has
+     * reported its UCI options.
+     */
     public final synchronized UCIOptions getUCIOptions() {
-        if (computerPlayer == null || !computerPlayer.computerLoaded())
+        if (computerPlayer == null || !computerPlayer.computerLoaded()) {
             return null;
+        }
         return computerPlayer.getUCIOptions();
     }
 
     /** Make a move for a human player. */
     public final synchronized void makeHumanMove(Move m) {
-        if (!humansTurn())
+        if (!humansTurn()) {
             return;
+        }
         Position oldPos = new Position(game.currPos());
         if (game.pendingDrawOffer) {
             ArrayList<Move> moves = new MoveGen().legalMoves(oldPos);
@@ -338,11 +371,15 @@ public class MaterialChessController {
         }
     }
 
-    /** Report promotion choice for incomplete move.
-     * @param choice 0=queen, 1=rook, 2=bishop, 3=knight. */
+    /**
+     * Report promotion choice for incomplete move.
+     *
+     * @param choice 0=queen, 1=rook, 2=bishop, 3=knight.
+     */
     public final synchronized void reportPromotePiece(int choice) {
-        if (promoteMove == null)
+        if (promoteMove == null) {
             return;
+        }
         final boolean white = game.currPos().whiteMove;
         int promoteTo;
         switch (choice) {
@@ -379,8 +416,9 @@ public class MaterialChessController {
 
     /** Help human to claim a draw by trying to find and execute a valid draw claim. */
     public final synchronized boolean claimDrawIfPossible() {
-        if (!findValidDrawClaim(""))
+        if (!findValidDrawClaim("")) {
             return false;
+        }
         updateGUI();
         return true;
     }
@@ -405,8 +443,9 @@ public class MaterialChessController {
             boolean didUndo = undoMoveNoUpdate();
             updateComputeThreads();
             setSelection();
-            if (didUndo)
+            if (didUndo) {
                 setAnimMove(game.currPos(), game.getNextMove(), false);
+            }
             updateGUI();
         }
     }
@@ -423,24 +462,28 @@ public class MaterialChessController {
         }
     }
 
-    /** Go back/forward to a given move number.
-     * Follows default variations when going forward. */
+    /**
+     * Go back/forward to a given move number.
+     * Follows default variations when going forward.
+     */
     public final synchronized void gotoMove(int moveNr) {
         boolean needUpdate = false;
         while (game.currPos().fullMoveCounter > moveNr) { // Go backward
             int before = game.currPos().fullMoveCounter * 2 + (game.currPos().whiteMove ? 0 : 1);
             undoMoveNoUpdate();
             int after = game.currPos().fullMoveCounter * 2 + (game.currPos().whiteMove ? 0 : 1);
-            if (after >= before)
+            if (after >= before) {
                 break;
+            }
             needUpdate = true;
         }
         while (game.currPos().fullMoveCounter < moveNr) { // Go forward
             int before = game.currPos().fullMoveCounter * 2 + (game.currPos().whiteMove ? 0 : 1);
             redoMoveNoUpdate();
             int after = game.currPos().fullMoveCounter * 2 + (game.currPos().whiteMove ? 0 : 1);
-            if (after <= before)
+            if (after <= before) {
                 break;
+            }
             needUpdate = true;
         }
         if (needUpdate) {
@@ -455,11 +498,13 @@ public class MaterialChessController {
     public final synchronized void gotoStartOfVariation() {
         boolean needUpdate = false;
         while (true) {
-            if (!undoMoveNoUpdate())
+            if (!undoMoveNoUpdate()) {
                 break;
+            }
             needUpdate = true;
-            if (game.numVariations() > 1)
+            if (game.numVariations() > 1) {
                 break;
+            }
         }
         if (needUpdate) {
             abortSearch();
@@ -471,15 +516,18 @@ public class MaterialChessController {
 
     /** Go to given node in game tree. */
     public final synchronized void goNode(Node node) {
-        if (node == null)
+        if (node == null) {
             return;
-        if (!game.goNode(node))
+        }
+        if (!game.goNode(node)) {
             return;
+        }
         if (!humansTurn()) {
             if (game.getLastMove() != null) {
                 game.undoMove();
-                if (!humansTurn())
+                if (!humansTurn()) {
                     game.redoMove();
+                }
             }
         }
         abortSearch();
@@ -531,17 +579,21 @@ public class MaterialChessController {
     /** Move current variation up/down in the game tree. */
     public final synchronized void moveVariation(int delta) {
         if (((delta > 0) && canMoveVariationDown()) ||
-            ((delta < 0) && canMoveVariationUp())) {
+                ((delta < 0) && canMoveVariationUp())) {
             game.moveVariation(delta);
             updateGUI();
         }
     }
 
-    /** Add a variation to the game tree.
-     * @param preComment Comment to add before first move.
-     * @param pvMoves List of moves in variation.
-     * @param updateDefault If true, make this the default variation. */
-    public final synchronized void addVariation(String preComment, List<Move> pvMoves, boolean updateDefault) {
+    /**
+     * Add a variation to the game tree.
+     *
+     * @param preComment    Comment to add before first move.
+     * @param pvMoves       List of moves in variation.
+     * @param updateDefault If true, make this the default variation.
+     */
+    public final synchronized void addVariation(String preComment, List<Move> pvMoves,
+            boolean updateDefault) {
         for (int i = 0; i < pvMoves.size(); i++) {
             Move m = pvMoves.get(i);
             String moveStr = TextIO.moveToUCIString(m);
@@ -549,8 +601,9 @@ public class MaterialChessController {
             int varNo = game.tree.addMove(moveStr, "", 0, pre, "");
             game.tree.goForward(varNo, updateDefault);
         }
-        for (int i = 0; i < pvMoves.size(); i++)
+        for (int i = 0; i < pvMoves.size(); i++) {
             game.tree.goBack();
+        }
         gameTextListener.clear();
         updateGUI();
     }
@@ -572,8 +625,9 @@ public class MaterialChessController {
 
     /** Return maximum number of PVs supported by engine. */
     public final synchronized int maxPV() {
-        if (computerPlayer == null)
+        if (computerPlayer == null) {
             return 1;
+        }
         return computerPlayer.getMaxPV();
     }
 
@@ -592,8 +646,9 @@ public class MaterialChessController {
 
     /** Request computer player to make a move immediately. */
     public final synchronized void stopSearch() {
-        if (!humansTurn() && (computerPlayer != null))
+        if (!humansTurn() && (computerPlayer != null)) {
             computerPlayer.moveNow();
+        }
     }
 
     /** Stop ponder search. */
@@ -601,8 +656,9 @@ public class MaterialChessController {
         if (humansTurn() && (computerPlayer != null)) {
             if (computerPlayer.getSearchType() == SearchType.PONDER) {
                 boolean updateGui = abortSearch();
-                if (updateGui)
+                if (updateGui) {
                     updateGUI();
+                }
             }
         }
     }
@@ -615,23 +671,17 @@ public class MaterialChessController {
     }
 
     /** Get PGN header tags and values. */
-    public final synchronized void getHeaders(Map<String,String> headers) {
-        if (game != null)
+    public final synchronized void getHeaders(Map<String, String> headers) {
+        if (game != null) {
             game.tree.getHeaders(headers);
+        }
     }
 
     /** Set PGN header tags and values. */
-    public final synchronized void setHeaders(Map<String,String> headers) {
+    public final synchronized void setHeaders(Map<String, String> headers) {
         game.tree.setHeaders(headers);
         gameTextListener.clear();
         updateGUI();
-    }
-
-    /** Comments associated with a move. */
-    public static final class CommentInfo {
-        public String move;
-        public String preComment, postComment;
-        public int nag;
     }
 
     /** Get comments associated with current position. */
@@ -658,13 +708,331 @@ public class MaterialChessController {
     /** Return true if localized piece names should be used. */
     private final boolean localPt() {
         switch (pgnOptions.view.pieceType) {
-        case PGNOptions.PT_ENGLISH:
+            case PGNOptions.PT_ENGLISH:
+                return false;
+            case PGNOptions.PT_LOCAL:
+            case PGNOptions.PT_FIGURINE:
+            default:
+                return true;
+        }
+    }
+
+    /** Discard current search. Return true if GUI update needed. */
+    private final boolean abortSearch() {
+        ponderMove = null;
+        searchId++;
+        if (computerPlayer == null) {
             return false;
-        case PGNOptions.PT_LOCAL:
-        case PGNOptions.PT_FIGURINE:
-        default:
+        }
+        if (computerPlayer.stopSearch()) {
+            listener.clearSearchInfo(searchId);
             return true;
         }
+        return false;
+    }
+
+    private final void updateBookHints() {
+        if (humansTurn()) {
+            Pair<String, ArrayList<Move>> bi = computerPlayer.getBookHints(game.currPos(),
+                    localPt());
+            listener.notifyBookInfo(searchId, bi.first, bi.second);
+        }
+    }
+
+    private final void updateGameMode() {
+        if (game != null) {
+            boolean gamePaused = !gameMode.clocksActive() || (humansTurn() && guiPaused);
+            game.setGamePaused(gamePaused);
+            updateRemainingTime();
+            Game.AddMoveBehavior amb;
+            if (gui.discardVariations()) {
+                amb = Game.AddMoveBehavior.REPLACE;
+            } else if (gameMode.clocksActive()) {
+                amb = Game.AddMoveBehavior.ADD_FIRST;
+            } else {
+                amb = Game.AddMoveBehavior.ADD_LAST;
+            }
+            game.setAddFirst(amb);
+        }
+    }
+
+    /** Start/stop computer thinking/analysis as appropriate. */
+    private final void updateComputeThreads() {
+        boolean alive = game.tree.getGameState() == GameState.ALIVE;
+        boolean analysis = gameMode.analysisMode() && alive;
+        boolean computersTurn = !humansTurn() && alive;
+        boolean ponder =
+                gui.ponderMode() && !analysis && !computersTurn && (ponderMove != null) && alive;
+        if (!analysis && !(computersTurn || ponder)) {
+            computerPlayer.stopSearch();
+        }
+        listener.clearSearchInfo(searchId);
+        updateBookHints();
+        if (!computerPlayer.sameSearchId(searchId)) {
+            if (analysis) {
+                Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
+                SearchRequest sr = MaterialComputerPlayer.SearchRequest.analyzeRequest(
+                        searchId, ph.first, ph.second,
+                        new Position(game.currPos()),
+                        game.haveDrawOffer(), engine, numPV);
+                computerPlayer.queueAnalyzeRequest(sr);
+            } else if (computersTurn || ponder) {
+                listener.clearSearchInfo(searchId);
+                listener.notifyBookInfo(searchId, "", null);
+                final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
+                Position currPos = new Position(game.currPos());
+                long now = System.currentTimeMillis();
+                if (ponder) {
+                    game.timeController.advanceMove(1);
+                }
+                int wTime = game.timeController.getRemainingTime(true, now);
+                int bTime = game.timeController.getRemainingTime(false, now);
+                int wInc = game.timeController.getIncrement(true);
+                int bInc = game.timeController.getIncrement(false);
+                boolean wtm = currPos.whiteMove;
+                int movesToGo = game.timeController.getMovesToTC(wtm ^ ponder);
+                if (ponder) {
+                    game.timeController.advanceMove(-1);
+                }
+                final Move fPonderMove = ponder ? ponderMove : null;
+                SearchRequest sr = MaterialComputerPlayer.SearchRequest.searchRequest(
+                        searchId, now, ph.first, ph.second, currPos,
+                        game.haveDrawOffer(),
+                        wTime, bTime, wInc, bInc, movesToGo,
+                        gui.ponderMode(), fPonderMove,
+                        engine, strength);
+                computerPlayer.queueSearchRequest(sr);
+            } else {
+                computerPlayer.queueStartEngine(searchId, engine);
+            }
+        }
+    }
+
+    private final synchronized void makeComputerMove(int id, final String cmd, final Move ponder) {
+        if (searchId != id) {
+            return;
+        }
+        searchId++;
+        Position oldPos = new Position(game.currPos());
+        game.processString(cmd);
+        ponderMove = ponder;
+        updateGameMode();
+        gui.computerMoveMade();
+        listener.clearSearchInfo(searchId);
+        updateComputeThreads();
+        setSelection();
+        setAnimMove(oldPos, game.getLastMove(), true);
+        updateGUI();
+    }
+
+    private final void setPlayerNames(Game game) {
+        if (game != null) {
+            String engine = "Computer";
+            if (computerPlayer != null) {
+                engine = computerPlayer.getEngineName();
+                if (strength < 1000) {
+                    engine += String.format(Locale.US, " (%.1f%%)", strength * 0.1);
+                }
+            }
+            String player = gui.playerName();
+            String white = gameMode.playerWhite() ? player : engine;
+            String black = gameMode.playerBlack() ? player : engine;
+            game.tree.setPlayerNames(white, black);
+        }
+    }
+
+    private final synchronized void updatePlayerNames(String engineName) {
+        if (game != null) {
+            if (strength < 1000) {
+                engineName += String.format(Locale.US, " (%.1f%%)", strength * 0.1);
+            }
+            String white = gameMode.playerWhite() ? game.tree.white : engineName;
+            String black = gameMode.playerBlack() ? game.tree.black : engineName;
+            game.tree.setPlayerNames(white, black);
+            updateMoveList();
+        }
+    }
+
+    private final boolean undoMoveNoUpdate() {
+        if (game.getLastMove() == null) {
+            return false;
+        }
+        searchId++;
+        game.undoMove();
+        if (!humansTurn()) {
+            if (game.getLastMove() != null) {
+                game.undoMove();
+                if (!humansTurn()) {
+                    game.redoMove();
+                }
+            } else {
+                // Don't undo first white move if playing black vs computer,
+                // because that would cause computer to immediately make
+                // a new move.
+                if (gameMode.playerWhite() || gameMode.playerBlack()) {
+                    game.redoMove();
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private final void redoMoveNoUpdate() {
+        if (game.canRedoMove()) {
+            searchId++;
+            game.redoMove();
+            if (!humansTurn() && game.canRedoMove()) {
+                game.redoMove();
+                if (!humansTurn()) {
+                    game.undoMove();
+                }
+            }
+        }
+    }
+
+    /**
+     * Move a piece from one square to another.
+     *
+     * @return True if the move was legal, false otherwise.
+     */
+    private final boolean doMove(Move move) {
+        Position pos = game.currPos();
+        ArrayList<Move> moves = new MoveGen().legalMoves(pos);
+        int promoteTo = move.promoteTo;
+        for (Move m : moves) {
+            if ((m.from == move.from) && (m.to == move.to)) {
+                if ((m.promoteTo != Piece.EMPTY) && (promoteTo == Piece.EMPTY)) {
+                    promoteMove = m;
+                    gui.requestPromotePiece();
+                    return false;
+                }
+                if (m.promoteTo == promoteTo) {
+                    String strMove = TextIO.moveToString(pos, m, false, false, moves);
+                    game.processString(strMove);
+                    return true;
+                }
+            }
+        }
+        gui.reportInvalidMove(move);
+        return false;
+    }
+
+    private final void updateGUI() {
+        GUIInterface.GameStatus s = new GUIInterface.GameStatus();
+        s.state = game.getGameState();
+        if (s.state == Game.GameState.ALIVE) {
+            s.moveNr = game.currPos().fullMoveCounter;
+            s.white = game.currPos().whiteMove;
+            MaterialComputerPlayer.SearchType st = SearchType.NONE;
+            if (computerPlayer != null) {
+                st = computerPlayer.getSearchType();
+            }
+            switch (st) {
+                case SEARCH:
+                    s.thinking = true;
+                    break;
+                case PONDER:
+                    s.ponder = true;
+                    break;
+                case ANALYZE:
+                    s.analyzing = true;
+                    break;
+                case NONE:
+                    break;
+            }
+        } else {
+            if ((s.state == GameState.DRAW_REP) || (s.state == GameState.DRAW_50)) {
+                s.drawInfo = game.getDrawInfo(localPt());
+            }
+        }
+        gui.setStatus(s);
+        updateMoveList();
+
+        StringBuilder sb = new StringBuilder();
+        if (game.tree.currentNode != game.tree.rootNode) {
+            game.tree.goBack();
+            Position pos = game.currPos();
+            List<Move> prevVarList = game.tree.variations();
+            for (int i = 0; i < prevVarList.size(); i++) {
+                if (i > 0) sb.append(' ');
+                if (i == game.tree.currentNode.defaultChild) {
+                    sb.append(Util.boldStart);
+                }
+                sb.append(TextIO.moveToString(pos, prevVarList.get(i), false, localPt()));
+                if (i == game.tree.currentNode.defaultChild) {
+                    sb.append(Util.boldStop);
+                }
+            }
+            game.tree.goForward(-1);
+        }
+        gui.setPosition(game.currPos(), sb.toString(), game.tree.variations());
+
+        updateRemainingTime();
+        updateMaterialDiffList();
+        gui.updateTimeControlTitle();
+    }
+
+    public final void updateMaterialDiffList() {
+        gui.updateMaterialDifferenceTitle(Util.getMaterialDiff(game.currPos()));
+    }
+
+    private final synchronized void setThinkingInfo(ThinkingInfo ti) {
+        if ((ti.id == searchId) && (ti == latestThinkingInfo)) {
+            gui.setThinkingInfo(ti);
+        }
+    }
+
+    private final void updateMoveList() {
+        if (game == null) {
+            return;
+        }
+        if (!gameTextListener.isUpToDate()) {
+            PGNOptions tmpOptions = new PGNOptions();
+            tmpOptions.exp.variations = pgnOptions.view.variations;
+            tmpOptions.exp.comments = pgnOptions.view.comments;
+            tmpOptions.exp.nag = pgnOptions.view.nag;
+            tmpOptions.exp.playerAction = false;
+            tmpOptions.exp.clockInfo = false;
+            tmpOptions.exp.moveNrAfterNag = false;
+            tmpOptions.exp.pieceType = pgnOptions.view.pieceType;
+            gameTextListener.clear();
+            game.tree.pgnTreeWalker(tmpOptions, gameTextListener);
+        }
+        gameTextListener.setCurrent(game.tree.currentNode);
+        gui.moveListUpdated();
+    }
+
+    /** Mark last played move in the GUI. */
+    private final void setSelection() {
+        Move m = game.getLastMove();
+        int sq = ((m != null) && (m.from != m.to)) ? m.to : -1;
+        gui.setSelection(sq);
+    }
+
+    private void setAnimMove(Position sourcePos, Move move, boolean forward) {
+        gui.setAnimMove(sourcePos, move, forward);
+    }
+
+    private final boolean findValidDrawClaim(String ms) {
+        if (!ms.isEmpty()) {
+            ms = " " + ms;
+        }
+        if (game.getGameState() != GameState.ALIVE) return true;
+        game.tryClaimDraw("draw accept");
+        if (game.getGameState() != GameState.ALIVE) return true;
+        game.tryClaimDraw("draw rep" + ms);
+        if (game.getGameState() != GameState.ALIVE) return true;
+        game.tryClaimDraw("draw 50" + ms);
+        if (game.getGameState() != GameState.ALIVE) return true;
+        return false;
+    }
+
+    /** Comments associated with a move. */
+    public static final class CommentInfo {
+        public String move;
+        public String preComment, postComment;
+        public int nag;
     }
 
     /** Engine search information receiver. */
@@ -684,7 +1052,7 @@ public class MaterialChessController {
         private ArrayList<Move> bookMoves = null;
 
         private Move ponderMove = null;
-        private ArrayList<PvInfo> pvInfoV = new ArrayList<PvInfo>();
+        private ArrayList<PvInfo> pvInfoV = new ArrayList<>();
         private int pvInfoSearchId = -1; // Search ID corresponding to pvInfoV
 
         public final void clearSearchInfo(int id) {
@@ -701,10 +1069,12 @@ public class MaterialChessController {
             StringBuilder buf = new StringBuilder();
             for (int i = 0; i < pvInfoV.size(); i++) {
                 PvInfo pvi = pvInfoV.get(i);
-                if (pvi.depth <= 0)
+                if (pvi.depth <= 0) {
                     continue;
-                if (i > 0)
+                }
+                if (i > 0) {
                     buf.append('\n');
+                }
                 buf.append(String.format(Locale.US, "[%d] ", pvi.depth));
                 boolean negateScore = !whiteMove && gui.whiteBasedScores();
                 if (pvi.upperBound || pvi.lowerBound) {
@@ -738,17 +1108,19 @@ public class MaterialChessController {
                     npsPrefix = "k";
                 }
                 statStrTmp.append(String.format(Locale.US, "d:%d", currDepth));
-                if (currMoveNr > 0)
+                if (currMoveNr > 0) {
                     statStrTmp.append(String.format(Locale.US, " %d:%s", currMoveNr, currMoveStr));
+                }
                 if (currTime < 99995) {
                     statStrTmp.append(String.format(Locale.US, " t:%.2f", currTime / 1000.0));
                 } else if (currTime < 999950) {
                     statStrTmp.append(String.format(Locale.US, " t:%.1f", currTime / 1000.0));
                 } else {
-                    statStrTmp.append(String.format(Locale.US, " t:%d", (int)((currTime + 500) / 1000)));
+                    statStrTmp.append(
+                            String.format(Locale.US, " t:%d", (int) ((currTime + 500) / 1000)));
                 }
                 statStrTmp.append(String.format(Locale.US, " n:%d%s nps:%d%s",
-                                                nodes, nodesPrefix, nps, npsPrefix));
+                        nodes, nodesPrefix, nps, npsPrefix));
                 if (currTBHits > 0) {
                     long tbHits = currTBHits;
                     String tbHitsPrefix = "";
@@ -761,19 +1133,21 @@ public class MaterialChessController {
                     }
                     statStrTmp.append(String.format(Locale.US, " tb:%d%s", tbHits, tbHitsPrefix));
                 }
-                if (currHash > 0)
+                if (currHash > 0) {
                     statStrTmp.append(String.format(Locale.US, " h:%d", currHash / 10));
+                }
             }
             final String statStr = statStrTmp.toString();
             final String newPV = buf.toString();
             final String newBookInfo = bookInfo;
-            final ArrayList<ArrayList<Move>> pvMoves = new ArrayList<ArrayList<Move>>();
+            final ArrayList<ArrayList<Move>> pvMoves = new ArrayList<>();
             for (int i = 0; i < pvInfoV.size(); i++) {
                 if (ponderMove != null) {
-                    ArrayList<Move> tmp = new ArrayList<Move>();
+                    ArrayList<Move> tmp = new ArrayList<>();
                     tmp.add(ponderMove);
-                    for (Move m : pvInfoV.get(i).pv)
+                    for (Move m : pvInfoV.get(i).pv) {
                         tmp.add(m);
+                    }
                     pvMoves.add(tmp);
                 } else {
                     pvMoves.add(pvInfoV.get(i).pv);
@@ -830,10 +1204,12 @@ public class MaterialChessController {
                     tmpPos.makeMove(ponderMove, ui);
                 }
                 for (Move m : pv.pv) {
-                    if (m == null)
+                    if (m == null) {
                         break;
-                    if (!TextIO.isValid(tmpPos, m))
+                    }
+                    if (!TextIO.isValid(tmpPos, m)) {
                         break;
+                    }
                     String moveStr = TextIO.moveToString(tmpPos, m, false, localPt());
                     buf.append(String.format(Locale.US, " %s", moveStr));
                     tmpPos.makeMove(m, ui);
@@ -865,8 +1241,9 @@ public class MaterialChessController {
         public void prefsChanged(int id, boolean translateMoves) {
             if (translateMoves && (id == pvInfoSearchId)) {
                 Position pos = game.currPos();
-                if (currMove != null)
+                if (currMove != null) {
                     notifyCurrMove(id, pos, currMove, currMoveNr);
+                }
                 notifyPV(id, pos, pvInfoV, ponderMove);
             } else {
                 setSearchInfo(id);
@@ -904,289 +1281,5 @@ public class MaterialChessController {
                 }
             });
         }
-    }
-
-    /** Discard current search. Return true if GUI update needed. */
-    private final boolean abortSearch() {
-        ponderMove = null;
-        searchId++;
-        if (computerPlayer == null)
-            return false;
-        if (computerPlayer.stopSearch()) {
-            listener.clearSearchInfo(searchId);
-            return true;
-        }
-        return false;
-    }
-
-    private final void updateBookHints() {
-        if (humansTurn()) {
-            Pair<String, ArrayList<Move>> bi = computerPlayer.getBookHints(game.currPos(), localPt());
-            listener.notifyBookInfo(searchId, bi.first, bi.second);
-        }
-    }
-
-    private final void updateGameMode() {
-        if (game != null) {
-            boolean gamePaused = !gameMode.clocksActive() || (humansTurn() && guiPaused);
-            game.setGamePaused(gamePaused);
-            updateRemainingTime();
-            Game.AddMoveBehavior amb;
-            if (gui.discardVariations())
-                amb = Game.AddMoveBehavior.REPLACE;
-            else if (gameMode.clocksActive())
-                amb = Game.AddMoveBehavior.ADD_FIRST;
-            else
-                amb = Game.AddMoveBehavior.ADD_LAST;
-            game.setAddFirst(amb);
-        }
-    }
-
-    /** Start/stop computer thinking/analysis as appropriate. */
-    private final void updateComputeThreads() {
-        boolean alive = game.tree.getGameState() == GameState.ALIVE;
-        boolean analysis = gameMode.analysisMode() && alive;
-        boolean computersTurn = !humansTurn() && alive;
-        boolean ponder = gui.ponderMode() && !analysis && !computersTurn && (ponderMove != null) && alive;
-        if (!analysis && !(computersTurn || ponder))
-            computerPlayer.stopSearch();
-        listener.clearSearchInfo(searchId);
-        updateBookHints();
-        if (!computerPlayer.sameSearchId(searchId)) {
-            if (analysis) {
-                Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
-                SearchRequest sr = MaterialComputerPlayer.SearchRequest.analyzeRequest(
-                        searchId, ph.first, ph.second,
-                        new Position(game.currPos()),
-                        game.haveDrawOffer(), engine, numPV);
-                computerPlayer.queueAnalyzeRequest(sr);
-            } else if (computersTurn || ponder) {
-                listener.clearSearchInfo(searchId);
-                listener.notifyBookInfo(searchId, "", null);
-                final Pair<Position, ArrayList<Move>> ph = game.getUCIHistory();
-                Position currPos = new Position(game.currPos());
-                long now = System.currentTimeMillis();
-                if (ponder)
-                    game.timeController.advanceMove(1);
-                int wTime = game.timeController.getRemainingTime(true, now);
-                int bTime = game.timeController.getRemainingTime(false, now);
-                int wInc = game.timeController.getIncrement(true);
-                int bInc = game.timeController.getIncrement(false);
-                boolean wtm = currPos.whiteMove;
-                int movesToGo = game.timeController.getMovesToTC(wtm ^ ponder);
-                if (ponder)
-                    game.timeController.advanceMove(-1);
-                final Move fPonderMove = ponder ? ponderMove : null;
-                SearchRequest sr = MaterialComputerPlayer.SearchRequest.searchRequest(
-                        searchId, now, ph.first, ph.second, currPos,
-                        game.haveDrawOffer(),
-                        wTime, bTime, wInc, bInc, movesToGo,
-                        gui.ponderMode(), fPonderMove,
-                        engine, strength);
-                computerPlayer.queueSearchRequest(sr);
-            } else {
-                computerPlayer.queueStartEngine(searchId, engine);
-            }
-        }
-    }
-
-    private final synchronized void makeComputerMove(int id, final String cmd, final Move ponder) {
-        if (searchId != id)
-            return;
-        searchId++;
-        Position oldPos = new Position(game.currPos());
-        game.processString(cmd);
-        ponderMove = ponder;
-        updateGameMode();
-        gui.computerMoveMade();
-        listener.clearSearchInfo(searchId);
-        updateComputeThreads();
-        setSelection();
-        setAnimMove(oldPos, game.getLastMove(), true);
-        updateGUI();
-    }
-
-    private final void setPlayerNames(Game game) {
-        if (game != null) {
-            String engine = "Computer";
-            if (computerPlayer != null) {
-                engine = computerPlayer.getEngineName();
-                if (strength < 1000)
-                    engine += String.format(Locale.US, " (%.1f%%)", strength * 0.1);
-            }
-            String player = gui.playerName();
-            String white = gameMode.playerWhite() ? player : engine;
-            String black = gameMode.playerBlack() ? player : engine;
-            game.tree.setPlayerNames(white, black);
-        }
-    }
-
-    private final synchronized void updatePlayerNames(String engineName) {
-        if (game != null) {
-            if (strength < 1000)
-                engineName += String.format(Locale.US, " (%.1f%%)", strength * 0.1);
-            String white = gameMode.playerWhite() ? game.tree.white : engineName;
-            String black = gameMode.playerBlack() ? game.tree.black : engineName;
-            game.tree.setPlayerNames(white, black);
-            updateMoveList();
-        }
-    }
-
-    private final boolean undoMoveNoUpdate() {
-        if (game.getLastMove() == null)
-            return false;
-        searchId++;
-        game.undoMove();
-        if (!humansTurn()) {
-            if (game.getLastMove() != null) {
-                game.undoMove();
-                if (!humansTurn()) {
-                    game.redoMove();
-                }
-            } else {
-                // Don't undo first white move if playing black vs computer,
-                // because that would cause computer to immediately make
-                // a new move.
-                if (gameMode.playerWhite() || gameMode.playerBlack()) {
-                    game.redoMove();
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private final void redoMoveNoUpdate() {
-        if (game.canRedoMove()) {
-            searchId++;
-            game.redoMove();
-            if (!humansTurn() && game.canRedoMove()) {
-                game.redoMove();
-                if (!humansTurn())
-                    game.undoMove();
-            }
-        }
-    }
-
-    /**
-     * Move a piece from one square to another.
-     * @return True if the move was legal, false otherwise.
-     */
-    private final boolean doMove(Move move) {
-        Position pos = game.currPos();
-        ArrayList<Move> moves = new MoveGen().legalMoves(pos);
-        int promoteTo = move.promoteTo;
-        for (Move m : moves) {
-            if ((m.from == move.from) && (m.to == move.to)) {
-                if ((m.promoteTo != Piece.EMPTY) && (promoteTo == Piece.EMPTY)) {
-                    promoteMove = m;
-                    gui.requestPromotePiece();
-                    return false;
-                }
-                if (m.promoteTo == promoteTo) {
-                    String strMove = TextIO.moveToString(pos, m, false, false, moves);
-                    game.processString(strMove);
-                    return true;
-                }
-            }
-        }
-        gui.reportInvalidMove(move);
-        return false;
-    }
-
-    private final void updateGUI() {
-        GUIInterface.GameStatus s = new GUIInterface.GameStatus();
-        s.state = game.getGameState();
-        if (s.state == Game.GameState.ALIVE) {
-            s.moveNr = game.currPos().fullMoveCounter;
-            s.white = game.currPos().whiteMove;
-            MaterialComputerPlayer.SearchType st = SearchType.NONE;
-            if (computerPlayer != null)
-                st = computerPlayer.getSearchType();
-            switch (st) {
-            case SEARCH:  s.thinking  = true; break;
-            case PONDER:  s.ponder    = true; break;
-            case ANALYZE: s.analyzing = true; break;
-            case NONE: break;
-            }
-        } else {
-            if ((s.state == GameState.DRAW_REP) || (s.state == GameState.DRAW_50))
-                s.drawInfo = game.getDrawInfo(localPt());
-        }
-        gui.setStatus(s);
-        updateMoveList();
-
-        StringBuilder sb = new StringBuilder();
-        if (game.tree.currentNode != game.tree.rootNode) {
-            game.tree.goBack();
-            Position pos = game.currPos();
-            List<Move> prevVarList = game.tree.variations();
-            for (int i = 0; i < prevVarList.size(); i++) {
-                if (i > 0) sb.append(' ');
-                if (i == game.tree.currentNode.defaultChild)
-                    sb.append(Util.boldStart);
-                sb.append(TextIO.moveToString(pos, prevVarList.get(i), false, localPt()));
-                if (i == game.tree.currentNode.defaultChild)
-                    sb.append(Util.boldStop);
-            }
-            game.tree.goForward(-1);
-        }
-        gui.setPosition(game.currPos(), sb.toString(), game.tree.variations());
-
-        updateRemainingTime();
-        updateMaterialDiffList();
-        gui.updateTimeControlTitle();
-    }
-
-    public final void updateMaterialDiffList() {
-        gui.updateMaterialDifferenceTitle(Util.getMaterialDiff(game.currPos()));
-    }
-
-    private final synchronized void setThinkingInfo(ThinkingInfo ti) {
-        if ((ti.id == searchId) && (ti == latestThinkingInfo))
-            gui.setThinkingInfo(ti);
-    }
-
-    private final void updateMoveList() {
-        if (game == null)
-            return;
-        if (!gameTextListener.isUpToDate()) {
-            PGNOptions tmpOptions = new PGNOptions();
-            tmpOptions.exp.variations     = pgnOptions.view.variations;
-            tmpOptions.exp.comments       = pgnOptions.view.comments;
-            tmpOptions.exp.nag            = pgnOptions.view.nag;
-            tmpOptions.exp.playerAction   = false;
-            tmpOptions.exp.clockInfo      = false;
-            tmpOptions.exp.moveNrAfterNag = false;
-            tmpOptions.exp.pieceType      = pgnOptions.view.pieceType;
-            gameTextListener.clear();
-            game.tree.pgnTreeWalker(tmpOptions, gameTextListener);
-        }
-        gameTextListener.setCurrent(game.tree.currentNode);
-        gui.moveListUpdated();
-    }
-
-    /** Mark last played move in the GUI. */
-    private final void setSelection() {
-        Move m = game.getLastMove();
-        int sq = ((m != null) && (m.from != m.to)) ? m.to : -1;
-        gui.setSelection(sq);
-    }
-
-    private void setAnimMove(Position sourcePos, Move move, boolean forward) {
-        gui.setAnimMove(sourcePos, move, forward);
-    }
-
-    private final boolean findValidDrawClaim(String ms) {
-        if (!ms.isEmpty())
-            ms = " " + ms;
-        if (game.getGameState() != GameState.ALIVE) return true;
-        game.tryClaimDraw("draw accept");
-        if (game.getGameState() != GameState.ALIVE) return true;
-        game.tryClaimDraw("draw rep" + ms);
-        if (game.getGameState() != GameState.ALIVE) return true;
-        game.tryClaimDraw("draw 50" + ms);
-        if (game.getGameState() != GameState.ALIVE) return true;
-        return false;
     }
 }

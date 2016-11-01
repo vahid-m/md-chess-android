@@ -18,17 +18,11 @@
 
 package org.mdc.chess.engine;
 
-import java.util.Map;
-
 import org.mdc.chess.EngineOptions;
 
-public interface UCIEngine {
+import java.util.Map;
 
-    /** For reporting engine error messages. */
-    public interface Report {
-        /** Report error message to GUI. */
-        void reportError(String errMsg);
-    }
+public interface UCIEngine {
 
     /** Start engine. */
     public void initialize();
@@ -40,7 +34,7 @@ public interface UCIEngine {
     public void applyIniFile();
 
     /** Set engine UCI options. */
-    public boolean setUCIOptions(Map<String,String> uciOptions);
+    public boolean setUCIOptions(Map<String, String> uciOptions);
 
     /** Save non-default UCI option values to file. */
     public void saveIniFile(UCIOptions options);
@@ -48,8 +42,10 @@ public interface UCIEngine {
     /** Get engine UCI options. */
     public UCIOptions getUCIOptions();
 
-    /** Return true if engine options have correct values.
-     * If false is returned, engine will be restarted. */
+    /**
+     * Return true if engine options have correct values.
+     * If false is returned, engine will be restarted.
+     */
     public boolean optionsOk(EngineOptions engineOptions);
 
     /** Shut down engine. */
@@ -57,16 +53,18 @@ public interface UCIEngine {
 
     /**
      * Read a line from the engine.
+     *
      * @param timeoutMillis Maximum time to wait for data.
      * @return The line, without terminating newline characters,
-     *         or empty string if no data available,
-     *         or null if I/O error.
+     * or empty string if no data available,
+     * or null if I/O error.
      */
     public String readLineFromEngine(int timeoutMillis);
 
-    // FIXME!! Writes should be handled by separate thread.
     /** Write a line to the engine. \n will be added automatically. */
     public void writeLineToEngine(String data);
+
+    // FIXME!! Writes should be handled by separate thread.
 
     /** Set the engine strength, allowed values 0 - 1000. */
     public void setStrength(int strength);
@@ -77,15 +75,27 @@ public interface UCIEngine {
     /** Set an engine boolean option. */
     public void setOption(String name, boolean value);
 
-    /** Set an engine option. If the option is not a string option,
+    /**
+     * Set an engine option. If the option is not a string option,
      * value is converted to the correct type.
-     * @return True if the option was changed. */
+     *
+     * @return True if the option was changed.
+     */
     public boolean setOption(String name, String value);
 
     /** Clear list of supported options. */
     public void clearOptions();
 
-    /** Register an option as supported by the engine.
-     * @param tokens  The UCI option line sent by the engine, split in words. */
+    /**
+     * Register an option as supported by the engine.
+     *
+     * @param tokens The UCI option line sent by the engine, split in words.
+     */
     public UCIOptions.OptionBase registerOption(String[] tokens);
+
+    /** For reporting engine error messages. */
+    public interface Report {
+        /** Report error message to GUI. */
+        void reportError(String errMsg);
+    }
 }

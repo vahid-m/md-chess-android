@@ -1,13 +1,13 @@
 package org.mdc.chess.engine;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+import android.content.Context;
 
 import com.kalab.chess.enginesupport.ChessEngine;
 import com.kalab.chess.enginesupport.ChessEngineResolver;
 
-import android.content.Context;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /** Engine imported from a different android app, resolved using the open exchange format. */
 public class OpenExchangeEngine extends ExternalEngine {

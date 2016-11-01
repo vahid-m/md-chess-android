@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 final class BufferedRandomAccessFileReader {
+    private final static int EOF = -1024;
     RandomAccessFile f;
     byte[] buffer = new byte[8192];
     long bufStartFilePos = 0;
@@ -31,17 +32,18 @@ final class BufferedRandomAccessFileReader {
     BufferedRandomAccessFileReader(String fileName) throws FileNotFoundException {
         f = new RandomAccessFile(fileName, "r");
     }
+
     final long length() throws IOException {
         return f.length();
     }
+
     final long getFilePointer() throws IOException {
         return bufStartFilePos + bufPos;
     }
+
     final void close() throws IOException {
         f.close();
     }
-
-    private final static int EOF = -1024;
 
     final String readLine() throws IOException {
         // First handle the common case where the next line is entirely
@@ -50,7 +52,7 @@ final class BufferedRandomAccessFileReader {
             byte b = buffer[i];
             if ((b == '\n') || (b == '\r')) {
                 String line = new String(buffer, bufPos, i - bufPos);
-                for ( ; i < bufLen; i++) {
+                for (; i < bufLen; i++) {
                     b = buffer[i];
                     if ((b != '\n') && (b != '\r')) {
                         bufPos = i;
@@ -67,24 +69,28 @@ final class BufferedRandomAccessFileReader {
         int b;
         while (true) {
             b = getByte();
-            if (b == '\n' || b == '\r' || b == EOF)
+            if (b == '\n' || b == '\r' || b == EOF) {
                 break;
-            lineBuf[lineLen++] = (byte)b;
-            if (lineLen >= lineBuf.length)
+            }
+            lineBuf[lineLen++] = (byte) b;
+            if (lineLen >= lineBuf.length) {
                 break;
+            }
         }
         while (true) {
             b = getByte();
             if ((b != '\n') && (b != '\r')) {
-                if (b != EOF)
+                if (b != EOF) {
                     bufPos--;
+                }
                 break;
             }
         }
-        if ((b == EOF) && (lineLen == 0))
+        if ((b == EOF) && (lineLen == 0)) {
             return null;
-        else
+        } else {
             return new String(lineBuf, 0, lineLen);
+        }
     }
 
     private final int getByte() throws IOException {
@@ -92,8 +98,9 @@ final class BufferedRandomAccessFileReader {
             bufStartFilePos = f.getFilePointer();
             bufLen = f.read(buffer);
             bufPos = 0;
-            if (bufLen <= 0)
+            if (bufLen <= 0) {
                 return EOF;
+            }
         }
         return buffer[bufPos++];
     }

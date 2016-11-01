@@ -19,6 +19,14 @@
 package org.mdc.chess.book;
 
 import android.annotation.SuppressLint;
+
+import org.mdc.chess.Util;
+import org.mdc.chess.gamelogic.Move;
+import org.mdc.chess.gamelogic.MoveGen;
+import org.mdc.chess.gamelogic.Pair;
+import org.mdc.chess.gamelogic.Position;
+import org.mdc.chess.gamelogic.TextIO;
+
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,30 +34,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
-import org.mdc.chess.Util;
-import org.mdc.chess.gamelogic.Move;
-import org.mdc.chess.gamelogic.MoveGen;
-import org.mdc.chess.gamelogic.Position;
-import org.mdc.chess.gamelogic.TextIO;
-import org.mdc.chess.gamelogic.Pair;
-
 /**
  * Implements an opening book.
+ *
  * @author petero
  */
 public final class DroidBook {
-    static final class BookEntry {
-        Move move;
-        float weight;
-        BookEntry(Move move) {
-            this.move = move;
-            weight = 1;
-        }
-        @Override
-        public String toString() {
-            return TextIO.moveToUCIString(move) + " (" + weight + ")";
-        }
-    }
+    private static final DroidBook INSTANCE = new DroidBook();
     @SuppressLint("TrulyRandom")
     private Random rndGen = new SecureRandom();
 
@@ -57,37 +48,38 @@ public final class DroidBook {
     private IOpeningBook internalBook = new InternalBook();
     private BookOptions options = null;
 
-    private static final DroidBook INSTANCE = new DroidBook();
+    private DroidBook() {
+        rndGen.setSeed(System.currentTimeMillis());
+    }
 
     /** Get singleton instance. */
     public static DroidBook getInstance() {
         return INSTANCE;
     }
 
-    private DroidBook() {
-        rndGen.setSeed(System.currentTimeMillis());
-    }
-
     /** Set opening book options. */
     public final synchronized void setOptions(BookOptions options) {
         this.options = options;
-        if (CtgBook.canHandle(options))
+        if (CtgBook.canHandle(options)) {
             externalBook = new CtgBook();
-        else if (PolyglotBook.canHandle(options))
+        } else if (PolyglotBook.canHandle(options)) {
             externalBook = new PolyglotBook();
-        else
+        } else {
             externalBook = new NullBook();
+        }
         externalBook.setOptions(options);
         internalBook.setOptions(options);
     }
 
     /** Return a random book move for a position, or null if out of book. */
     public final synchronized Move getBookMove(Position pos) {
-        if ((options != null) && (pos.fullMoveCounter > options.maxLength))
+        if ((options != null) && (pos.fullMoveCounter > options.maxLength)) {
             return null;
+        }
         List<BookEntry> bookMoves = getBook().getBookEntries(pos);
-        if (bookMoves == null)
+        if (bookMoves == null) {
             return null;
+        }
 
         ArrayList<Move> legalMoves = new MoveGen().legalMoves(pos);
         double sum = 0;
@@ -108,17 +100,18 @@ public final class DroidBook {
         sum = 0;
         for (int i = 0; i < nMoves; i++) {
             sum += scaleWeight(bookMoves.get(i).weight);
-            if (rnd < sum)
+            if (rnd < sum) {
                 return bookMoves.get(i).move;
+            }
         }
-        return bookMoves.get(nMoves-1).move;
+        return bookMoves.get(nMoves - 1).move;
     }
 
     /** Return all book moves, both as a formatted string and as a list of moves. */
-    public final synchronized Pair<String,ArrayList<Move>> getAllBookMoves(Position pos,
-                                                                           boolean localized) {
+    public final synchronized Pair<String, ArrayList<Move>> getAllBookMoves(Position pos,
+            boolean localized) {
         StringBuilder ret = new StringBuilder();
-        ArrayList<Move> bookMoveList = new ArrayList<Move>();
+        ArrayList<Move> bookMoveList = new ArrayList<>();
         ArrayList<BookEntry> bookMoves = getBook().getBookEntries(pos);
 
         // Check legality
@@ -137,41 +130,47 @@ public final class DroidBook {
             Collections.sort(bookMoves, new Comparator<BookEntry>() {
                 public int compare(BookEntry arg0, BookEntry arg1) {
                     double wd = arg1.weight - arg0.weight;
-                    if (wd != 0)
+                    if (wd != 0) {
                         return (wd > 0) ? 1 : -1;
+                    }
                     String str0 = TextIO.moveToUCIString(arg0.move);
                     String str1 = TextIO.moveToUCIString(arg1.move);
                     return str0.compareTo(str1);
-                }});
+                }
+            });
             double totalWeight = 0;
-            for (BookEntry be : bookMoves)
+            for (BookEntry be : bookMoves) {
                 totalWeight += scaleWeight(be.weight);
+            }
             if (totalWeight <= 0) totalWeight = 1;
             boolean first = true;
             for (BookEntry be : bookMoves) {
                 Move m = be.move;
                 bookMoveList.add(m);
                 String moveStr = TextIO.moveToString(pos, m, false, localized);
-                if (first)
+                if (first) {
                     first = false;
-                else
+                } else {
                     ret.append(' ');
+                }
                 ret.append(Util.boldStart);
                 ret.append(moveStr);
                 ret.append(Util.boldStop);
                 ret.append(':');
-                int percent = (int)Math.round(scaleWeight(be.weight) * 100 / totalWeight);
+                int percent = (int) Math.round(scaleWeight(be.weight) * 100 / totalWeight);
                 ret.append(percent);
             }
         }
-        return new Pair<String, ArrayList<Move>>(ret.toString(), bookMoveList);
+        return new Pair<>(ret.toString(), bookMoveList);
     }
 
     private final double scaleWeight(double w) {
-        if (w <= 0)
+        if (w <= 0) {
             return 0;
-        if (options == null)
+        }
+        if (options == null) {
             return w;
+        }
         return Math.pow(w, Math.exp(-options.random));
     }
 
@@ -180,6 +179,21 @@ public final class DroidBook {
             return externalBook;
         } else {
             return internalBook;
+        }
+    }
+
+    static final class BookEntry {
+        Move move;
+        float weight;
+
+        BookEntry(Move move) {
+            this.move = move;
+            weight = 1;
+        }
+
+        @Override
+        public String toString() {
+            return TextIO.moveToUCIString(move) + " (" + weight + ")";
         }
     }
 }

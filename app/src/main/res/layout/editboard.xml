@@ -6,13 +6,13 @@
     android:layout_marginTop="?attr/actionBarSize"
     android:orientation="vertical">
 
-    <include layout="@layout/title"/>
+    <include layout="@layout/title" />
 
     <view
         android:id="@+id/eb_chessboard"
         class="org.mdc.chess.activities.ChessBoardEdit"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"/>
+        android:layout_height="fill_parent" />
 
     <TextView
         android:id="@+id/eb_status"
@@ -22,7 +22,7 @@
         android:includeFontPadding="true"
         android:text=""
         android:textSize="12sp"
-        android:typeface="monospace"/>
+        android:typeface="monospace" />
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -35,7 +35,7 @@
             android:layout_marginEnd="@dimen/standard_padding"
             android:layout_marginStart="@dimen/standard_padding"
             android:layout_weight="1"
-            android:text="@string/cancel"/>
+            android:text="@string/cancel" />
 
         <Button
             android:id="@+id/eb_ok"
@@ -43,7 +43,7 @@
             android:layout_marginEnd="@dimen/standard_padding"
             android:layout_marginStart="@dimen/standard_padding"
             android:layout_weight="1"
-            android:text="@android:string/ok"/>
+            android:text="@android:string/ok" />
     </LinearLayout>
 </LinearLayout>
 

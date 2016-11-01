@@ -18,16 +18,6 @@
 
 package org.mdc.chess;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.mdc.chess.gamelogic.Move;
-import org.mdc.chess.gamelogic.Piece;
-import org.mdc.chess.gamelogic.Position;
-import org.mdc.chess.gamelogic.UndoInfo;
-import org.mdc.chess.tb.ProbeResult;
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
@@ -43,41 +33,17 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import org.mdc.chess.gamelogic.Move;
+import org.mdc.chess.gamelogic.Piece;
+import org.mdc.chess.gamelogic.Position;
+import org.mdc.chess.gamelogic.UndoInfo;
+import org.mdc.chess.tb.ProbeResult;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public abstract class ChessBoard extends View {
-    public Position pos;
-
-    public int selectedSquare;
-    public boolean userSelectedSquare;  // True if selectedSquare was set by user tap/click,
-                                        // false if selectedSquare used to highlight last move
-    public float cursorX, cursorY;
-    public boolean cursorVisible;
-    protected int x0, y0, sqSize;
-    private int pieceXDelta;
-    private int pieceYDelta;
-    // --Commented out by Inspection (25/10/2016 10:13 PM):private int pieceYDelta; // top/left pixel draw position relative to square
-    public boolean flipped;
-    public boolean drawSquareLabels;
-    boolean toggleSelection;
-    boolean highlightLastMove;         // If true, last move is marked with a rectangle
-    boolean blindMode;                 // If true, no chess pieces and arrows are drawn
-
-    private List<Move> moveHints;
-
-    /** Decoration for a square. Currently the only possible decoration is a tablebase probe result. */
-    public final static class SquareDecoration implements Comparable<SquareDecoration> {
-        final int sq;
-        final ProbeResult tbData;
-        public SquareDecoration(int sq, ProbeResult tbData) {
-            this.sq = sq;
-            this.tbData = tbData;
-        }
-        @Override
-        public int compareTo(@NonNull SquareDecoration another) {
-            return tbData.compareTo(another.tbData);
-        }
-    }
-    private ArrayList<SquareDecoration> decorations;
-
     protected final Paint darkPaint;
     protected final Paint brightPaint;
     private final Paint selectedSquarePaint;
@@ -87,6 +53,28 @@ public abstract class ChessBoard extends View {
     private final Paint labelPaint;
     private final Paint decorationPaint;
     private final ArrayList<Paint> moveMarkPaint;
+    private final Handler handlerTimer = new Handler();
+    private final AnimInfo anim = new AnimInfo();
+    public Position pos;
+    public int selectedSquare;
+    public boolean userSelectedSquare;  // True if selectedSquare was set by user tap/click,
+    // false if selectedSquare used to highlight last move
+    public float cursorX, cursorY;
+    public boolean cursorVisible;
+    // --Commented out by Inspection (25/10/2016 10:13 PM):private int pieceYDelta; // top/left
+    // pixel draw position relative to square
+    public boolean flipped;
+    public boolean drawSquareLabels;
+    protected int x0, y0, sqSize;
+    boolean toggleSelection;
+    boolean highlightLastMove;         // If true, last move is marked with a rectangle
+    boolean blindMode;                 // If true, no chess pieces and arrows are drawn
+    private int pieceXDelta;
+    private int pieceYDelta;
+    private List<Move> moveHints;
+    private ArrayList<SquareDecoration> decorations;
+    private Rect labelBounds = null;
+    private OnTrackballListener otbl = null;
 
     public ChessBoard(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -134,10 +122,12 @@ public abstract class ChessBoard extends View {
             moveMarkPaint.add(p);
         }
 
-        if (isInEditMode())
+        if (isInEditMode()) {
             return;
+        }
 
-        Typeface chessFont = Typeface.createFromAsset(getContext().getAssets(), "fonts/ChessCases.ttf");
+        Typeface chessFont = Typeface.createFromAsset(getContext().getAssets(),
+                "fonts/ChessCases.ttf");
         whitePiecePaint.setTypeface(chessFont);
         blackPiecePaint.setTypeface(chessFont);
 
@@ -155,68 +145,16 @@ public abstract class ChessBoard extends View {
         blackPiecePaint.setColor(ct.getColor(ColorTheme.DARK_PIECE));
         labelPaint.setColor(ct.getColor(ColorTheme.SQUARE_LABEL));
         decorationPaint.setColor(ct.getColor(ColorTheme.DECORATION));
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 6; i++) {
             moveMarkPaint.get(i).setColor(ct.getColor(ColorTheme.ARROW_0 + i));
+        }
 
         invalidate();
     }
 
-    private final Handler handlerTimer = new Handler();
-
-    private final class AnimInfo {
-        AnimInfo() { startTime = -1; }
-        boolean paused;
-        long posHash;   // Position the animation is valid for
-        long startTime; // Time in milliseconds when animation was started
-        long stopTime;  // Time in milliseconds when animation should stop
-        long now;       // Current time in milliseconds
-        int piece1, from1, to1, hide1;
-        int piece2, from2, to2, hide2;
-
-        public final boolean updateState() {
-            now = System.currentTimeMillis();
-            return animActive();
-        }
-        private boolean animActive() {
-            return !(paused || (startTime < 0) || (now >= stopTime) || (posHash
-                    != pos.zobristHash()));
-        }
-        public final boolean squareHidden(int sq) {
-            return animActive() && ((sq == hide1) || (sq == hide2));
-        }
-        public final void draw(Canvas canvas) {
-            if (!animActive())
-                return;
-            double animState = (now - startTime) / (double)(stopTime - startTime);
-            drawAnimPiece(canvas, piece2, from2, to2, animState);
-            drawAnimPiece(canvas, piece1, from1, to1, animState);
-            long now2 = System.currentTimeMillis();
-            long delay = 20 - (now2 - now);
-//          System.out.printf("delay:%d\n", delay);
-            if (delay < 1) delay = 1;
-            handlerTimer.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    invalidate();
-                }
-            }, delay);
-        }
-        private void drawAnimPiece(Canvas canvas, int piece, int from, int to, double animState) {
-            if (piece == Piece.EMPTY)
-                return;
-            final int xCrd1 = getXCrd(Position.getX(from));
-            final int yCrd1 = getYCrd(Position.getY(from));
-            final int xCrd2 = getXCrd(Position.getX(to));
-            final int yCrd2 = getYCrd(Position.getY(to));
-            final int xCrd = xCrd1 + (int)Math.round((xCrd2 - xCrd1) * animState);
-            final int yCrd = yCrd1 + (int)Math.round((yCrd2 - yCrd1) * animState);
-            drawPiece(canvas, xCrd, yCrd, piece);
-        }
-    }
-    private final AnimInfo anim = new AnimInfo();
-
     /**
      * Set up move animation. The animation will start the next time setPosition is called.
+     *
      * @param sourcePos The source position for the animation.
      * @param move      The move leading to the target position.
      * @param forward   True if forward direction, false for undo move.
@@ -239,7 +177,7 @@ public abstract class ChessBoard extends View {
             int dy = Position.getY(move.to) - Position.getY(move.from);
             double dist = Math.sqrt(dx * dx + dy * dy);
             double t = Math.sqrt(dist) * 100;
-            animTime = (int)Math.round(t);
+            animTime = (int) Math.round(t);
         }
         if (animTime > 0) {
             anim.startTime = System.currentTimeMillis();
@@ -276,8 +214,9 @@ public abstract class ChessBoard extends View {
             } else {
                 int p = sourcePos.getPiece(move.from);
                 anim.piece1 = p;
-                if (move.promoteTo != Piece.EMPTY)
+                if (move.promoteTo != Piece.EMPTY) {
                     anim.piece1 = Piece.isWhite(anim.piece1) ? Piece.WPAWN : Piece.BPAWN;
+                }
                 anim.from1 = move.to;
                 anim.to1 = move.from;
                 anim.hide1 = anim.to1;
@@ -301,6 +240,7 @@ public abstract class ChessBoard extends View {
 
     /**
      * Set the board to a given state.
+     *
      * @param pos Set the position on the board
      */
     final public void setPosition(Position pos) {
@@ -313,8 +253,9 @@ public abstract class ChessBoard extends View {
             this.pos = new Position(pos);
             doInvalidate = true;
         }
-        if (doInvalidate)
+        if (doInvalidate) {
             invalidate();
+        }
     }
 
     /** Set/clear the board flipped status. */
@@ -343,6 +284,7 @@ public abstract class ChessBoard extends View {
 
     /**
      * Set/clear the selected square.
+     *
      * @param square The square to select, or -1 to clear selection.
      */
     final public void setSelection(int square) {
@@ -354,10 +296,15 @@ public abstract class ChessBoard extends View {
     }
 
     protected abstract int getWidth(int sqSize);
+
     protected abstract int getHeight(int sqSize);
+
     protected abstract int getSqSizeW(int width);
+
     protected abstract int getSqSizeH(int height);
+
     protected abstract int getMaxHeightPercentage();
+
     protected abstract int getMaxWidthPercentage();
 
     @Override
@@ -381,13 +328,16 @@ public abstract class ChessBoard extends View {
     }
 
     protected abstract void computeOrigin(int width, int height);
+
     protected abstract int getXFromSq(int sq);
+
     protected abstract int getYFromSq(int sq);
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (isInEditMode())
+        if (isInEditMode()) {
             return;
+        }
 //      long t0 = System.currentTimeMillis();
         boolean animActive = anim.updateState();
         final int width = getWidth();
@@ -395,15 +345,15 @@ public abstract class ChessBoard extends View {
         sqSize = Math.min(getSqSizeW(width), getSqSizeH(height));
         blackPiecePaint.setTextSize(sqSize);
         whitePiecePaint.setTextSize(sqSize);
-        labelPaint.setTextSize(sqSize/4.0f);
-        decorationPaint.setTextSize(sqSize/3.0f);
+        labelPaint.setTextSize(sqSize / 4.0f);
+        decorationPaint.setTextSize(sqSize / 3.0f);
         computeOrigin(width, height);
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 final int xCrd = getXCrd(x);
                 final int yCrd = getYCrd(y);
                 Paint paint = Position.darkSquare(x, y) ? darkPaint : brightPaint;
-                canvas.drawRect(xCrd, yCrd, xCrd+sqSize, yCrd+sqSize, paint);
+                canvas.drawRect(xCrd, yCrd, xCrd + sqSize, yCrd + sqSize, paint);
 
                 int sq = Position.getSquare(x, y);
                 if (!animActive || !anim.squareHidden(sq)) {
@@ -424,7 +374,7 @@ public abstract class ChessBoard extends View {
         if (!animActive && (selectedSquare != -1)) {
             int selX = getXFromSq(selectedSquare);
             int selY = getYFromSq(selectedSquare);
-            selectedSquarePaint.setStrokeWidth(sqSize/(float)16);
+            selectedSquarePaint.setStrokeWidth(sqSize / (float) 16);
             int x0 = getXCrd(selX);
             int y0 = getYCrd(selY);
             canvas.drawRect(x0, y0, x0 + sqSize, y0 + sqSize, selectedSquarePaint);
@@ -434,7 +384,7 @@ public abstract class ChessBoard extends View {
             int y = Math.round(cursorY);
             int x0 = getXCrd(x);
             int y0 = getYCrd(y);
-            cursorSquarePaint.setStrokeWidth(sqSize/(float)16);
+            cursorSquarePaint.setStrokeWidth(sqSize / (float) 16);
             canvas.drawRect(x0, y0, x0 + sqSize, y0 + sqSize, cursorSquarePaint);
         }
         if (!animActive) {
@@ -448,10 +398,11 @@ public abstract class ChessBoard extends View {
     }
 
     private void drawMoveHints(Canvas canvas) {
-        if ((moveHints == null) || blindMode)
+        if ((moveHints == null) || blindMode) {
             return;
-        float h = (float)(sqSize / 2.0);
-        float d = (float)(sqSize / 8.0);
+        }
+        float h = (float) (sqSize / 2.0);
+        float d = (float) (sqSize / 8.0);
         double v = 35 * Math.PI / 180;
         double cosv = Math.cos(v);
         double sinv = Math.sin(v);
@@ -459,20 +410,21 @@ public abstract class ChessBoard extends View {
         int n = Math.min(moveMarkPaint.size(), moveHints.size());
         for (int i = 0; i < n; i++) {
             Move m = moveHints.get(i);
-            if ((m == null) || (m.from == m.to))
+            if ((m == null) || (m.from == m.to)) {
                 continue;
+            }
             float x0 = getXCrd(Position.getX(m.from)) + h;
             float y0 = getYCrd(Position.getY(m.from)) + h;
             float x1 = getXCrd(Position.getX(m.to)) + h;
             float y1 = getYCrd(Position.getY(m.to)) + h;
 
-            float x2 = (float)(Math.hypot(x1 - x0, y1 - y0) + d);
+            float x2 = (float) (Math.hypot(x1 - x0, y1 - y0) + d);
             float y2 = 0;
-            float x3 = (float)(x2 - h * cosv);
-            float y3 = (float)(y2 - h * sinv);
-            float x4 = (float)(x3 - d * sinv);
-            float y4 = (float)(y3 + d * cosv);
-            float x5 = (float)(x4 + (-d/2 - y4) / tanv);
+            float x3 = (float) (x2 - h * cosv);
+            float y3 = (float) (y2 - h * sinv);
+            float x4 = (float) (x3 - d * sinv);
+            float y4 = (float) (y3 + d * cosv);
+            float x5 = (float) (x4 + (-d / 2 - y4) / tanv);
             float y5 = -d / 2;
             float x6 = 0;
             float y6 = y5 / 2;
@@ -488,7 +440,7 @@ public abstract class ChessBoard extends View {
             path.lineTo(x3, -y3);
             path.close();
             Matrix mtx = new Matrix();
-            mtx.postRotate((float)(Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI));
+            mtx.postRotate((float) (Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI));
             mtx.postTranslate(x0, y0);
             path.transform(mtx);
             Paint p = moveMarkPaint.get(i);
@@ -499,8 +451,9 @@ public abstract class ChessBoard extends View {
     abstract protected void drawExtraSquares(Canvas canvas);
 
     protected final void drawPiece(Canvas canvas, int xCrd, int yCrd, int p) {
-        if (blindMode)
+        if (blindMode) {
             return;
+        }
         /*String psb, psw;
         boolean rotate = false;
         switch (p) {
@@ -544,43 +497,43 @@ public abstract class ChessBoard extends View {
         switch (p) {
             default:
             case Piece.EMPTY:
-                dr = null;		// don't do anything
+                dr = null;        // don't do anything
                 break;
             case Piece.WKING:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.wk);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.wk);
                 break;
             case Piece.WQUEEN:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.wq);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.wq);
                 break;
             case Piece.WROOK:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.wr);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.wr);
                 break;
             case Piece.WBISHOP:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.wb);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.wb);
                 break;
             case Piece.WKNIGHT:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.wn);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.wn);
                 break;
             case Piece.WPAWN:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.wp);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.wp);
                 break;
             case Piece.BKING:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.bk);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.bk);
                 break;
             case Piece.BQUEEN:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.bq);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.bq);
                 break;
             case Piece.BROOK:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.br);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.br);
                 break;
             case Piece.BBISHOP:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.bb);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.bb);
                 break;
             case Piece.BKNIGHT:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.bn);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.bn);
                 break;
             case Piece.BPAWN:
-                dr = ContextCompat.getDrawable(getContext(),R.drawable.bp);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.bp);
                 break;
         }
         if (dr != null) {
@@ -600,10 +553,8 @@ public abstract class ChessBoard extends View {
         }
     }
 
-    private Rect labelBounds = null;
-
     private void drawLabel(Canvas canvas, int xCrd, int yCrd, boolean right,
-                                 boolean bottom, char c) {
+            boolean bottom, char c) {
         String s = Character.toString(c);
         if (labelBounds == null) {
             labelBounds = new Rect();
@@ -611,8 +562,8 @@ public abstract class ChessBoard extends View {
         }
         int margin = sqSize / 16;
         if (right) {
-                xCrd += sqSize - labelBounds.right - margin;
-            } else {
+            xCrd += sqSize - labelBounds.right - margin;
+        } else {
             xCrd += -labelBounds.left + margin;
         }
         if (bottom) {
@@ -624,18 +575,22 @@ public abstract class ChessBoard extends View {
     }
 
     protected abstract int getXCrd(int x);
+
     protected abstract int getYCrd(int y);
+
     protected abstract int getXSq(int xCrd);
+
     protected abstract int getYSq(int yCrd);
 
     /**
      * Compute the square corresponding to the coordinates of a mouse event.
+     *
      * @param evt Details about the mouse event.
      * @return The square corresponding to the mouse event, or -1 if outside board.
      */
     public int eventToSquare(MotionEvent evt) {
-        int xCrd = (int)(evt.getX());
-        int yCrd = (int)(evt.getY());
+        int xCrd = (int) (evt.getX());
+        int yCrd = (int) (evt.getY());
 
         int sq = -1;
         if (sqSize > 0) {
@@ -650,13 +605,10 @@ public abstract class ChessBoard extends View {
 
     protected abstract Move mousePressed(int sq);
 
-    public static class OnTrackballListener {
-        public void onTrackballEvent() { }
-    }
-    private OnTrackballListener otbl = null;
     public final void setOnTrackballListener(OnTrackballListener onTrackballListener) {
         otbl = onTrackballListener;
     }
+
     @Override
     public boolean onTrackballEvent(MotionEvent event) {
         if (otbl != null) {
@@ -667,22 +619,24 @@ public abstract class ChessBoard extends View {
     }
 
     protected abstract int minValidY();
+
     protected abstract int maxValidX();
+
     protected abstract int getSquare(int x, int y);
 
     public final Move handleTrackballEvent(MotionEvent event) {
         switch (event.getAction()) {
-        case MotionEvent.ACTION_DOWN:
-            invalidate();
-            if (cursorVisible) {
-                int x = Math.round(cursorX);
-                int y = Math.round(cursorY);
-                cursorX = x;
-                cursorY = y;
-                int sq = getSquare(x, y);
-                return mousePressed(sq);
-            }
-            return null;
+            case MotionEvent.ACTION_DOWN:
+                invalidate();
+                if (cursorVisible) {
+                    int x = Math.round(cursorX);
+                    int y = Math.round(cursorY);
+                    cursorX = x;
+                    cursorY = y;
+                    int sq = getSquare(x, y);
+                    return mousePressed(sq);
+                }
+                return null;
         }
         cursorVisible = true;
         int c = flipped ? -1 : 1;
@@ -718,22 +672,26 @@ public abstract class ChessBoard extends View {
         }
         if (!equal) {
             this.decorations = decorations;
-            if (this.decorations != null)
+            if (this.decorations != null) {
                 Collections.sort(this.decorations);
+            }
             invalidate();
         }
     }
 
     private void drawDecorations(Canvas canvas) {
-        if (decorations == null)
+        if (decorations == null) {
             return;
+        }
         long decorated = 0;
         for (SquareDecoration sd : decorations) {
             int sq = sd.sq;
-            if ((sd.sq < 0) || (sd.sq >= 64))
+            if ((sd.sq < 0) || (sd.sq >= 64)) {
                 continue;
-            if (((1L << sq) & decorated) != 0)
+            }
+            if (((1L << sq) & decorated) != 0) {
                 continue;
+            }
             decorated |= 1L << sq;
             int xCrd = getXCrd(Position.getX(sq));
             int yCrd = getYCrd(Position.getY(sq));
@@ -742,32 +700,35 @@ public abstract class ChessBoard extends View {
             int wdl = sd.tbData.wdl;
             int num = (sd.tbData.score + 1) / 2;
             switch (sd.tbData.type) {
-            case DTM:
-                if (wdl > 0)
-                    s = "+" + String.valueOf(num);
-                else if (wdl < 0)
-                    s = "-" + String.valueOf(num);
-                else
-                    s = "0";
-                break;
-            case DTZ:
-                if (wdl > 0)
-                    s = "W" + String.valueOf(num);
-                else if (wdl < 0)
-                    s = "L" + String.valueOf(num);
-                else
-                    s = "0";
-                break;
-            case WDL:
-                if (wdl > 0)
-                    s = "W";
-                else if (wdl < 0)
-                    s = "L";
-                else
-                    s = "0";
-                break;
-            case NONE:
-                break;
+                case DTM:
+                    if (wdl > 0) {
+                        s = "+" + String.valueOf(num);
+                    } else if (wdl < 0) {
+                        s = "-" + String.valueOf(num);
+                    } else {
+                        s = "0";
+                    }
+                    break;
+                case DTZ:
+                    if (wdl > 0) {
+                        s = "W" + String.valueOf(num);
+                    } else if (wdl < 0) {
+                        s = "L" + String.valueOf(num);
+                    } else {
+                        s = "0";
+                    }
+                    break;
+                case WDL:
+                    if (wdl > 0) {
+                        s = "W";
+                    } else if (wdl < 0) {
+                        s = "L";
+                    } else {
+                        s = "0";
+                    }
+                    break;
+                case NONE:
+                    break;
             }
             if (s != null) {
                 Rect bounds = new Rect();
@@ -781,5 +742,89 @@ public abstract class ChessBoard extends View {
 
     public final int getSelectedSquare() {
         return selectedSquare;
+    }
+
+    /**
+     * Decoration for a square. Currently the only possible decoration is a tablebase probe
+     * result.
+     */
+    public final static class SquareDecoration implements Comparable<SquareDecoration> {
+        final int sq;
+        final ProbeResult tbData;
+
+        public SquareDecoration(int sq, ProbeResult tbData) {
+            this.sq = sq;
+            this.tbData = tbData;
+        }
+
+        @Override
+        public int compareTo(@NonNull SquareDecoration another) {
+            return tbData.compareTo(another.tbData);
+        }
+    }
+
+    public static class OnTrackballListener {
+        public void onTrackballEvent() {
+        }
+    }
+
+    private final class AnimInfo {
+        boolean paused;
+        long posHash;   // Position the animation is valid for
+        long startTime; // Time in milliseconds when animation was started
+        long stopTime;  // Time in milliseconds when animation should stop
+        long now;       // Current time in milliseconds
+        int piece1, from1, to1, hide1;
+        int piece2, from2, to2, hide2;
+
+        AnimInfo() {
+            startTime = -1;
+        }
+
+        public final boolean updateState() {
+            now = System.currentTimeMillis();
+            return animActive();
+        }
+
+        private boolean animActive() {
+            return !(paused || (startTime < 0) || (now >= stopTime) || (posHash
+                    != pos.zobristHash()));
+        }
+
+        public final boolean squareHidden(int sq) {
+            return animActive() && ((sq == hide1) || (sq == hide2));
+        }
+
+        public final void draw(Canvas canvas) {
+            if (!animActive()) {
+                return;
+            }
+            double animState = (now - startTime) / (double) (stopTime - startTime);
+            drawAnimPiece(canvas, piece2, from2, to2, animState);
+            drawAnimPiece(canvas, piece1, from1, to1, animState);
+            long now2 = System.currentTimeMillis();
+            long delay = 20 - (now2 - now);
+//          System.out.printf("delay:%d\n", delay);
+            if (delay < 1) delay = 1;
+            handlerTimer.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    invalidate();
+                }
+            }, delay);
+        }
+
+        private void drawAnimPiece(Canvas canvas, int piece, int from, int to, double animState) {
+            if (piece == Piece.EMPTY) {
+                return;
+            }
+            final int xCrd1 = getXCrd(Position.getX(from));
+            final int yCrd1 = getYCrd(Position.getY(from));
+            final int xCrd2 = getXCrd(Position.getX(to));
+            final int yCrd2 = getYCrd(Position.getY(to));
+            final int xCrd = xCrd1 + (int) Math.round((xCrd2 - xCrd1) * animState);
+            final int yCrd = yCrd1 + (int) Math.round((yCrd2 - yCrd1) * animState);
+            drawPiece(canvas, xCrd, yCrd, piece);
+        }
     }
 }

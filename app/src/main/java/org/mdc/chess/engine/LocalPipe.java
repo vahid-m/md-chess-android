@@ -5,17 +5,17 @@ import java.util.Locale;
 
 /** Implements line-based text communication between threads. */
 public class LocalPipe {
-    private LinkedList<String> lines = new LinkedList<String>();
+    private LinkedList<String> lines = new LinkedList<>();
     private boolean closed = false;
 
     /** Write a line to the pipe. */
     public final synchronized void printLine(String format) {
-        String s = String.format(Locale.US, format, new Object[]{});
+        String s = String.format(Locale.US, format);
         addLine(s);
     }
 
     /** Write a line to the pipe. */
-    public final synchronized void printLine(String format, Object ... args) {
+    public final synchronized void printLine(String format, Object... args) {
         String s = String.format(Locale.US, format, args);
         addLine(s);
     }
@@ -32,17 +32,20 @@ public class LocalPipe {
 
     /** Read a line from the pipe. Returns null on failure. Returns empty string on timeout. */
     public final synchronized String readLine(int timeoutMillis) {
-        if (closed)
+        if (closed) {
             return null;
+        }
         try {
             if (lines.isEmpty()) {
-                if (timeoutMillis > 0)
+                if (timeoutMillis > 0) {
                     wait(timeoutMillis);
-                else
+                } else {
                     wait();
+                }
             }
-            if (lines.isEmpty())
+            if (lines.isEmpty()) {
                 return closed ? null : "";
+            }
             String ret = lines.get(0);
             lines.remove(0);
             return ret;

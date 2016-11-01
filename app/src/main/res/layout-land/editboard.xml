@@ -1,55 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_marginTop="?attr/actionBarSize"
-    android:orientation="vertical">
+    android:orientation="horizontal">
+
+
+    <view
+        android:id="@+id/eb_chessboard"
+        class="org.mdc.chess.activities.ChessBoardEdit"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
+        <include layout="@layout/title" />
 
-        <view
-            android:id="@+id/eb_chessboard"
-            class="org.mdc.chess.activities.ChessBoardEdit"
+        <TextView
+            android:id="@+id/eb_status"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent" />
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:includeFontPadding="true"
+            android:text=""
+            android:textSize="12sp"
+            android:typeface="monospace" />
 
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:orientation="vertical">
+        <Button
+            android:id="@+id/eb_cancel"
+            style="@style/AppTheme.Button"
+            android:layout_margin="@dimen/standard_margin"
+            android:text="@string/cancel" />
 
-            <include layout="@layout/title"/>
+        <Button
+            android:id="@+id/eb_ok"
+            style="@style/AppTheme.Button"
+            android:layout_margin="@dimen/standard_margin"
+            android:text="@android:string/ok" />
 
-            <TextView
-                android:id="@+id/eb_status"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:includeFontPadding="true"
-                android:text=""
-                android:textSize="12sp"
-                android:typeface="monospace" />
-
-            <Button
-                android:id="@+id/eb_cancel"
-                style="@style/AppTheme.Button"
-                android:layout_margin="@dimen/standard_margin"
-                android:text="@string/cancel" />
-
-            <Button
-                android:id="@+id/eb_ok"
-                style="@style/AppTheme.Button"
-                android:layout_margin="@dimen/standard_margin"
-                android:text="@android:string/ok" />
-
-        </LinearLayout>
     </LinearLayout>
-
-
 </LinearLayout>
 

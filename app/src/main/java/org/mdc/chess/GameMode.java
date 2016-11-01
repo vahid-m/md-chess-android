@@ -19,14 +19,13 @@
 package org.mdc.chess;
 
 public class GameMode {
-    private final int modeNr;
-
-    public static final int PLAYER_WHITE  = 1;
-    public static final int PLAYER_BLACK  = 2;
-    public static final int TWO_PLAYERS   = 3;
-    public static final int ANALYSIS      = 4;
+    public static final int PLAYER_WHITE = 1;
+    public static final int PLAYER_BLACK = 2;
+    public static final int TWO_PLAYERS = 3;
+    public static final int ANALYSIS = 4;
     public static final int TWO_COMPUTERS = 5;
-    public static final int EDIT_GAME     = 6;
+    public static final int EDIT_GAME = 6;
+    private final int modeNr;
 
     public GameMode(int modeNr) {
         this.modeNr = modeNr;
@@ -39,26 +38,26 @@ public class GameMode {
     /** Return true if white side is controlled by a human. */
     public final boolean playerWhite() {
         switch (modeNr) {
-        case PLAYER_WHITE:
-        case TWO_PLAYERS:
-        case ANALYSIS:
-        case EDIT_GAME:
-            return true;
-        default:
-            return false;
+            case PLAYER_WHITE:
+            case TWO_PLAYERS:
+            case ANALYSIS:
+            case EDIT_GAME:
+                return true;
+            default:
+                return false;
         }
     }
 
     /** Return true if black side is controlled by a human. */
     public final boolean playerBlack() {
         switch (modeNr) {
-        case PLAYER_BLACK:
-        case TWO_PLAYERS:
-        case ANALYSIS:
-        case EDIT_GAME:
-            return true;
-        default:
-            return false;
+            case PLAYER_BLACK:
+            case TWO_PLAYERS:
+            case ANALYSIS:
+            case EDIT_GAME:
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -74,21 +73,22 @@ public class GameMode {
     /** Return true if the clocks are running. */
     public final boolean clocksActive() {
         switch (modeNr) {
-        case PLAYER_WHITE:
-        case PLAYER_BLACK:
-        case TWO_PLAYERS:
-        case TWO_COMPUTERS:
-            return true;
-        default:
-            return false;
+            case PLAYER_WHITE:
+            case PLAYER_BLACK:
+            case TWO_PLAYERS:
+            case TWO_COMPUTERS:
+                return true;
+            default:
+                return false;
         }
     }
 
     @Override
     public boolean equals(Object o) {
-        if ((o == null) || (o.getClass() != this.getClass()))
+        if ((o == null) || (o.getClass() != this.getClass())) {
             return false;
-        GameMode other = (GameMode)o;
+        }
+        GameMode other = (GameMode) o;
         return modeNr == other.modeNr;
     }
 

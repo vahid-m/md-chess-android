@@ -19,7 +19,6 @@
 package org.mdc.chess.gamelogic;
 
 /**
- *
  * @author petero
  */
 public class Move {
@@ -47,17 +46,22 @@ public class Move {
 
     @Override
     public boolean equals(Object o) {
-        if ((o == null) || (o.getClass() != this.getClass()))
+        if ((o == null) || (o.getClass() != this.getClass())) {
             return false;
-        Move other = (Move)o;
-        if (from != other.from)
+        }
+        Move other = (Move) o;
+        if (from != other.from) {
             return false;
-        if (to != other.to)
+        }
+        if (to != other.to) {
             return false;
-        if (promoteTo != other.promoteTo)
+        }
+        if (promoteTo != other.promoteTo) {
             return false;
+        }
         return true;
     }
+
     @Override
     public int hashCode() {
         return (from * 64 + to) * 16 + promoteTo;

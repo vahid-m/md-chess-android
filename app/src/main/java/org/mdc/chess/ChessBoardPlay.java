@@ -18,7 +18,11 @@
 
 package org.mdc.chess;
 
-import java.util.ArrayList;
+import android.content.Context;
+import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.util.AttributeSet;
+import android.widget.Toast;
 
 import org.mdc.chess.gamelogic.Move;
 import org.mdc.chess.gamelogic.MoveGen;
@@ -27,16 +31,12 @@ import org.mdc.chess.gamelogic.Piece;
 import org.mdc.chess.gamelogic.Position;
 import org.mdc.chess.gamelogic.TextIO;
 
-import android.content.Context;
-import android.content.res.Configuration;
-import android.graphics.Canvas;
-import android.util.AttributeSet;
-import android.widget.Toast;
+import java.util.ArrayList;
 
 /** Chess board widget suitable for play mode. */
 public class ChessBoardPlay extends ChessBoard {
-    private PGNOptions pgnOptions = null;
     boolean oneTouchMoves;
+    private PGNOptions pgnOptions = null;
 
     public ChessBoardPlay(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -48,26 +48,55 @@ public class ChessBoardPlay extends ChessBoard {
     }
 
     @Override
-    protected int getXCrd(int x) { return x0 + sqSize * (flipped ? 7 - x : x); }
-    @Override
-    protected int getYCrd(int y) { return y0 + sqSize * (flipped ? y : 7 - y); }
-    @Override
-    protected int getXSq(int xCrd) { int t = (xCrd - x0) / sqSize; return flipped ? 7 - t : t; }
-    @Override
-    protected int getYSq(int yCrd) { int t = (yCrd - y0) / sqSize; return flipped ? t : 7 - t; }
+    protected int getXCrd(int x) {
+        return x0 + sqSize * (flipped ? 7 - x : x);
+    }
 
     @Override
-    protected int getWidth(int sqSize) { return sqSize * 8; }
-    @Override
-    protected int getHeight(int sqSize) { return sqSize * 8; }
-    @Override
-    protected int getSqSizeW(int width) { return (width) / 8; }
-    @Override
-    protected int getSqSizeH(int height) { return (height) / 8; }
-    @Override
-    protected int getMaxHeightPercentage() { return 75; }
+    protected int getYCrd(int y) {
+        return y0 + sqSize * (flipped ? y : 7 - y);
+    }
 
-    protected int getMaxWidthPercentage() { return 65; }
+    @Override
+    protected int getXSq(int xCrd) {
+        int t = (xCrd - x0) / sqSize;
+        return flipped ? 7 - t : t;
+    }
+
+    @Override
+    protected int getYSq(int yCrd) {
+        int t = (yCrd - y0) / sqSize;
+        return flipped ? t : 7 - t;
+    }
+
+    @Override
+    protected int getWidth(int sqSize) {
+        return sqSize * 8;
+    }
+
+    @Override
+    protected int getHeight(int sqSize) {
+        return sqSize * 8;
+    }
+
+    @Override
+    protected int getSqSizeW(int width) {
+        return (width) / 8;
+    }
+
+    @Override
+    protected int getSqSizeH(int height) {
+        return (height) / 8;
+    }
+
+    @Override
+    protected int getMaxHeightPercentage() {
+        return 75;
+    }
+
+    protected int getMaxWidthPercentage() {
+        return 65;
+    }
 
     @Override
     protected void computeOrigin(int width, int height) {
@@ -76,17 +105,31 @@ public class ChessBoardPlay extends ChessBoard {
         boolean landScape = (config.orientation == Configuration.ORIENTATION_LANDSCAPE);
         y0 = landScape ? 0 : (height - sqSize * 8) / 2;
     }
-    @Override
-    protected int getXFromSq(int sq) { return Position.getX(sq); }
-    @Override
-    protected int getYFromSq(int sq) { return Position.getY(sq); }
 
     @Override
-    protected int minValidY() { return 0; }
+    protected int getXFromSq(int sq) {
+        return Position.getX(sq);
+    }
+
     @Override
-    protected int maxValidX() { return 7; }
+    protected int getYFromSq(int sq) {
+        return Position.getY(sq);
+    }
+
     @Override
-    protected int getSquare(int x, int y) { return Position.getSquare(x, y); }
+    protected int minValidY() {
+        return 0;
+    }
+
+    @Override
+    protected int maxValidX() {
+        return 7;
+    }
+
+    @Override
+    protected int getSquare(int x, int y) {
+        return Position.getSquare(x, y);
+    }
 
     @Override
     protected void drawExtraSquares(Canvas canvas) {
@@ -97,18 +140,21 @@ public class ChessBoardPlay extends ChessBoard {
     }
 
     public Move mousePressed(int sq) {
-        if (sq < 0)
+        if (sq < 0) {
             return null;
+        }
         cursorVisible = false;
-        if ((selectedSquare != -1) && !userSelectedSquare)
+        if ((selectedSquare != -1) && !userSelectedSquare) {
             setSelection(-1); // Remove selection of opponents last moving piece
+        }
 
         if (!oneTouchMoves) {
             int p = pos.getPiece(sq);
             if (selectedSquare != -1) {
                 if (sq == selectedSquare) {
-                    if (toggleSelection)
+                    if (toggleSelection) {
                         setSelection(-1);
+                    }
                     return null;
                 }
                 if (!myColor(p)) {
@@ -116,25 +162,29 @@ public class ChessBoardPlay extends ChessBoard {
                     setSelection(highlightLastMove ? sq : -1);
                     userSelectedSquare = false;
                     return m;
-                } else
+                } else {
                     setSelection(sq);
+                }
             } else {
-                if (myColor(p))
+                if (myColor(p)) {
                     setSelection(sq);
+                }
             }
         } else {
             int prevSq = userSelectedSquare ? selectedSquare : -1;
             if (prevSq == sq) {
-                if (toggleSelection)
+                if (toggleSelection) {
                     setSelection(-1);
+                }
                 return null;
             }
             ArrayList<Move> moves = new MoveGen().legalMoves(pos);
             Move matchingMove = null;
-            if (prevSq >= 0)
+            if (prevSq >= 0) {
                 matchingMove = matchingMove(prevSq, sq, moves).first;
+            }
             boolean anyMatch = false;
-            if  (matchingMove == null) {
+            if (matchingMove == null) {
                 Pair<Move, Boolean> match = matchingMove(-1, sq, moves);
                 matchingMove = match.first;
                 anyMatch = match.second;
@@ -149,7 +199,7 @@ public class ChessBoardPlay extends ChessBoard {
                 if (myColor(p)) {
                     String msg = getContext().getString(R.string.piece_can_not_be_moved);
                     int pieceType = (pgnOptions == null) ? PGNOptions.PT_LOCAL
-                                                         : pgnOptions.view.pieceType;
+                            : pgnOptions.view.pieceType;
                     msg += ": " + TextIO.pieceAndSquareToString(pieceType, p, sq);
                     Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
                 }
@@ -161,29 +211,31 @@ public class ChessBoardPlay extends ChessBoard {
 
     /**
      * Determine if there is a unique legal move corresponding to one or two selected squares.
+     *
      * @param sq1   First square, or -1.
      * @param sq2   Second square.
      * @param moves List of legal moves.
-     * @return      Matching move if unique.
-     *              Boolean indicating if there was at least one match.
+     * @return Matching move if unique.
+     * Boolean indicating if there was at least one match.
      */
     private final Pair<Move, Boolean> matchingMove(int sq1, int sq2, ArrayList<Move> moves) {
         Move matchingMove = null;
         boolean anyMatch = false;
         for (Move m : moves) {
             boolean match;
-            if (sq1 == -1)
+            if (sq1 == -1) {
                 match = (m.from == sq2) || (m.to == sq2);
-            else
+            } else {
                 match = (m.from == sq1) && (m.to == sq2) ||
                         (m.from == sq2) && (m.to == sq1);
+            }
             if (match) {
                 if (matchingMove == null) {
                     matchingMove = m;
                     anyMatch = true;
                 } else {
                     if ((matchingMove.from == m.from) &&
-                        (matchingMove.to == m.to)) {
+                            (matchingMove.to == m.to)) {
                         matchingMove.promoteTo = Piece.EMPTY;
                     } else {
                         matchingMove = null;
@@ -192,6 +244,6 @@ public class ChessBoardPlay extends ChessBoard {
                 }
             }
         }
-        return new Pair<Move, Boolean>(matchingMove, anyMatch);
+        return new Pair<>(matchingMove, anyMatch);
     }
 }

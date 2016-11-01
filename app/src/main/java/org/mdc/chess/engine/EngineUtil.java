@@ -18,17 +18,21 @@
 
 package org.mdc.chess.engine;
 
+import android.os.Build;
+
+import com.kalab.chess.enginesupport.ChessEngine;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import com.kalab.chess.enginesupport.ChessEngine;
-
-import android.os.Build;
-
 public class EngineUtil {
+    public static final String openExchangeDir = "oex";
+    /** For synchronizing non thread safe native calls. */
+    public static Object nativeLock = new Object();
+
     static {
         System.loadLibrary("nativeutil");
     }
@@ -37,17 +41,26 @@ public class EngineUtil {
     public static String internalStockFishName() {
         String abi = Build.CPU_ABI;
         boolean noPIE = Build.VERSION.SDK_INT < 21;
-        if (abi.equals("x86")) {
-        } else if (abi.equals("x86_64")) {
-            noPIE = false;
-        } else if (abi.equals("armeabi-v7a")) {
-        } else if (abi.equals("arm64-v8a")) {
-            noPIE = false;
-        } else if (abi.equals("mips")) {
-        } else if (abi.equals("mips64")) {
-            noPIE = false;
-        } else {
-            abi = "armeabi"; // Unknown ABI, assume original ARM
+        switch (abi) {
+            case "x86":
+                break;
+            case "x86_64":
+                noPIE = false;
+                break;
+            case "armeabi-v7a":
+                break;
+            case "arm64-v8a":
+                noPIE = false;
+                break;
+            case "mips":
+                break;
+            case "mips64":
+                noPIE = false;
+                break;
+            default:
+                abi = "armeabi"; // Unknown ABI, assume original ARM
+
+                break;
         }
         return "stockfish";
     }
@@ -67,8 +80,6 @@ public class EngineUtil {
         }
         return netEngine;
     }
-
-    public static final String openExchangeDir = "oex";
 
     /** Return true if file "engine" is an open exchange engine. */
     public static boolean isOpenExchangeEngine(String engine) {
@@ -93,6 +104,12 @@ public class EngineUtil {
         return ret;
     }
 
+    /** Executes chmod 744 exePath. */
+    //final static native boolean chmod(String exePath);
+
+    /** Change the priority of a process. */
+    //final static native void reNice(int pid, int prio);
+
     /** Remove characters from s that are not safe to use in a filename. */
     private static String sanitizeString(String s) {
         StringBuilder sb = new StringBuilder();
@@ -108,13 +125,4 @@ public class EngineUtil {
         }
         return sb.toString();
     }
-
-    /** Executes chmod 744 exePath. */
-    //final static native boolean chmod(String exePath);
-
-    /** Change the priority of a process. */
-    //final static native void reNice(int pid, int prio);
-
-    /** For synchronizing non thread safe native calls. */
-    public static Object nativeLock = new Object();
 }

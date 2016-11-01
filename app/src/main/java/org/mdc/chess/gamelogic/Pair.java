@@ -20,6 +20,7 @@ package org.mdc.chess.gamelogic;
 
 /**
  * A small helper class that makes it possible to return two values from a function.
+ *
  * @author petero
  */
 public final class Pair<T1, T2> {

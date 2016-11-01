@@ -26,11 +26,11 @@ public final class EngineOptions {
     public boolean hintsEdit;   // Hints in "edit board" mode
     public boolean rootProbe;   // Only search optimal moves at root
     public boolean engineProbe; // Let engine use EGTB
+    public String networkID;    // host+port network settings
     String gtbPath;             // GTB directory path
     String gtbPathNet;          // GTB directory path for network engines
     String rtbPath;             // Syzygy directory path
     String rtbPathNet;          // Syzygy directory path for network engines
-    public String networkID;    // host+port network settings
 
     public EngineOptions() {
         hashMB = 16;
@@ -62,23 +62,26 @@ public final class EngineOptions {
 
     /** Get the GTB path for an engine. */
     public String getEngineGtbPath(boolean networkEngine) {
-        if (!engineProbe)
+        if (!engineProbe) {
             return "";
+        }
         return networkEngine ? gtbPathNet : gtbPath;
     }
 
     /** Get the RTB path for an engine. */
     public String getEngineRtbPath(boolean networkEngine) {
-        if (!engineProbe)
+        if (!engineProbe) {
             return "";
+        }
         return networkEngine ? rtbPathNet : rtbPath;
     }
 
     @Override
     public boolean equals(Object o) {
-        if ((o == null) || (o.getClass() != this.getClass()))
+        if ((o == null) || (o.getClass() != this.getClass())) {
             return false;
-        EngineOptions other = (EngineOptions)o;
+        }
+        EngineOptions other = (EngineOptions) o;
 
         return ((hashMB == other.hashMB) &&
                 (unSafeHash == other.unSafeHash) &&

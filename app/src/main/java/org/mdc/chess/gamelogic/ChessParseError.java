@@ -20,6 +20,7 @@ package org.mdc.chess.gamelogic;
 
 /**
  * Exception class to represent parse errors in FEN or algebraic notation.
+ *
  * @author petero
  */
 public class ChessParseError extends Exception {
@@ -32,6 +33,7 @@ public class ChessParseError extends Exception {
         super(msg);
         pos = null;
     }
+
     public ChessParseError(String msg, Position pos) {
         super(msg);
         this.pos = pos;

@@ -1,16 +1,5 @@
 package org.mdc.chess;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-
-import org.mdc.chess.gamelogic.Piece;
-import org.mdc.chess.gamelogic.Position;
-
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -23,6 +12,17 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import org.mdc.chess.gamelogic.Piece;
+import org.mdc.chess.gamelogic.Position;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 
 public final class Util {
     public final static String boldStart;
@@ -43,13 +43,14 @@ public final class Util {
 
     /** Read a text file. Return string array with one string per line. */
     public static String[] readFile(String networkEngineToConfig) throws IOException {
-        ArrayList<String> ret = new ArrayList<String>();
+        ArrayList<String> ret = new ArrayList<>();
         InputStream inStream = new FileInputStream(networkEngineToConfig);
         InputStreamReader inFile = new InputStreamReader(inStream);
         BufferedReader inBuf = new BufferedReader(inFile);
         String line;
-        while ((line = inBuf.readLine()) != null)
+        while ((line = inBuf.readLine()) != null) {
             ret.add(line);
+        }
         inBuf.close();
         return ret.toArray(new String[ret.size()]);
     }
@@ -72,16 +73,6 @@ public final class Util {
             return null;
         } catch (IOException e) {
             return null;
-        }
-    }
-
-    /** Represent material difference as two unicode strings. */
-    public final static class MaterialDiff {
-        public CharSequence white;
-        public CharSequence black;
-        MaterialDiff(CharSequence w, CharSequence b) {
-            white = w;
-            black = b;
         }
     }
 
@@ -117,14 +108,15 @@ public final class Util {
 
     /** Change foreground/background color in a view. */
     public static void overrideViewAttribs(final View v) {
-        if (v == null)
+        if (v == null) {
             return;
+        }
         final int bg = ColorTheme.instance().getColor(ColorTheme.GENERAL_BACKGROUND);
         Object tag = v.getTag();
         final boolean excludedItems = v instanceof Button ||
-                                      ((v instanceof EditText) && !(v instanceof MoveListView)) ||
-                                      v instanceof ImageButton ||
-                                      "title".equals(tag);
+                ((v instanceof EditText) && !(v instanceof MoveListView)) ||
+                v instanceof ImageButton ||
+                "title".equals(tag);
         if (!excludedItems) {
             int c = bg;
             if ("thinking".equals(tag)) {
@@ -135,8 +127,9 @@ public final class Util {
             }
             v.setBackgroundColor(c);
         }
-        if (v instanceof ListView)
+        if (v instanceof ListView) {
             ((ListView) v).setCacheColorHint(bg);
+        }
         if (v instanceof ViewGroup) {
             ViewGroup vg = (ViewGroup) v;
             for (int i = 0; i < vg.getChildCount(); i++) {
@@ -149,6 +142,17 @@ public final class Util {
         } else if (!excludedItems && (v instanceof MoveListView)) {
             int fg = ColorTheme.instance().getColor(ColorTheme.FONT_FOREGROUND);
             ((MoveListView) v).setTextColor(fg);
+        }
+    }
+
+    /** Represent material difference as two unicode strings. */
+    public final static class MaterialDiff {
+        public CharSequence white;
+        public CharSequence black;
+
+        MaterialDiff(CharSequence w, CharSequence b) {
+            white = w;
+            black = b;
         }
     }
 }

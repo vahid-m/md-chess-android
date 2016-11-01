@@ -18,6 +18,11 @@
 
 package org.mdc.chess.engine;
 
+import android.content.Context;
+
+import org.mdc.chess.EngineOptions;
+import org.mdc.chess.engine.cuckoochess.CuckooChessEngine;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,38 +32,35 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import org.mdc.chess.EngineOptions;
-import org.mdc.chess.engine.cuckoochess.CuckooChessEngine;
-
-import android.content.Context;
-
 public abstract class UCIEngineBase implements UCIEngine {
 
+    protected boolean isUCI;
     private boolean processAlive;
     private UCIOptions options;
-    protected boolean isUCI;
-
-    public static UCIEngine getEngine(Context context, String engine,
-                                      EngineOptions engineOptions, Report report) {
-       // if ("stockfish".equals(engine) && (EngineUtil.internalStockFishName() == null))
-        //    engine = "cuckoochess";
-        if ("cuckoochess".equals(engine))
-            return new CuckooChessEngine(report);
-        else if ("stockfish".equals(engine))
-            //return new InternalStockFish(context, report);
-            return new CuckooChessEngine(report);
-        else if (EngineUtil.isOpenExchangeEngine(engine))
-            return new OpenExchangeEngine(context, engine, report);
-        else if (EngineUtil.isNetEngine(engine))
-            return new NetworkEngine(context, engine, engineOptions, report);
-        else
-            return new ExternalEngine(context, engine, report);
-    }
 
     protected UCIEngineBase() {
         processAlive = false;
         options = new UCIOptions();
         isUCI = false;
+    }
+
+    public static UCIEngine getEngine(Context context, String engine,
+            EngineOptions engineOptions, Report report) {
+        // if ("stockfish".equals(engine) && (EngineUtil.internalStockFishName() == null))
+        //    engine = "cuckoochess";
+        if ("cuckoochess".equals(engine)) {
+            return new CuckooChessEngine(report);
+        } else if ("stockfish".equals(engine))
+        //return new InternalStockFish(context, report);
+        {
+            return new CuckooChessEngine(report);
+        } else if (EngineUtil.isOpenExchangeEngine(engine)) {
+            return new OpenExchangeEngine(context, engine, report);
+        } else if (EngineUtil.isNetEngine(engine)) {
+            return new NetworkEngine(context, engine, engineOptions, report);
+        } else {
+            return new ExternalEngine(context, engine, report);
+        }
     }
 
     protected abstract void startProcess();
@@ -86,27 +88,33 @@ public abstract class UCIEngineBase implements UCIEngine {
             iniOptions.load(is);
         } catch (IOException ex) {
         } finally {
-            if (is != null)
-                try { is.close(); } catch (IOException ex) {}
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ex) {
+                }
+            }
         }
-        for (Map.Entry<Object,Object> ent : iniOptions.entrySet()) {
+        for (Map.Entry<Object, Object> ent : iniOptions.entrySet()) {
             if (ent.getKey() instanceof String && ent.getValue() instanceof String) {
-                String key = ((String)ent.getKey()).toLowerCase(Locale.US);
-                String value = (String)ent.getValue();
-                if (configurableOption(key))
+                String key = ((String) ent.getKey()).toLowerCase(Locale.US);
+                String value = (String) ent.getValue();
+                if (configurableOption(key)) {
                     setOption(key, value);
+                }
             }
         }
     }
 
     @Override
-    public final boolean setUCIOptions(Map<String,String> uciOptions) {
+    public final boolean setUCIOptions(Map<String, String> uciOptions) {
         boolean modified = false;
-        for (Map.Entry<String,String> ent : uciOptions.entrySet()) {
-            String key = ((String)ent.getKey()).toLowerCase(Locale.US);
-            String value = (String)ent.getValue();
-            if (configurableOption(key))
+        for (Map.Entry<String, String> ent : uciOptions.entrySet()) {
+            String key = ent.getKey().toLowerCase(Locale.US);
+            String value = ent.getValue();
+            if (configurableOption(key)) {
                 modified |= setOption(key, value);
+            }
         }
         return modified;
     }
@@ -116,8 +124,9 @@ public abstract class UCIEngineBase implements UCIEngine {
         Properties iniOptions = new Properties();
         for (String name : options.getOptionNames()) {
             UCIOptions.OptionBase o = options.getOption(name);
-            if (configurableOption(name) && o.modified())
+            if (configurableOption(name) && o.modified()) {
                 iniOptions.put(o.name, o.getStringValue());
+            }
         }
         File optionsFile = getOptionsFile();
         FileOutputStream os = null;
@@ -126,8 +135,12 @@ public abstract class UCIEngineBase implements UCIEngine {
             iniOptions.store(os, null);
         } catch (IOException ex) {
         } finally {
-            if (os != null)
-                try { os.close(); } catch (IOException ex) {}
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException ex) {
+                }
+            }
         }
     }
 
@@ -143,9 +156,10 @@ public abstract class UCIEngineBase implements UCIEngine {
     protected boolean configurableOption(String name) {
         name = name.toLowerCase(Locale.US);
         if (name.startsWith("uci_") || name.equals("hash") || name.equals("ponder") ||
-            name.equals("multipv") || name.equals("gaviotatbpath") ||
-            name.equals("syzygypath"))
+                name.equals("multipv") || name.equals("gaviotatbpath") ||
+                name.equals("syzygypath")) {
             return false;
+        }
         return true;
     }
 
@@ -164,96 +178,118 @@ public abstract class UCIEngineBase implements UCIEngine {
 
     @Override
     public final UCIOptions.OptionBase registerOption(String[] tokens) {
-        if (tokens.length < 5 || !tokens[1].equals("name"))
+        if (tokens.length < 5 || !tokens[1].equals("name")) {
             return null;
+        }
         String name = tokens[2];
         int i;
         for (i = 3; i < tokens.length; i++) {
-            if ("type".equals(tokens[i]))
+            if ("type".equals(tokens[i])) {
                 break;
+            }
             name += " " + tokens[i];
         }
 
-        if (i >= tokens.length - 1)
+        if (i >= tokens.length - 1) {
             return null;
+        }
         i++;
         String type = tokens[i++];
 
         String defVal = null;
         String minVal = null;
         String maxVal = null;
-        ArrayList<String> var = new ArrayList<String>();
+        ArrayList<String> var = new ArrayList<>();
         try {
             for (; i < tokens.length; i++) {
-                if (tokens[i].equals("default")) {
-                    String stop = null;
-                    if (type.equals("spin"))
-                        stop = "min";
-                    else if (type.equals("combo"))
-                        stop = "var";
-                    defVal = "";
-                    while (i+1 < tokens.length && !tokens[i+1].equals(stop)) {
-                        if (defVal.length() > 0)
-                            defVal += " ";
-                        defVal += tokens[i+1];
-                        i++;
-                    }
-                } else if (tokens[i].equals("min")) {
-                    minVal = tokens[++i];
-                } else if (tokens[i].equals("max")) {
-                    maxVal = tokens[++i];
-                } else if (tokens[i].equals("var")) {
-                    String value = "";
-                    while (i+1 < tokens.length && !tokens[i+1].equals("var")) {
-                        if (value.length() > 0)
-                            value += " ";
-                        value += tokens[i+1];
-                        i++;
-                    }
-                    var.add(value);
-                } else
-                    return null;
+                switch (tokens[i]) {
+                    case "default":
+                        String stop = null;
+                        if (type.equals("spin")) {
+                            stop = "min";
+                        } else if (type.equals("combo")) {
+                            stop = "var";
+                        }
+                        defVal = "";
+                        while (i + 1 < tokens.length && !tokens[i + 1].equals(stop)) {
+                            if (defVal.length() > 0) {
+                                defVal += " ";
+                            }
+                            defVal += tokens[i + 1];
+                            i++;
+                        }
+                        break;
+                    case "min":
+                        minVal = tokens[++i];
+                        break;
+                    case "max":
+                        maxVal = tokens[++i];
+                        break;
+                    case "var":
+                        String value = "";
+                        while (i + 1 < tokens.length && !tokens[i + 1].equals("var")) {
+                            if (value.length() > 0) {
+                                value += " ";
+                            }
+                            value += tokens[i + 1];
+                            i++;
+                        }
+                        var.add(value);
+                        break;
+                    default:
+                        return null;
+                }
             }
         } catch (ArrayIndexOutOfBoundsException ex) {
             return null;
         }
 
         UCIOptions.OptionBase option = null;
-        if (type.equals("check")) {
-            if (defVal != null) {
-                defVal = defVal.toLowerCase(Locale.US);
-                option = new UCIOptions.CheckOption(name, defVal.equals("true"));
-            }
-        } else if (type.equals("spin")) {
-            if (defVal != null && minVal != null && maxVal != null) {
-                try {
-                    int defV = Integer.parseInt(defVal);
-                    int minV = Integer.parseInt(minVal);
-                    int maxV = Integer.parseInt(maxVal);
-                    if (minV <= defV && defV <= maxV)
-                        option = new UCIOptions.SpinOption(name, minV, maxV, defV);
-                } catch (NumberFormatException ex) {
+        switch (type) {
+            case "check":
+                if (defVal != null) {
+                    defVal = defVal.toLowerCase(Locale.US);
+                    option = new UCIOptions.CheckOption(name, defVal.equals("true"));
                 }
-            }
-        } else if (type.equals("combo")) {
-            if (defVal != null && var.size() > 0) {
-                String[] allowed = var.toArray(new String[var.size()]);
-                for (String s : allowed)
-                    if (s.equals(defVal)) {
-                        option = new UCIOptions.ComboOption(name, allowed, defVal);
-                        break;
+                break;
+            case "spin":
+                if (defVal != null && minVal != null && maxVal != null) {
+                    try {
+                        int defV = Integer.parseInt(defVal);
+                        int minV = Integer.parseInt(minVal);
+                        int maxV = Integer.parseInt(maxVal);
+                        if (minV <= defV && defV <= maxV) {
+                            option = new UCIOptions.SpinOption(name, minV, maxV, defV);
+                        }
+                    } catch (NumberFormatException ex) {
                     }
-            }
-        } else if (type.equals("button")) {
-            option = new UCIOptions.ButtonOption(name);
-        } else if (type.equals("string")) {
-            if (defVal != null)
-                option = new UCIOptions.StringOption(name, defVal);
+                }
+                break;
+            case "combo":
+                if (defVal != null && var.size() > 0) {
+                    String[] allowed = var.toArray(new String[var.size()]);
+                    for (String s : allowed) {
+                        if (s.equals(defVal)) {
+                            option = new UCIOptions.ComboOption(name, allowed, defVal);
+                            break;
+                        }
+                    }
+                }
+                break;
+            case "button":
+                option = new UCIOptions.ButtonOption(name);
+                break;
+            case "string":
+                if (defVal != null) {
+                    option = new UCIOptions.StringOption(name, defVal);
+                }
+                break;
         }
 
         if (option != null) {
-            if (!configurableOption(name))
+            if (!configurableOption(name)) {
                 option.visible = false;
+            }
             options.addOption(option);
         }
         return option;
@@ -276,15 +312,18 @@ public abstract class UCIEngineBase implements UCIEngine {
 
     @Override
     public final boolean setOption(String name, String value) {
-        if (!options.contains(name))
+        if (!options.contains(name)) {
             return false;
+        }
         UCIOptions.OptionBase o = options.getOption(name);
         if (o instanceof UCIOptions.ButtonOption) {
             writeLineToEngine(String.format(Locale.US, "setoption name %s", o.name));
         } else if (o.setFromString(value)) {
-            if (value.length() == 0)
+            if (value.length() == 0) {
                 value = "<empty>";
-            writeLineToEngine(String.format(Locale.US, "setoption name %s value %s", o.name, value));
+            }
+            writeLineToEngine(
+                    String.format(Locale.US, "setoption name %s value %s", o.name, value));
             return true;
         }
         return false;

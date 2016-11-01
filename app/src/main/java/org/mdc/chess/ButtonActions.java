@@ -18,8 +18,6 @@
 
 package org.mdc.chess;
 
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.view.View;
@@ -27,19 +25,19 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.widget.ImageButton;
 
+import java.util.ArrayList;
+
 /**
  * Handle all actions connected to a button.
  */
 public class ButtonActions {
+    private static final int maxMenuActions = 6;
     private ImageButton button;
     private String name;
     private int longClickDialog;
     private int menuTitle;
-
     private UIAction mainAction = null;
-    private ArrayList<UIAction> menuActions = new ArrayList<UIAction>();
-
-    private static final int maxMenuActions = 6;
+    private ArrayList<UIAction> menuActions = new ArrayList<>();
 
     /** Constructor. */
     public ButtonActions(String buttonName, int longClickDialog, int menuTitle) {
@@ -50,11 +48,14 @@ public class ButtonActions {
     }
 
     public boolean isEnabled() {
-        if (mainAction != null)
+        if (mainAction != null) {
             return true;
-        for (UIAction a : menuActions)
-            if (a != null)
+        }
+        for (UIAction a : menuActions) {
+            if (a != null) {
                 return true;
+            }
+        }
         return false;
     }
 
@@ -65,8 +66,9 @@ public class ButtonActions {
             @Override
             public void onClick(View v) {
                 if (mainAction != null) {
-                    if (mainAction.enabled())
+                    if (mainAction.enabled()) {
                         mainAction.run();
+                    }
                 } else {
                     showMenu(activity);
                 }
@@ -86,8 +88,9 @@ public class ButtonActions {
         for (UIAction a : menuActions) {
             if (a != null) {
                 haveActions = true;
-                if (a.enabled())
+                if (a.enabled()) {
                     haveEnabledActions = true;
+                }
             }
         }
         if (haveActions) {
@@ -115,27 +118,31 @@ public class ButtonActions {
         boolean visible = false;
         String actionId = settings.getString("button_action_" + name + "_0", "");
         mainAction = factory.getAction(actionId);
-        if (mainAction != null)
+        if (mainAction != null) {
             visible = true;
+        }
         menuActions.clear();
         for (int i = 0; i < maxMenuActions; i++) {
-            actionId = settings.getString("button_action_" + name + "_" + (i+1), "");
+            actionId = settings.getString("button_action_" + name + "_" + (i + 1), "");
             UIAction a = factory.getAction(actionId);
-            if (a != null)
+            if (a != null) {
                 visible = true;
+            }
             menuActions.add(a);
         }
-        if (button != null)
+        if (button != null) {
             button.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
     }
 
     /** Get icon resource for button. */
     public int getIcon() {
         int ret = -1;
-        if (mainAction != null)
+        if (mainAction != null) {
             ret = mainAction.getIcon();
+        }
         //if (ret == -1)
-            //ret = R.raw.custom;
+        //ret = R.raw.custom;
         return ret;
     }
 }

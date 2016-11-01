@@ -13,24 +13,23 @@
  */
 package com.kalab.chess.enginesupport;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import android.content.ContentResolver;
 import android.net.Uri;
 import android.util.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class ChessEngine {
 
     private static final String TAG = ChessEngine.class.getSimpleName();
 
-    private String name;
-    private String fileName;
-    private String authority;
-    private String packageName;
+    private final String name;
+    private final String fileName;
+    private final String authority;
+    private final String packageName;
 
     public ChessEngine(String name, String fileName, String authority, String packageName) {
         this.name = name;
@@ -47,31 +46,30 @@ public class ChessEngine {
         return this.fileName;
     }
 
-    public Uri getUri() {
+    private Uri getUri() {
         return Uri.parse("content://" + authority + "/" + fileName);
     }
 
     public File copyToFiles(ContentResolver contentResolver, File destination)
-            throws FileNotFoundException, IOException {
+            throws IOException {
         Uri uri = getUri();
-        File output = new File(destination, uri.getPath().toString());
+        File output = new File(destination, uri.getPath());
         copyUri(contentResolver, uri, output.getAbsolutePath());
         return output;
     }
 
-    public void copyUri(final ContentResolver contentResolver,
-            final Uri source, String targetFilePath) throws IOException,
-            FileNotFoundException {
+    private void copyUri(final ContentResolver contentResolver,
+            final Uri source, String targetFilePath) throws IOException {
         InputStream istream = contentResolver.openInputStream(source);
         copyFile(istream, targetFilePath);
         setExecutablePermission(targetFilePath);
     }
 
     private void copyFile(InputStream istream, String targetFilePath)
-            throws FileNotFoundException, IOException {
+            throws IOException {
         FileOutputStream fout = new FileOutputStream(targetFilePath);
         byte[] b = new byte[1024];
-        int numBytes = 0;
+        int numBytes;
         while ((numBytes = istream.read(b)) != -1) {
             fout.write(b, 0, numBytes);
         }
@@ -80,7 +78,7 @@ public class ChessEngine {
     }
 
     private void setExecutablePermission(String engineFileName) throws IOException {
-        String cmd[] = { "chmod", "744", engineFileName };
+        String cmd[] = {"chmod", "744", engineFileName};
         Process process = Runtime.getRuntime().exec(cmd);
         try {
             process.waitFor();

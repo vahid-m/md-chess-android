@@ -18,12 +18,14 @@
 
 package org.mdc.chess.engine.cuckoochess;
 
-import chess.Move;
 import java.util.ArrayList;
 import java.util.List;
 
+import chess.Move;
+
 /**
  * Store search parameters (times, increments, max depth, etc).
+ *
  * @author petero
  */
 public class SearchParams {
@@ -40,6 +42,6 @@ public class SearchParams {
     boolean infinite;
 
     public SearchParams() {
-        searchMoves = new ArrayList<Move>();
+        searchMoves = new ArrayList<>();
     }
 }

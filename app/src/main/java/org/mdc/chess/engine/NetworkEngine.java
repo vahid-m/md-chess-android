@@ -18,6 +18,12 @@
 
 package org.mdc.chess.engine;
 
+import android.content.Context;
+
+import org.mdc.chess.EngineOptions;
+import org.mdc.chess.R;
+import org.mdc.chess.Util;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -25,13 +31,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
-import org.mdc.chess.EngineOptions;
-import org.mdc.chess.Util;
-
-import android.content.Context;
-
-import org.mdc.chess.R;
 
 /** Engine running on a different computer. */
 public class NetworkEngine extends UCIEngineBase {
@@ -49,8 +48,13 @@ public class NetworkEngine extends UCIEngineBase {
     private boolean startedOk;
     private boolean isRunning;
     private boolean isError;
+    private int hashMB = -1;
+    private String gaviotaTbPath = "";
+    private String syzygyPath = "";
+    private boolean optionsInitialized = false;
 
-    public NetworkEngine(Context context, String engine, EngineOptions engineOptions, Report report) {
+    public NetworkEngine(Context context, String engine, EngineOptions engineOptions,
+            Report report) {
         this.context = context;
         this.report = report;
         fileName = engine;
@@ -100,8 +104,9 @@ public class NetworkEngine extends UCIEngineBase {
                     report.reportError(e.getMessage());
                 }
             }
-            if (socket == null)
+            if (socket == null) {
                 socket = new Socket();
+            }
         }
     }
 
@@ -137,8 +142,9 @@ public class NetworkEngine extends UCIEngineBase {
                     String line;
                     boolean first = true;
                     while ((line = br.readLine()) != null) {
-                        if (Thread.currentThread().isInterrupted())
+                        if (Thread.currentThread().isInterrupted()) {
                             return;
+                        }
                         synchronized (engineToGui) {
                             engineToGui.addLine(line);
                             if (first) {
@@ -153,12 +159,16 @@ public class NetworkEngine extends UCIEngineBase {
                     if (isRunning) {
                         isError = true;
                         isRunning = false;
-                        if (!startedOk)
+                        if (!startedOk) {
                             report.reportError(context.getString(R.string.failed_to_start_engine));
-                        else
+                        } else {
                             report.reportError(context.getString(R.string.engine_terminated));
+                        }
                     }
-                    try { socket.close(); } catch (IOException e) {}
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                    }
                 }
                 engineToGui.close();
             }
@@ -173,8 +183,9 @@ public class NetworkEngine extends UCIEngineBase {
                     connect();
                     String line;
                     while ((line = guiToEngine.readLine()) != null) {
-                        if (Thread.currentThread().isInterrupted())
+                        if (Thread.currentThread().isInterrupted()) {
                             return;
+                        }
                         line += "\n";
                         socket.getOutputStream().write(line.getBytes());
                     }
@@ -189,17 +200,15 @@ public class NetworkEngine extends UCIEngineBase {
                         report.reportError(context.getString(R.string.engine_terminated));
                     }
                     isRunning = false;
-                    try { socket.close(); } catch (IOException ex) {}
+                    try {
+                        socket.close();
+                    } catch (IOException ex) {
+                    }
                 }
             }
         });
         stdOutThread.start();
     }
-
-    private int hashMB = -1;
-    private String gaviotaTbPath = "";
-    private String syzygyPath = "";
-    private boolean optionsInitialized = false;
 
     /** @inheritDoc */
     @Override
@@ -222,18 +231,25 @@ public class NetworkEngine extends UCIEngineBase {
     /** @inheritDoc */
     @Override
     public boolean optionsOk(EngineOptions engineOptions) {
-        if (isError)
+        if (isError) {
             return false;
-        if (!optionsInitialized)
+        }
+        if (!optionsInitialized) {
             return true;
-        if (!networkID.equals(engineOptions.networkID))
+        }
+        if (!networkID.equals(engineOptions.networkID)) {
             return false;
-        if (hashMB != engineOptions.hashMB)
+        }
+        if (hashMB != engineOptions.hashMB) {
             return false;
-        if (hasOption("gaviotatbpath") && !gaviotaTbPath.equals(engineOptions.getEngineGtbPath(true)))
+        }
+        if (hasOption("gaviotatbpath") && !gaviotaTbPath.equals(
+                engineOptions.getEngineGtbPath(true))) {
             return false;
-        if (hasOption("syzygypath") && !syzygyPath.equals(engineOptions.getEngineRtbPath(true)))
+        }
+        if (hasOption("syzygypath") && !syzygyPath.equals(engineOptions.getEngineRtbPath(true))) {
             return false;
+        }
         return true;
     }
 
@@ -246,8 +262,9 @@ public class NetworkEngine extends UCIEngineBase {
     @Override
     public String readLineFromEngine(int timeoutMillis) {
         String ret = engineToGui.readLine(timeoutMillis);
-        if (ret == null)
+        if (ret == null) {
             return null;
+        }
         if (ret.length() > 0) {
 //            System.out.printf("Engine -> GUI: %s\n", ret);
         }
@@ -265,16 +282,25 @@ public class NetworkEngine extends UCIEngineBase {
     @Override
     public void shutDown() {
         isRunning = false;
-        if (startupThread != null)
+        if (startupThread != null) {
             startupThread.interrupt();
+        }
         if (socket != null) {
-            try { socket.getOutputStream().write("quit\n".getBytes()); } catch (IOException e) {}
-            try { socket.close(); } catch (IOException e) {}
+            try {
+                socket.getOutputStream().write("quit\n".getBytes());
+            } catch (IOException e) {
+            }
+            try {
+                socket.close();
+            } catch (IOException e) {
+            }
         }
         super.shutDown();
-        if (stdOutThread != null)
+        if (stdOutThread != null) {
             stdOutThread.interrupt();
-        if (stdInThread != null)
+        }
+        if (stdInThread != null) {
             stdInThread.interrupt();
+        }
     }
 }

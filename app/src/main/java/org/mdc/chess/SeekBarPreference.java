@@ -18,8 +18,6 @@
 
 package org.mdc.chess;
 
-import java.util.Locale;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -33,19 +31,21 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Locale;
 
 /** Lets user enter a percentage value using a seek bar. */
 public class SeekBarPreference extends Preference
-                               implements OnSeekBarChangeListener {
+        implements OnSeekBarChangeListener {
     private final static int maxValue = 1000;
     private final static int DEFAULT_VALUE = 1000;
     private int currVal = DEFAULT_VALUE;
@@ -55,9 +55,11 @@ public class SeekBarPreference extends Preference
     public SeekBarPreference(Context context) {
         super(context);
     }
+
     public SeekBarPreference(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
+
     public SeekBarPreference(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
@@ -69,10 +71,10 @@ public class SeekBarPreference extends Preference
         name.setTextAppearance(getContext(), android.R.style.TextAppearance_Large);
         name.setGravity(Gravity.LEFT);
         LinearLayout.LayoutParams lp =
-            new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                                          LinearLayout.LayoutParams.WRAP_CONTENT);
+                new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.LEFT;
-        lp.weight  = 1.0f;
+        lp.weight = 1.0f;
         name.setLayoutParams(lp);
 
         currValBox = new TextView(getContext());
@@ -81,7 +83,7 @@ public class SeekBarPreference extends Preference
         currValBox.setPadding(2, 5, 0, 0);
         currValBox.setText(valToString());
         lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                                           LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.CENTER;
         currValBox.setLayoutParams(lp);
 
@@ -95,7 +97,7 @@ public class SeekBarPreference extends Preference
         bar.setProgress(currVal);
         bar.setOnSeekBarChangeListener(this);
         lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                                           LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.RIGHT;
         bar.setLayoutParams(lp);
 
@@ -108,9 +110,9 @@ public class SeekBarPreference extends Preference
 //            summary.setTextAppearance(getContext(), android.R.style.TextAppearance_Large);
             summary.setGravity(Gravity.LEFT);
             lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                                               LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
             lp.gravity = Gravity.LEFT;
-            lp.weight  = 1.0f;
+            lp.weight = 1.0f;
             summary.setLayoutParams(lp);
         }
 
@@ -119,15 +121,18 @@ public class SeekBarPreference extends Preference
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.addView(row1);
         layout.addView(bar);
-        if (summary != null)
+        if (summary != null) {
             layout.addView(summary);
+        }
         layout.setId(android.R.id.widget_frame);
 
         currValBox.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                View content = View.inflate(SeekBarPreference.this.getContext(), R.layout.select_percentage, null);
-                final AlertDialog.Builder builder = new AlertDialog.Builder(SeekBarPreference.this.getContext());
+                View content = View.inflate(SeekBarPreference.this.getContext(),
+                        R.layout.select_percentage, null);
+                final AlertDialog.Builder builder = new AlertDialog.Builder(
+                        SeekBarPreference.this.getContext());
                 builder.setView(content);
                 String title = "";
                 String key = getKey();
@@ -137,13 +142,15 @@ public class SeekBarPreference extends Preference
                     title = getContext().getString(R.string.edit_randomization);
                 }
                 builder.setTitle(title);
-                final EditText valueView = (EditText)content.findViewById(R.id.selpercentage_number);
-                valueView.setText(currValBox.getText().toString().replaceAll("%", "").replaceAll(",", "."));
+                final EditText valueView = (EditText) content.findViewById(
+                        R.id.selpercentage_number);
+                valueView.setText(
+                        currValBox.getText().toString().replaceAll("%", "").replaceAll(",", "."));
                 final Runnable selectValue = new Runnable() {
                     public void run() {
                         try {
                             String txt = valueView.getText().toString();
-                            int value = (int)(Double.parseDouble(txt) * 10 + 0.5);
+                            int value = (int) (Double.parseDouble(txt) * 10 + 0.5);
                             if (value < 0) value = 0;
                             if (value > maxValue) value = maxValue;
                             onProgressChanged(bar, value, false);
@@ -153,7 +160,8 @@ public class SeekBarPreference extends Preference
                 };
                 valueView.setOnKeyListener(new OnKeyListener() {
                     public boolean onKey(View v, int keyCode, KeyEvent event) {
-                        if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                        if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
+                                == KeyEvent.KEYCODE_ENTER)) {
                             selectValue.run();
                             return true;
                         }
@@ -175,37 +183,43 @@ public class SeekBarPreference extends Preference
     }
 
     private final String valToString() {
-        return String.format(Locale.US, "%.1f%%", currVal*0.1);
+        return String.format(Locale.US, "%.1f%%", currVal * 0.1);
     }
 
     @Override
-    public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser) {
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (!callChangeListener(progress)) {
-            if (currVal != seekBar.getProgress())
+            if (currVal != seekBar.getProgress()) {
                 seekBar.setProgress(currVal);
+            }
             return;
         }
-        if (progress != seekBar.getProgress())
+        if (progress != seekBar.getProgress()) {
             seekBar.setProgress(progress);
+        }
         currVal = progress;
         currValBox.setText(valToString());
-        SharedPreferences.Editor editor =  getEditor();
+        SharedPreferences.Editor editor = getEditor();
         editor.putInt(getKey(), progress);
         editor.commit();
         if ((progress == 0) && showStrengthHint) {
-            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getContext());
+            SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(
+                    getContext());
             String engine = settings.getString("engine", "stockfish");
             if ("stockfish".equals(engine)) {
                 showStrengthHint = false;
-                if (getKey().equals("strength"))
+                if (getKey().equals("strength")) {
                     Toast.makeText(getContext(), R.string.strength_cuckoo_hint,
-                                   Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
+
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
     }
+
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
         notifyChanged();
@@ -221,9 +235,10 @@ public class SeekBarPreference extends Preference
 
     @Override
     protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
-        int val = restorePersistedValue ? getPersistedInt(DEFAULT_VALUE) : (Integer)defaultValue;
-        if (!restorePersistedValue)
+        int val = restorePersistedValue ? getPersistedInt(DEFAULT_VALUE) : (Integer) defaultValue;
+        if (!restorePersistedValue) {
             persistInt(val);
+        }
         currVal = val;
     }
 }

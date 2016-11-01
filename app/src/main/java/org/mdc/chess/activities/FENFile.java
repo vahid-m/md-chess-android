@@ -18,14 +18,14 @@
 
 package org.mdc.chess.activities;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import android.app.Activity;
+import android.app.ProgressDialog;
 
 import org.mdc.chess.gamelogic.Pair;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class FENFile {
     private final File fileName;
@@ -38,6 +38,60 @@ public class FENFile {
         return fileName.getAbsolutePath();
     }
 
+    /** Read all FEN strings (one per line) in a file. */
+    public final Pair<FenInfoResult, ArrayList<FenInfo>> getFenInfo(Activity activity,
+            final ProgressDialog progress) {
+        ArrayList<FenInfo> fensInFile = new ArrayList<>();
+        try {
+            int percent = -1;
+            fensInFile.clear();
+            BufferedRandomAccessFileReader f = new BufferedRandomAccessFileReader(
+                    fileName.getAbsolutePath());
+            long fileLen = f.length();
+            long filePos = 0;
+            int fenNo = 1;
+            while (true) {
+                filePos = f.getFilePointer();
+                String line = f.readLine();
+                if (line == null) {
+                    break; // EOF
+                }
+                if ((line.length() == 0) || (line.charAt(0) == '#')) {
+                    continue;
+                }
+                FenInfo fi = new FenInfo(fenNo++, line.trim());
+                fensInFile.add(fi);
+                final int newPercent = (int) (filePos * 100 / fileLen);
+                if (newPercent > percent) {
+                    percent = newPercent;
+                    if (progress != null) {
+                        activity.runOnUiThread(new Runnable() {
+                            public void run() {
+                                progress.setProgress(newPercent);
+                            }
+                        });
+                    }
+                }
+                if (Thread.currentThread().isInterrupted()) {
+                    return new Pair<>(FenInfoResult.CANCEL, null);
+                }
+            }
+            f.close();
+        } catch (IOException e) {
+        } catch (OutOfMemoryError e) {
+            fensInFile.clear();
+            fensInFile = null;
+            return new Pair<>(FenInfoResult.OUT_OF_MEMORY, null);
+        }
+        return new Pair<>(FenInfoResult.OK, fensInFile);
+    }
+
+    public enum FenInfoResult {
+        OK,
+        CANCEL,
+        OUT_OF_MEMORY;
+    }
+
     static final class FenInfo {
         int gameNo;
         String fen;
@@ -48,61 +102,10 @@ public class FENFile {
         }
 
         public String toString() {
-            StringBuilder info = new StringBuilder(128);
-            info.append(gameNo);
-            info.append(". ");
-            info.append(fen);
-            return info.toString();
+            String info = String.valueOf(gameNo) +
+                    ". " +
+                    fen;
+            return info;
         }
-    }
-
-    public static enum FenInfoResult {
-        OK,
-        CANCEL,
-        OUT_OF_MEMORY;
-    }
-
-    /** Read all FEN strings (one per line) in a file. */
-    public final Pair<FenInfoResult,ArrayList<FenInfo>> getFenInfo(Activity activity,
-                                                                   final ProgressDialog progress) {
-        ArrayList<FenInfo> fensInFile = new ArrayList<FenInfo>();
-        try {
-            int percent = -1;
-            fensInFile.clear();
-            BufferedRandomAccessFileReader f = new BufferedRandomAccessFileReader(fileName.getAbsolutePath());
-            long fileLen = f.length();
-            long filePos = 0;
-            int fenNo = 1;
-            while (true) {
-                filePos = f.getFilePointer();
-                String line = f.readLine();
-                if (line == null)
-                    break; // EOF
-                if ((line.length() == 0) || (line.charAt(0) == '#'))
-                    continue;
-                FenInfo fi = new FenInfo(fenNo++, line.trim());
-                fensInFile.add(fi);
-                final int newPercent = (int)(filePos * 100 / fileLen);
-                if (newPercent > percent) {
-                    percent =  newPercent;
-                    if (progress != null) {
-                        activity.runOnUiThread(new Runnable() {
-                            public void run() {
-                                progress.setProgress(newPercent);
-                            }
-                        });
-                    }
-                }
-                if (Thread.currentThread().isInterrupted())
-                    return new Pair<FenInfoResult,ArrayList<FenInfo>>(FenInfoResult.CANCEL, null);
-            }
-            f.close();
-        } catch (IOException e) {
-        } catch (OutOfMemoryError e) {
-            fensInFile.clear();
-            fensInFile = null;
-            return new Pair<FenInfoResult,ArrayList<FenInfo>>(FenInfoResult.OUT_OF_MEMORY, null);
-        }
-        return new Pair<FenInfoResult,ArrayList<FenInfo>>(FenInfoResult.OK, fensInFile);
     }
 }

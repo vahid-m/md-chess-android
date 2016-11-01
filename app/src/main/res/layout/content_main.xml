@@ -7,7 +7,7 @@
     android:background="@color/White"
     android:orientation="vertical">
 
-    <include layout="@layout/title"/>
+    <include layout="@layout/title" />
 
     <view
         android:id="@+id/chessboard"

@@ -43,6 +43,7 @@ public class MoveListView extends View {
     private int layoutWidth = -1;
     private TextPaint textPaint;
     private Typeface defaultTypeface;
+    private OnLinkClickListener onLinkClickListener;
 
     /**
      * Constructor.
@@ -71,8 +72,9 @@ public class MoveListView extends View {
      * Set typeface and text size. If tf is null the default typeface is used.
      */
     public void setTypeface(Typeface tf, float size) {
-        if (tf == null)
+        if (tf == null) {
             tf = defaultTypeface;
+        }
         boolean modified = false;
         if (tf != textPaint.getTypeface()) {
             textPaint.setTypeface(tf);
@@ -103,8 +105,9 @@ public class MoveListView extends View {
      * or -1 if layout has not been created yet.
      */
     public int getLineForOffset(int currPos) {
-        if (layout == null)
+        if (layout == null) {
             return -1;
+        }
         return layout.getLineForOffset(currPos);
     }
 
@@ -134,17 +137,20 @@ public class MoveListView extends View {
                 break;
         }
 
-        if (width != layoutWidth)
+        if (width != layoutWidth) {
             createLayout(width);
+        }
 
         int height = 0;
         if (layout != null) {
             height = layout.getLineCount() * getLineHeight();
             ViewParent p = getParent();
-            if (p != null)
+            if (p != null) {
                 p = p.getParent();
-            if (p instanceof MyRelativeLayout)
+            }
+            if (p instanceof MyRelativeLayout) {
                 height += -getLineHeight() + ((MyRelativeLayout) p).getNewHeight();
+            }
         }
         switch (MeasureSpec.getMode(heightMeasureSpec)) {
             case MeasureSpec.UNSPECIFIED:
@@ -171,12 +177,6 @@ public class MoveListView extends View {
         }
     }
 
-    public interface OnLinkClickListener {
-        boolean onLinkClick(int offs);
-    }
-
-    private OnLinkClickListener onLinkClickListener;
-
     public void setOnLinkClickListener(OnLinkClickListener listener) {
         onLinkClickListener = listener;
     }
@@ -192,8 +192,9 @@ public class MoveListView extends View {
             int y = (int) event.getY() - getPaddingTop() + getScrollY();
             int line = layout.getLineForVertical(y);
             int offs = layout.getOffsetForHorizontal(line, x);
-            if (onLinkClickListener.onLinkClick(offs))
+            if (onLinkClickListener.onLinkClick(offs)) {
                 return true;
+            }
         }
         return ret;
     }
@@ -202,8 +203,9 @@ public class MoveListView extends View {
      * Create a StaticLayout corresponding to the current text.
      */
     private void createLayout(int width) {
-        if (width <= 0)
+        if (width <= 0) {
             return;
+        }
         if (text == null) {
             layout = null;
             layoutWidth = -1;
@@ -212,5 +214,9 @@ public class MoveListView extends View {
                     Alignment.ALIGN_NORMAL, 1.0f, 0.0f, true);
             layoutWidth = width;
         }
+    }
+
+    public interface OnLinkClickListener {
+        boolean onLinkClick(int offs);
     }
 }

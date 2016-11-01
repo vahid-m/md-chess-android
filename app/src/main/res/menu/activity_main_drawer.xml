@@ -25,38 +25,32 @@
         <item
             android:id="@+id/nav_force_computer"
             android:icon="@drawable/ic_play_circle_filled"
-            android:title="@string/option_force_computer_move"
-            />
+            android:title="@string/option_force_computer_move" />
 
         <item
             android:id="@+id/nav_open_book"
             android:icon="@drawable/ic_book_24dp"
-            android:title="@string/select_opening_book_file"
-            />
+            android:title="@string/select_opening_book_file" />
 
         <item
             android:id="@+id/nav_theme"
             android:icon="@drawable/ic_color"
-            android:title="@string/option_color_theme"
-            />
+            android:title="@string/option_color_theme" />
 
         <item
             android:id="@+id/nav_engine"
             android:icon="@drawable/ic_build"
-            android:title="@string/option_manage_engines"
-            />
+            android:title="@string/option_manage_engines" />
 
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings"
-            android:title="@string/option_settings"
-            />
+            android:title="@string/option_settings" />
 
         <item
             android:id="@+id/nav_about"
             android:icon="@drawable/ic_about"
-            android:title="@string/option_about"
-            />
+            android:title="@string/option_about" />
 
     </group>
 

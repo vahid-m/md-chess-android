@@ -18,10 +18,10 @@
 
 package org.mdc.chess.book;
 
-import java.util.ArrayList;
-
 import org.mdc.chess.book.DroidBook.BookEntry;
 import org.mdc.chess.gamelogic.Position;
+
+import java.util.ArrayList;
 
 class NullBook implements IOpeningBook {
 

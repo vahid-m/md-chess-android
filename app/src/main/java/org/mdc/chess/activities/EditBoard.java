@@ -18,23 +18,6 @@
 
 package org.mdc.chess.activities;
 
-import java.util.ArrayList;
-
-import org.mdc.chess.ChessBoard;
-import org.mdc.chess.MaterialChess;
-import org.mdc.chess.ChessBoard.SquareDecoration;
-import org.mdc.chess.R;
-import org.mdc.chess.Util;
-import org.mdc.chess.Util.MaterialDiff;
-import org.mdc.chess.gamelogic.ChessParseError;
-import org.mdc.chess.gamelogic.Move;
-import org.mdc.chess.gamelogic.Pair;
-import org.mdc.chess.gamelogic.Piece;
-import org.mdc.chess.gamelogic.Position;
-import org.mdc.chess.gamelogic.TextIO;
-import org.mdc.chess.tb.Probe;
-import org.mdc.chess.tb.ProbeResult;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -46,8 +29,6 @@ import android.content.res.Configuration;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -65,20 +46,43 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.mdc.chess.ChessBoard;
+import org.mdc.chess.ChessBoard.SquareDecoration;
+import org.mdc.chess.MaterialChess;
+import org.mdc.chess.R;
+import org.mdc.chess.Util;
+import org.mdc.chess.Util.MaterialDiff;
+import org.mdc.chess.gamelogic.ChessParseError;
+import org.mdc.chess.gamelogic.Move;
+import org.mdc.chess.gamelogic.Pair;
+import org.mdc.chess.gamelogic.Piece;
+import org.mdc.chess.gamelogic.Position;
+import org.mdc.chess.gamelogic.TextIO;
+import org.mdc.chess.tb.Probe;
+import org.mdc.chess.tb.ProbeResult;
+
+import java.util.ArrayList;
+
 @SuppressLint("ClickableViewAccessibility")
 public class EditBoard extends AppCompatActivity {
+    static private final int RESULT_SETTINGS = 1;
+    private static final int EDIT_DIALOG = 0;
+    private static final int SIDE_DIALOG = 1;
+    private static final int CASTLE_DIALOG = 2;
+    private static final int EP_DIALOG = 3;
+    private static final int MOVCNT_DIALOG = 4;
+    static private final int RESULT_GET_FEN = 0;
+    static private final int RESULT_LOAD_FEN = 1;
+
+    //private DrawerLayout drawerLayout;
+    //private ListView mainDrawer;
     private ChessBoardEdit cb;
     private TextView status;
-
-    static private final int RESULT_SETTINGS = 1;
     private boolean egtbHints;
     private boolean autoScrollTitle;
     private TextView whiteFigText;
     private TextView blackFigText;
     private Typeface figNotation;
-
-    //private DrawerLayout drawerLayout;
-    //private ListView mainDrawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -244,13 +248,6 @@ public class EditBoard extends AppCompatActivity {
 
     }
 
-    private static final int EDIT_DIALOG = 0;
-    private static final int SIDE_DIALOG = 1;
-    private static final int CASTLE_DIALOG = 2;
-    private static final int EP_DIALOG = 3;
-    private static final int MOVCNT_DIALOG = 4;
-
-
     private boolean checkValid() {
         try {
             String fen = TextIO.toFEN(cb.pos);
@@ -262,7 +259,6 @@ public class EditBoard extends AppCompatActivity {
         }
         return false;
     }
-
 
     private void setSelection(int sq) {
         cb.setSelection(sq);
@@ -392,7 +388,6 @@ public class EditBoard extends AppCompatActivity {
             return getString(e.resourceId);
         }
     }
-
 
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -639,9 +634,6 @@ public class EditBoard extends AppCompatActivity {
         setSelection(-1);
         checkValidAndUpdateMaterialDiff();
     }
-
-    static private final int RESULT_GET_FEN = 0;
-    static private final int RESULT_LOAD_FEN = 1;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

@@ -4,8 +4,10 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.RelativeLayout;
 
-/** A RelativeLayout with the addition that child widgets can ask
- * about the new parent size during onMeasure(). */
+/**
+ * A RelativeLayout with the addition that child widgets can ask
+ * about the new parent size during onMeasure().
+ */
 public class MyRelativeLayout extends RelativeLayout {
     private int newWidth;
     private int newHeight;

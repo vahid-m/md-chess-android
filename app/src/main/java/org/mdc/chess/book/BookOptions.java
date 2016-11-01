@@ -27,7 +27,8 @@ public final class BookOptions {
     public boolean tournamentMode = false;
     public double random = 0; // Scale probabilities according to p^(exp(-random))
 
-    public BookOptions() { }
+    public BookOptions() {
+    }
 
     public BookOptions(BookOptions other) {
         filename = other.filename;
@@ -39,9 +40,10 @@ public final class BookOptions {
 
     @Override
     public boolean equals(Object o) {
-        if ((o == null) || (o.getClass() != this.getClass()))
+        if ((o == null) || (o.getClass() != this.getClass())) {
             return false;
-        BookOptions other = (BookOptions)o;
+        }
+        BookOptions other = (BookOptions) o;
 
         return ((filename.equals(other.filename)) &&
                 (maxLength == other.maxLength) &&

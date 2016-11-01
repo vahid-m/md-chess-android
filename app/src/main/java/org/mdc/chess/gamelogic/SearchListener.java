@@ -25,36 +25,6 @@ import java.util.ArrayList;
  * Used to get various search information during search.
  */
 public interface SearchListener {
-    public final static class PvInfo {
-        int depth;
-        int score;
-        int time;
-        long nodes;
-        int nps;
-        long tbHits;
-        int hash;
-        boolean isMate;
-        boolean upperBound;
-        boolean lowerBound;
-        ArrayList<Move> pv;
-        String pvStr = "";
-
-        public PvInfo(int depth, int score, int time, long nodes, int nps, long tbHits, int hash,
-                      boolean isMate, boolean upperBound, boolean lowerBound, ArrayList<Move> pv) {
-            this.depth = depth;
-            this.score = score;
-            this.time = time;
-            this.nodes = nodes;
-            this.nps = nps;
-            this.tbHits = tbHits;
-            this.hash = hash;
-            this.isMate = isMate;
-            this.upperBound = upperBound;
-            this.lowerBound = lowerBound;
-            this.pv = pv;
-        }
-    }
-
     /** Report current engine search depth. */
     public void notifyDepth(int id, int depth);
 
@@ -81,4 +51,34 @@ public interface SearchListener {
 
     /** Report engine error. */
     public void reportEngineError(String errMsg);
+
+    public final static class PvInfo {
+        int depth;
+        int score;
+        int time;
+        long nodes;
+        int nps;
+        long tbHits;
+        int hash;
+        boolean isMate;
+        boolean upperBound;
+        boolean lowerBound;
+        ArrayList<Move> pv;
+        String pvStr = "";
+
+        public PvInfo(int depth, int score, int time, long nodes, int nps, long tbHits, int hash,
+                boolean isMate, boolean upperBound, boolean lowerBound, ArrayList<Move> pv) {
+            this.depth = depth;
+            this.score = score;
+            this.time = time;
+            this.nodes = nodes;
+            this.nps = nps;
+            this.tbHits = tbHits;
+            this.hash = hash;
+            this.isMate = isMate;
+            this.upperBound = upperBound;
+            this.lowerBound = lowerBound;
+            this.pv = pv;
+        }
+    }
 }

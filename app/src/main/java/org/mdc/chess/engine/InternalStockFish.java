@@ -18,6 +18,9 @@
 
 package org.mdc.chess.engine;
 
+import android.content.Context;
+import android.os.Environment;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -29,9 +32,6 @@ import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
-
-import android.content.Context;
-import android.os.Environment;
 
 /** Stockfish engine running as process, started from assets resource. */
 public class InternalStockFish extends ExternalEngine {
@@ -49,18 +49,20 @@ public class InternalStockFish extends ExternalEngine {
     @Override
     protected boolean configurableOption(String name) {
         name = name.toLowerCase(Locale.US);
-        if (!super.configurableOption(name))
+        if (!super.configurableOption(name)) {
             return false;
+        }
         if (name.equals("skill level") || name.equals("write debug log") ||
-            name.equals("write search log"))
+                name.equals("write search log")) {
             return false;
+        }
         return true;
     }
 
     /** @inheritDoc */
     @Override
     public final void setStrength(int strength) {
-        setOption("Skill Level", strength/50);
+        setOption("Skill Level", strength / 50);
     }
 
     private final long readCheckSum(File f) {
@@ -72,7 +74,12 @@ public class InternalStockFish extends ExternalEngine {
         } catch (IOException e) {
             return 0;
         } finally {
-            if (is != null) try { is.close(); } catch (IOException ex) {}
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ex) {
+                }
+            }
         }
     }
 
@@ -84,7 +91,12 @@ public class InternalStockFish extends ExternalEngine {
             dos.writeLong(checkSum);
         } catch (IOException e) {
         } finally {
-            if (dos != null) try { dos.close(); } catch (IOException ex) {}
+            if (dos != null) {
+                try {
+                    dos.close();
+                } catch (IOException ex) {
+                }
+            }
         }
     }
 
@@ -96,14 +108,15 @@ public class InternalStockFish extends ExternalEngine {
             byte[] buf = new byte[8192];
             while (true) {
                 int len = is.read(buf);
-                if (len <= 0)
+                if (len <= 0) {
                     break;
+                }
                 md.update(buf, 0, len);
             }
             byte[] digest = md.digest(new byte[]{0});
             long ret = 0;
             for (int i = 0; i < 8; i++) {
-                ret ^= ((long)digest[i]) << (i * 8);
+                ret ^= ((long) digest[i]) << (i * 8);
             }
             return ret;
         } catch (IOException e) {
@@ -111,7 +124,12 @@ public class InternalStockFish extends ExternalEngine {
         } catch (NoSuchAlgorithmException e) {
             return -1;
         } finally {
-            if (is != null) try { is.close(); } catch (IOException ex) {}
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ex) {
+                }
+            }
         }
     }
 
@@ -124,11 +142,13 @@ public class InternalStockFish extends ExternalEngine {
         // on the assumption that it will reduce memory wear.
         long oldCSum = readCheckSum(new File(internalSFPath()));
         long newCSum = computeAssetsCheckSum(sfExe);
-        if (oldCSum == newCSum)
+        if (oldCSum == newCSum) {
             return to.getAbsolutePath();
+        }
 
-        if (to.exists())
+        if (to.exists()) {
             to.delete();
+        }
         to.createNewFile();
 
         InputStream is = context.getAssets().open(sfExe);
@@ -138,13 +158,24 @@ public class InternalStockFish extends ExternalEngine {
             byte[] buf = new byte[8192];
             while (true) {
                 int len = is.read(buf);
-                if (len <= 0)
+                if (len <= 0) {
                     break;
+                }
                 os.write(buf, 0, len);
             }
         } finally {
-            if (is != null) try { is.close(); } catch (IOException ex) {}
-            if (os != null) try { os.close(); } catch (IOException ex) {}
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ex) {
+                }
+            }
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException ex) {
+                }
+            }
         }
 
         writeCheckSum(new File(internalSFPath()), newCSum);

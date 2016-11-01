@@ -13,12 +13,6 @@
  */
 package com.kalab.chess.enginesupport;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -30,11 +24,17 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class ChessEngineResolver {
 
     private static final String ENGINE_PROVIDER_MARKER = "intent.chess.provider.ENGINE";
     private static final String TAG = ChessEngineResolver.class.getSimpleName();
-    private Context context;
+    private final Context context;
     private String target;
 
     public ChessEngineResolver(Context context) {
@@ -51,7 +51,7 @@ public class ChessEngineResolver {
     }
 
     public List<ChessEngine> resolveEngines() {
-        List<ChessEngine> result = new ArrayList<ChessEngine>();
+        List<ChessEngine> result = new ArrayList<>();
         final Intent intent = new Intent(ENGINE_PROVIDER_MARKER);
         List<ResolveInfo> list = context.getPackageManager()
                 .queryIntentActivities(intent, PackageManager.GET_META_DATA);
@@ -96,7 +96,7 @@ public class ChessEngineResolver {
         try {
             int eventType = parser.getEventType();
             while (eventType != XmlResourceParser.END_DOCUMENT) {
-                String name = null;
+                String name;
                 try {
                     if (eventType == XmlResourceParser.START_TAG) {
                         name = parser.getName();
@@ -126,15 +126,17 @@ public class ChessEngineResolver {
         }
     }
 
-    /**
-     * Don't use this in production - this method is only for testing. Set the
-     * cpu target.
-     * 
-     * @param target
-     *            the cpu target to set
-     */
-    public void setTarget(String target) {
-        this.target = target;
-        sanitizeArmV6Target();
-    }
+// --Commented out by Inspection START (31/10/2016 10:45 PM):
+//    /**
+//     * Don't use this in production - this method is only for testing. Set the
+//     * cpu target.
+//     *
+//     * @param target
+//     *            the cpu target to set
+//     */
+//    public void setTarget(String target) {
+//        this.target = target;
+//        sanitizeArmV6Target();
+//    }
+// --Commented out by Inspection STOP (31/10/2016 10:45 PM)
 }

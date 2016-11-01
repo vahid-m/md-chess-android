@@ -18,20 +18,6 @@
 
 package org.mdc.chess.activities;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
-
-import org.mdc.chess.ChessBoardPlay;
-import org.mdc.chess.ColorTheme;
-import org.mdc.chess.Util;
-import org.mdc.chess.activities.FENFile.FenInfo;
-import org.mdc.chess.activities.FENFile.FenInfoResult;
-import org.mdc.chess.gamelogic.ChessParseError;
-import org.mdc.chess.gamelogic.Pair;
-import org.mdc.chess.gamelogic.Position;
-import org.mdc.chess.gamelogic.TextIO;
-
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -49,18 +35,31 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemLongClickListener;
 
+import org.mdc.chess.ChessBoardPlay;
+import org.mdc.chess.ColorTheme;
 import org.mdc.chess.R;
+import org.mdc.chess.Util;
+import org.mdc.chess.activities.FENFile.FenInfo;
+import org.mdc.chess.activities.FENFile.FenInfoResult;
+import org.mdc.chess.gamelogic.ChessParseError;
+import org.mdc.chess.gamelogic.Pair;
+import org.mdc.chess.gamelogic.Position;
+import org.mdc.chess.gamelogic.TextIO;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 
 public class LoadFEN extends ListActivity {
-    private static ArrayList<FenInfo> fensInFile = new ArrayList<FenInfo>();
+    private static ArrayList<FenInfo> fensInFile = new ArrayList<>();
     private static boolean cacheValid = false;
     private FENFile fenFile;
     private ProgressDialog progress;
@@ -77,7 +76,6 @@ public class LoadFEN extends ListActivity {
 
     private ChessBoardPlay cb;
     private Button okButton;
-    private Button cancelButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,65 +98,72 @@ public class LoadFEN extends ListActivity {
         Intent i = getIntent();
         String action = i.getAction();
         String fileName = i.getStringExtra("org.petero.MaterialChess.pathname");
-        if (action.equals("org.petero.MaterialChess.loadFen")) {
-            fenFile = new FENFile(fileName);
-            progressLatch = new CountDownLatch(1);
-            showProgressDialog();
-            final LoadFEN lfen = this;
-            workThread = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        progressLatch.await();
-                    } catch (InterruptedException e) {
-                        setResult(RESULT_CANCELED);
-                        finish();
-                        return;
-                    }
-                    if (!readFile())
-                        return;
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            lfen.showList();
-                        }
-                    });
-                }
-            });
-            workThread.start();
-        } else if (action.equals("org.petero.MaterialChess.loadNextFen") ||
-                   action.equals("org.petero.MaterialChess.loadPrevFen")) {
-            fenFile = new FENFile(fileName);
-            boolean next = action.equals("org.petero.MaterialChess.loadNextFen");
-            final int loadItem = defaultItem + (next ? 1 : -1);
-            if (loadItem < 0) {
-                Toast.makeText(getApplicationContext(), R.string.no_prev_fen,
-                               Toast.LENGTH_SHORT).show();
-                setResult(RESULT_CANCELED);
-                finish();
-            } else {
+        switch (action) {
+            case "org.petero.MaterialChess.loadFen":
+                fenFile = new FENFile(fileName);
+                progressLatch = new CountDownLatch(1);
+                showProgressDialog();
+                final LoadFEN lfen = this;
                 workThread = new Thread(new Runnable() {
                     public void run() {
-                        if (!readFile())
+                        try {
+                            progressLatch.await();
+                        } catch (InterruptedException e) {
+                            setResult(RESULT_CANCELED);
+                            finish();
                             return;
+                        }
+                        if (!readFile()) {
+                            return;
+                        }
                         runOnUiThread(new Runnable() {
                             public void run() {
-                                if (loadItem >= fensInFile.size()) {
-                                    Toast.makeText(getApplicationContext(), R.string.no_next_fen,
-                                                   Toast.LENGTH_SHORT).show();
-                                    setResult(RESULT_CANCELED);
-                                    finish();
-                                } else {
-                                    defaultItem = loadItem;
-                                    sendBackResult(fensInFile.get(loadItem));
-                                }
+                                lfen.showList();
                             }
                         });
                     }
                 });
                 workThread.start();
-            }
-        } else { // Unsupported action
-            setResult(RESULT_CANCELED);
-            finish();
+                break;
+            case "org.petero.MaterialChess.loadNextFen":
+            case "org.petero.MaterialChess.loadPrevFen":
+                fenFile = new FENFile(fileName);
+                boolean next = action.equals("org.petero.MaterialChess.loadNextFen");
+                final int loadItem = defaultItem + (next ? 1 : -1);
+                if (loadItem < 0) {
+                    Toast.makeText(getApplicationContext(), R.string.no_prev_fen,
+                            Toast.LENGTH_SHORT).show();
+                    setResult(RESULT_CANCELED);
+                    finish();
+                } else {
+                    workThread = new Thread(new Runnable() {
+                        public void run() {
+                            if (!readFile()) {
+                                return;
+                            }
+                            runOnUiThread(new Runnable() {
+                                public void run() {
+                                    if (loadItem >= fensInFile.size()) {
+                                        Toast.makeText(getApplicationContext(),
+                                                R.string.no_next_fen,
+                                                Toast.LENGTH_SHORT).show();
+                                        setResult(RESULT_CANCELED);
+                                        finish();
+                                    } else {
+                                        defaultItem = loadItem;
+                                        sendBackResult(fensInFile.get(loadItem));
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    workThread.start();
+                }
+                break;
+            default:  // Unsupported action
+                setResult(RESULT_CANCELED);
+                finish();
+                break;
         }
     }
 
@@ -176,7 +181,7 @@ public class LoadFEN extends ListActivity {
         editor.putInt("defaultItem", defaultItem);
         editor.putString("lastFenFileName", lastFileName);
         editor.putLong("lastFenModTime", lastModTime);
-        editor.commit();
+        editor.apply();
         super.onPause();
     }
 
@@ -198,15 +203,16 @@ public class LoadFEN extends ListActivity {
         removeProgressDialog();
         setContentView(R.layout.load_fen);
 
-        cb = (ChessBoardPlay)findViewById(R.id.loadfen_chessboard);
-        okButton = (Button)findViewById(R.id.loadfen_ok);
-        cancelButton = (Button)findViewById(R.id.loadfen_cancel);
+        cb = (ChessBoardPlay) findViewById(R.id.loadfen_chessboard);
+        okButton = (Button) findViewById(R.id.loadfen_ok);
+        Button cancelButton = (Button) findViewById(R.id.loadfen_cancel);
 
         okButton.setEnabled(false);
         okButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                if (selectedFi != null)
+                if (selectedFi != null) {
                     sendBackResult(selectedFi);
+                }
             }
         });
         cancelButton.setOnClickListener(new OnClickListener() {
@@ -236,8 +242,9 @@ public class LoadFEN extends ListActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
                 selectedFi = aa.getItem(pos);
-                if (selectedFi == null)
+                if (selectedFi == null) {
                     return;
+                }
                 defaultItem = pos;
                 Position chessPos;
                 try {
@@ -255,8 +262,9 @@ public class LoadFEN extends ListActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int pos, long id) {
                 selectedFi = aa.getItem(pos);
-                if (selectedFi == null)
+                if (selectedFi == null) {
                     return false;
+                }
                 defaultItem = pos;
                 Position chessPos;
                 try {
@@ -264,8 +272,9 @@ public class LoadFEN extends ListActivity {
                 } catch (ChessParseError e2) {
                     chessPos = e2.pos;
                 }
-                if (chessPos != null)
+                if (chessPos != null) {
                     sendBackResult(selectedFi);
+                }
                 return true;
             }
         });
@@ -283,29 +292,6 @@ public class LoadFEN extends ListActivity {
         }
     }
 
-    public static class ProgressFragment extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            LoadFEN a = (LoadFEN)getActivity();
-            ProgressDialog progress = new ProgressDialog(a);
-            progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progress.setTitle(R.string.reading_fen_file);
-            a.progress = progress;
-            a.progressLatch.countDown();
-            return progress;
-        }
-        @Override
-        public void onCancel(DialogInterface dialog) {
-            super.onCancel(dialog);
-            Activity a = getActivity();
-            if (a instanceof LoadFEN) {
-                Thread thr = ((LoadFEN)a).workThread;
-                if (thr != null)
-                    thr.interrupt();
-            }
-        }
-    }
-
     private void showProgressDialog() {
         ProgressFragment f = new ProgressFragment();
         f.show(getFragmentManager(), "progress");
@@ -313,26 +299,29 @@ public class LoadFEN extends ListActivity {
 
     private void removeProgressDialog() {
         Fragment f = getFragmentManager().findFragmentByTag("progress");
-        if (f instanceof DialogFragment)
-            ((DialogFragment)f).dismiss();
+        if (f instanceof DialogFragment) {
+            ((DialogFragment) f).dismiss();
+        }
     }
 
     private final boolean readFile() {
         String fileName = fenFile.getName();
-        if (!fileName.equals(lastFileName))
+        if (!fileName.equals(lastFileName)) {
             defaultItem = 0;
+        }
         long modTime = new File(fileName).lastModified();
-        if (cacheValid && (modTime == lastModTime) && fileName.equals(lastFileName))
+        if (cacheValid && (modTime == lastModTime) && fileName.equals(lastFileName)) {
             return true;
+        }
         fenFile = new FENFile(fileName);
         Pair<FenInfoResult, ArrayList<FenInfo>> p = fenFile.getFenInfo(this, progress);
         if (p.first != FenInfoResult.OK) {
-            fensInFile = new ArrayList<FenInfo>();
+            fensInFile = new ArrayList<>();
             if (p.first == FenInfoResult.OUT_OF_MEMORY) {
                 runOnUiThread(new Runnable() {
                     public void run() {
                         Toast.makeText(getApplicationContext(), R.string.file_too_large,
-                                       Toast.LENGTH_SHORT).show();
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -355,6 +344,31 @@ public class LoadFEN extends ListActivity {
         } else {
             setResult(RESULT_CANCELED);
             finish();
+        }
+    }
+
+    public static class ProgressFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            LoadFEN a = (LoadFEN) getActivity();
+            ProgressDialog progress = new ProgressDialog(a);
+            progress.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progress.setTitle(R.string.reading_fen_file);
+            a.progress = progress;
+            a.progressLatch.countDown();
+            return progress;
+        }
+
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            super.onCancel(dialog);
+            Activity a = getActivity();
+            if (a instanceof LoadFEN) {
+                Thread thr = ((LoadFEN) a).workThread;
+                if (thr != null) {
+                    thr.interrupt();
+                }
+            }
         }
     }
 }

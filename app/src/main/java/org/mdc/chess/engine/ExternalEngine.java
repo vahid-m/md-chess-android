@@ -18,6 +18,11 @@
 
 package org.mdc.chess.engine;
 
+import android.content.Context;
+
+import org.mdc.chess.EngineOptions;
+import org.mdc.chess.R;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,17 +32,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.channels.FileChannel;
 
-import org.mdc.chess.EngineOptions;
-import android.content.Context;
-
-import org.mdc.chess.R;
-
 /** Engine running as a process started from an external resource. */
 public class ExternalEngine extends UCIEngineBase {
     protected final Context context;
-
-    private File engineFileName;
     private final Report report;
+    private File engineFileName;
     private Process engineProc;
     private Thread startupThread;
     private Thread exitThread;
@@ -46,6 +45,10 @@ public class ExternalEngine extends UCIEngineBase {
     private LocalPipe inLines;
     private boolean startedOk;
     private boolean isRunning;
+    private int hashMB = -1;
+    private String gaviotaTbPath = "";
+    private String syzygyPath = "";
+    private boolean optionsInitialized = false;
 
     public ExternalEngine(Context context, String engine, Report report) {
         this.context = context;
@@ -59,6 +62,21 @@ public class ExternalEngine extends UCIEngineBase {
         inLines = new LocalPipe();
         startedOk = false;
         isRunning = false;
+    }
+
+    /** Reduce too large hash sizes. */
+    private final static int getHashMB(EngineOptions engineOptions) {
+        int hashMB = engineOptions.hashMB;
+        if (hashMB > 16 && !engineOptions.unSafeHash) {
+            int maxMem = (int) (Runtime.getRuntime().maxMemory() / (1024 * 1024));
+            if (maxMem < 16) {
+                maxMem = 16;
+            }
+            if (hashMB > maxMem) {
+                hashMB = maxMem;
+            }
+        }
+        return hashMB;
     }
 
     protected String internalSFPath() {
@@ -88,8 +106,9 @@ public class ExternalEngine extends UCIEngineBase {
                     } catch (InterruptedException e) {
                         return;
                     }
-                    if (startedOk && isRunning && !isUCI)
+                    if (startedOk && isRunning && !isUCI) {
                         report.reportError(context.getString(R.string.uci_protocol_error));
+                    }
                 }
             });
             startupThread.start();
@@ -99,12 +118,13 @@ public class ExternalEngine extends UCIEngineBase {
                 public void run() {
                     try {
                         Process ep = engineProc;
-                        if (ep != null)
+                        if (ep != null) {
                             ep.waitFor();
+                        }
                         isRunning = false;
-                        if (!startedOk)
+                        if (!startedOk) {
                             report.reportError(context.getString(R.string.failed_to_start_engine));
-                        else {
+                        } else {
                             report.reportError(context.getString(R.string.engine_terminated));
                         }
                     } catch (InterruptedException e) {
@@ -118,8 +138,9 @@ public class ExternalEngine extends UCIEngineBase {
                 @Override
                 public void run() {
                     Process ep = engineProc;
-                    if (ep == null)
+                    if (ep == null) {
                         return;
+                    }
                     InputStream is = ep.getInputStream();
                     InputStreamReader isr = new InputStreamReader(is);
                     BufferedReader br = new BufferedReader(isr, 8192);
@@ -127,8 +148,9 @@ public class ExternalEngine extends UCIEngineBase {
                     try {
                         boolean first = true;
                         while ((line = br.readLine()) != null) {
-                            if ((ep == null) || Thread.currentThread().isInterrupted())
+                            if ((ep == null) || Thread.currentThread().isInterrupted()) {
                                 return;
+                            }
                             synchronized (inLines) {
                                 inLines.addLine(line);
                                 if (first) {
@@ -152,12 +174,14 @@ public class ExternalEngine extends UCIEngineBase {
                     byte[] buffer = new byte[128];
                     while (true) {
                         Process ep = engineProc;
-                        if ((ep == null) || Thread.currentThread().isInterrupted())
+                        if ((ep == null) || Thread.currentThread().isInterrupted()) {
                             return;
+                        }
                         try {
                             int len = ep.getErrorStream().read(buffer, 0, 1);
-                            if (len < 0)
+                            if (len < 0) {
                                 break;
+                            }
                         } catch (IOException e) {
                             return;
                         }
@@ -186,21 +210,18 @@ public class ExternalEngine extends UCIEngineBase {
         try {
             exePath = new File(exePath).getCanonicalPath();
             File[] files = exeDir.listFiles();
-            if (files == null)
+            if (files == null) {
                 return;
+            }
             for (File f : files) {
-                if (!f.getCanonicalPath().equals(exePath))
+                if (!f.getCanonicalPath().equals(exePath)) {
                     f.delete();
+                }
             }
             new File(context.getFilesDir(), "engine.exe").delete();
         } catch (IOException e) {
         }
     }
-
-    private int hashMB = -1;
-    private String gaviotaTbPath = "";
-    private String syzygyPath = "";
-    private boolean optionsInitialized = false;
 
     /** @inheritDoc */
     @Override
@@ -220,30 +241,22 @@ public class ExternalEngine extends UCIEngineBase {
         return new File(engineFileName.getAbsolutePath() + ".ini");
     }
 
-    /** Reduce too large hash sizes. */
-    private final static int getHashMB(EngineOptions engineOptions) {
-        int hashMB = engineOptions.hashMB;
-        if (hashMB > 16 && !engineOptions.unSafeHash) {
-            int maxMem = (int)(Runtime.getRuntime().maxMemory() / (1024*1024));
-            if (maxMem < 16)
-                maxMem = 16;
-            if (hashMB > maxMem)
-                hashMB = maxMem;
-        }
-        return hashMB;
-    }
-
     /** @inheritDoc */
     @Override
     public boolean optionsOk(EngineOptions engineOptions) {
-        if (!optionsInitialized)
+        if (!optionsInitialized) {
             return true;
-        if (hashMB != getHashMB(engineOptions))
+        }
+        if (hashMB != getHashMB(engineOptions)) {
             return false;
-        if (hasOption("gaviotatbpath") && !gaviotaTbPath.equals(engineOptions.getEngineGtbPath(false)))
+        }
+        if (hasOption("gaviotatbpath") && !gaviotaTbPath.equals(
+                engineOptions.getEngineGtbPath(false))) {
             return false;
-        if (hasOption("syzygypath") && !syzygyPath.equals(engineOptions.getEngineRtbPath(false)))
+        }
+        if (hasOption("syzygypath") && !syzygyPath.equals(engineOptions.getEngineRtbPath(false))) {
             return false;
+        }
         return true;
     }
 
@@ -256,8 +269,9 @@ public class ExternalEngine extends UCIEngineBase {
     @Override
     public String readLineFromEngine(int timeoutMillis) {
         String ret = inLines.readLine(timeoutMillis);
-        if (ret == null)
+        if (ret == null) {
             return null;
+        }
         if (ret.length() > 0) {
 //            System.out.printf("Engine -> GUI: %s\n", ret);
         }
@@ -282,27 +296,35 @@ public class ExternalEngine extends UCIEngineBase {
     /** @inheritDoc */
     @Override
     public void shutDown() {
-        if (startupThread != null)
+        if (startupThread != null) {
             startupThread.interrupt();
-        if (exitThread != null)
+        }
+        if (exitThread != null) {
             exitThread.interrupt();
+        }
         super.shutDown();
-        if (engineProc != null)
+        if (engineProc != null) {
             engineProc.destroy();
+        }
         engineProc = null;
-        if (stdInThread != null)
+        if (stdInThread != null) {
             stdInThread.interrupt();
-        if (stdErrThread != null)
+        }
+        if (stdErrThread != null) {
             stdErrThread.interrupt();
+        }
     }
 
     protected String copyFile(File from, File exeDir) throws IOException {
         File to = new File(exeDir, "engine.exe");
         new File(internalSFPath()).delete();
-        if (to.exists() && (from.length() == to.length()) && (from.lastModified() == to.lastModified()))
+        if (to.exists() && (from.length() == to.length()) && (from.lastModified()
+                == to.lastModified())) {
             return to.getAbsolutePath();
-        if (to.exists())
+        }
+        if (to.exists()) {
             to.delete();
+        }
         to.createNewFile();
         FileInputStream fis = null;
         FileOutputStream fos = null;
@@ -312,11 +334,22 @@ public class ExternalEngine extends UCIEngineBase {
             fos = new FileOutputStream(to);
             FileChannel outFC = fos.getChannel();
             long cnt = outFC.transferFrom(inFC, 0, inFC.size());
-            if (cnt < inFC.size())
+            if (cnt < inFC.size()) {
                 throw new IOException("File copy failed");
+            }
         } finally {
-            if (fis != null) { try { fis.close(); } catch (IOException ex) {} }
-            if (fos != null) { try { fos.close(); } catch (IOException ex) {} }
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException ex) {
+                }
+            }
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException ex) {
+                }
+            }
             to.setLastModified(from.lastModified());
         }
         return to.getAbsolutePath();

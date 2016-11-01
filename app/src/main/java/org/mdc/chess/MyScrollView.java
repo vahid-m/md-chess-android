@@ -35,9 +35,10 @@ public class MyScrollView extends ScrollView {
         int width = getMeasuredWidth();
         int height = getMeasuredHeight();
         if (getParent() instanceof MyRelativeLayout) {
-            int parentHeight = ((MyRelativeLayout)getParent()).getNewHeight();
-            if (parentHeight > 0)
+            int parentHeight = ((MyRelativeLayout) getParent()).getNewHeight();
+            if (parentHeight > 0) {
                 height = Math.min(height, parentHeight * 3 / 4);
+            }
         }
         setMeasuredDimension(width, height);
     }

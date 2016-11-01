@@ -48,7 +48,10 @@ public class PgnToken {
 
     /** PGN parser visitor interface. */
     public interface PgnTokenReceiver {
-        /** If this method returns false, the object needs a full re-initialization, using clear() and processToken(). */
+        /**
+         * If this method returns false, the object needs a full re-initialization, using clear()
+         * and processToken().
+         */
         public boolean isUpToDate();
 
         /** Clear object state. */
