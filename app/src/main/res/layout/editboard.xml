@@ -29,21 +29,31 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
+
         <Button
             android:id="@+id/eb_cancel"
-            style="@style/AppTheme.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/standard_padding"
             android:layout_marginStart="@dimen/standard_padding"
             android:layout_weight="1"
-            android:text="@string/cancel" />
+            android:background="@drawable/btn_primary_background"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="@string/cancel"
+            android:textColor="@color/White" />
 
         <Button
             android:id="@+id/eb_ok"
-            style="@style/AppTheme.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/standard_padding"
             android:layout_marginStart="@dimen/standard_padding"
             android:layout_weight="1"
-            android:text="@android:string/ok" />
+            android:background="@drawable/btn_primary_background"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="@android:string/ok"
+            android:textColor="@color/White" />
+
     </LinearLayout>
 </LinearLayout>
 

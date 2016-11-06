@@ -19,6 +19,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
 
+        debug {
+            minifyEnabled true
+            shrinkResources true
+
+        }
+
 
     }
 
@@ -27,7 +33,7 @@ android {
         jni.srcDirs = [] //disable automatic ndk-build call
     }
 
-    splits {
+    /*splits {
         density {
             enable true
             reset()
@@ -38,7 +44,7 @@ android {
             reset()
             include "x86", "mips", "arm64-v8a", "armeabi", "mips64", "x86_64"
         }
-    }
+    }*/
 }
 
 repositories {
@@ -50,4 +56,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.0.0'
     compile 'com.github.amlcurran.showcaseview:library:5.0.0'
     compile 'com.android.support:design:25.0.0'
+    compile 'blue.aodev:material-values:1.1.0'
 }

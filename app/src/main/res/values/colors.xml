@@ -5,11 +5,11 @@
     <color name="default_disabled">#aaa</color><!-- android.R.color.darker_gray -->
     <color name="White">#FFFFFF</color>
 
-    <color name="colorPrimary">#607D8B</color>
-    <color name="colorPrimaryDark">#455A64</color>
-    <color name="colorPrimaryLight">#CFD8DC</color>
+    <color name="colorPrimary">@color/material_color_blue_grey_500</color>
+    <color name="colorPrimaryDark">@color/material_color_blue_grey_600</color>
+    <color name="colorPrimaryLight">@color/material_color_blue_grey_400</color>
     <color name="colorIconsText">#FFFFFF</color>
-    <color name="colorAccent">#FFC107</color>
+    <color name="colorAccent">@color/material_color_blue_500</color>
     <color name="colorPrimaryText">#212121</color>
     <color name="colorSecondaryText">#757575</color>
     <color name="colorDivider">#BDBDBD</color>
@@ -28,39 +28,23 @@
     <item name="darkred" type="color">#ffd32f2f</item>
     <item name="disabled" type="color">#757575</item>
 
-    <!--
-    final static int ARROW_0 = 7;
-    final static int ARROW_1 = 8;
-    final static int ARROW_2 = 9;
-    final static int ARROW_3 = 10;
-    final static int ARROW_4 = 11;
-    final static int ARROW_5 = 12;
-    final static int SQUARE_LABEL = 13;
-    final static int DECORATION = 14;
-    final static int PGN_COMMENT = 15;
-    public final static int FONT_FOREGROUND = 16;
-    public final static int GENERAL_BACKGROUND = 17;
-     -->
-
-    <!--
-    <color name="original_dark_square">#455A64</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    <color name="original_selected_square">#263238</color>
-    <color name="original_cursor_square">#263238</color>
-    <color name="original_dark_piece">#263238</color>
-    <color name="original_bright_piece">#CFD8DC</color>
-    <color name="original_current_move">#90A4AE</color>
-    <color name="original_arrow_0">#ECEFF1</color>
-    <color name="original_arrow_0">#ECEFF1</color>
-    <color name="original_arrow_0">#ECEFF1</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    <color name="original_bright_square">#ECEFF1</color>
-    -->
+    <color name="original_dark_square">@color/material_color_blue_grey_800</color>
+    <color name="original_bright_square">@color/material_color_blue_grey_100</color>
+    <color name="original_selected_square">@color/material_color_blue_accent_700</color>
+    <color name="original_cursor_square">@color/material_color_blue_accent_200</color>
+    <color name="original_dark_piece">@color/material_color_black</color>
+    <color name="original_bright_piece">@color/material_color_white</color>
+    <color name="original_current_move">@color/material_color_blue_grey_600</color>
+    <color name="original_arrow_0">@color/material_color_indigo_accent_700</color>
+    <color name="original_arrow_1">@color/material_color_blue_accent_700</color>
+    <color name="original_arrow_2">@color/material_color_light_blue_accent_700</color>
+    <color name="original_arrow_3">@color/material_color_cyan_accent_700</color>
+    <color name="original_arrow_4">@color/material_color_teal_accent_700</color>
+    <color name="original_arrow_5">@color/material_color_green_accent_700</color>
+    <color name="original_square_label">@color/material_color_orange_accent_700</color>
+    <color name="original_decoration">@color/material_color_blue_grey_200</color>
+    <color name="original_pgn_comment">@color/material_color_blue_grey_400</color>
+    <color name="original_font_foreground">@color/material_color_blue_grey_200</color>
+    <color name="original_general_background">@color/material_color_blue_grey_600</color>
 
 </resources>
