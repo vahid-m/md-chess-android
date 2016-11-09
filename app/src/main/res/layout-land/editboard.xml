@@ -17,6 +17,8 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
         android:orientation="vertical">
 
         <include layout="@layout/title" />
@@ -26,6 +28,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
+            android:gravity="center_horizontal"
             android:includeFontPadding="true"
             android:text=""
             android:textSize="12sp"
@@ -34,7 +37,7 @@
         <Button
             android:id="@+id/eb_cancel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/button_height"
             android:layout_margin="@dimen/standard_padding"
             android:background="@drawable/btn_primary_background"
             android:backgroundTint="@color/colorPrimary"
@@ -44,7 +47,7 @@
         <Button
             android:id="@+id/eb_ok"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/button_height"
             android:layout_margin="@dimen/standard_padding"
             android:background="@drawable/btn_primary_background"
             android:backgroundTint="@color/colorPrimary"

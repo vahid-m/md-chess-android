@@ -31,7 +31,7 @@
             android:layout_weight="1"
             android:gravity="center_horizontal"
             android:includeFontPadding="true"
-            android:textSize="14sp"
+            android:textSize="18sp"
             android:typeface="monospace" />
 
     </LinearLayout>
@@ -74,7 +74,7 @@
                 android:fontFamily="monospace"
                 android:includeFontPadding="true"
                 android:tag="thinking"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:typeface="monospace" />
         </view>
     </view>

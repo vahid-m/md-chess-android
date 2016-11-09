@@ -2,7 +2,8 @@
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="10dp">
+    android:layout_margin="@dimen/activity_horizontal_margin"
+    android:padding="@dimen/standard_padding">
 
     <TableRow
         android:layout_width="fill_parent"
@@ -11,7 +12,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingRight="10dp"
+            android:paddingEnd="@dimen/standard_padding"
+            android:paddingStart="@dimen/standard_padding"
             android:text="@string/halfmove" />
 
         <EditText
@@ -29,7 +31,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingRight="10dp"
+            android:paddingEnd="@dimen/standard_padding"
+            android:paddingStart="@dimen/standard_padding"
             android:text="@string/fullmove" />
 
         <EditText

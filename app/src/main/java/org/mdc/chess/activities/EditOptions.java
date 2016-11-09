@@ -61,8 +61,8 @@ public class EditOptions extends Activity {
         Util.setFullScreenMode(this, settings);
 
         Intent i = getIntent();
-        uciOpts = (UCIOptions) i.getSerializableExtra("org.petero.MaterialChess.ucioptions");
-        engineName = (String) i.getSerializableExtra("org.petero.MaterialChess.enginename");
+        uciOpts = (UCIOptions) i.getSerializableExtra("org.mdc.chess.ucioptions");
+        engineName = (String) i.getSerializableExtra("org.mdc.chess.enginename");
         if (uciOpts != null) {
             initUI();
         } else {
@@ -97,6 +97,7 @@ public class EditOptions extends Activity {
 
         if (uciOpts != null) {
             LinearLayout content = (LinearLayout) view.findViewById(R.id.eo_content);
+            content.setBackgroundColor(getResources().getColor(R.color.material_color_white));
             for (String name : uciOpts.getOptionNames()) {
                 UCIOptions.OptionBase o = uciOpts.getOption(name);
                 if (!o.visible) {
@@ -105,6 +106,7 @@ public class EditOptions extends Activity {
                 switch (o.type) {
                     case CHECK: {
                         View v = View.inflate(this, R.layout.uci_option_check, null);
+
                         CheckBox checkBox = (CheckBox) v.findViewById(R.id.eo_value);
                         checkBox.setText(o.name);
                         final UCIOptions.CheckOption co = (UCIOptions.CheckOption) o;
@@ -322,7 +324,7 @@ public class EditOptions extends Activity {
                 }
             }
             Intent i = new Intent();
-            i.putExtra("org.petero.MaterialChess.ucioptions", uciMap);
+            i.putExtra("org.mdc.chess.ucioptions", uciMap);
             setResult(RESULT_OK, i);
             finish();
         } else {

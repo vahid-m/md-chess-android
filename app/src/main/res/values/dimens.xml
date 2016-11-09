@@ -32,4 +32,6 @@
     <dimen name="standard_padding_1">64dp</dimen>
     <dimen name="standard_padding_2">16dp</dimen>
     <dimen name="standard_radius">2dp</dimen>
+
+    <dimen name="normal_text_size">14sp</dimen>
 </resources>

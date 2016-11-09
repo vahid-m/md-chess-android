@@ -97,9 +97,9 @@ public class LoadFEN extends ListActivity {
 
         Intent i = getIntent();
         String action = i.getAction();
-        String fileName = i.getStringExtra("org.petero.MaterialChess.pathname");
+        String fileName = i.getStringExtra("org.mdc.chess.ucioptions.pathname");
         switch (action) {
-            case "org.petero.MaterialChess.loadFen":
+            case "org.mdc.chess.ucioptions.loadFen":
                 fenFile = new FENFile(fileName);
                 progressLatch = new CountDownLatch(1);
                 showProgressDialog();
@@ -125,10 +125,10 @@ public class LoadFEN extends ListActivity {
                 });
                 workThread.start();
                 break;
-            case "org.petero.MaterialChess.loadNextFen":
-            case "org.petero.MaterialChess.loadPrevFen":
+            case "org.mdc.chess.ucioptions.loadNextFen":
+            case "org.mdc.chess.ucioptions.loadPrevFen":
                 fenFile = new FENFile(fileName);
-                boolean next = action.equals("org.petero.MaterialChess.loadNextFen");
+                boolean next = action.equals("org.mdc.chess.ucioptions.loadNextFen");
                 final int loadItem = defaultItem + (next ? 1 : -1);
                 if (loadItem < 0) {
                     Toast.makeText(getApplicationContext(), R.string.no_prev_fen,

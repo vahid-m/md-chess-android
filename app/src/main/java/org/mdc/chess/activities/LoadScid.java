@@ -114,10 +114,10 @@ public class LoadScid extends ListActivity {
 
         Intent i = getIntent();
         String action = i.getAction();
-        fileName = i.getStringExtra("org.petero.MaterialChess.pathname");
+        fileName = i.getStringExtra("org.mdc.chess.ucioptions.pathname");
         resultSentBack = false;
         switch (action) {
-            case "org.petero.MaterialChess.loadScid":
+            case "org.mdc.chess.ucioptions.loadScid":
                 progressLatch = new CountDownLatch(1);
                 showProgressDialog();
                 final LoadScid lpgn = this;
@@ -142,9 +142,9 @@ public class LoadScid extends ListActivity {
                     }
                 });
                 break;
-            case "org.petero.MaterialChess.loadScidNextGame":
-            case "org.petero.MaterialChess.loadScidPrevGame":
-                boolean next = action.equals("org.petero.MaterialChess.loadScidNextGame");
+            case "org.mdc.chess.ucioptions.loadScidNextGame":
+            case "org.mdc.chess.ucioptions.loadScidPrevGame":
+                boolean next = action.equals("org.mdc.chess.ucioptions.loadScidNextGame");
                 final int loadItem = defaultItem + (next ? 1 : -1);
                 if (loadItem < 0) {
                     Toast.makeText(getApplicationContext(), R.string.no_prev_game,
