@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_height="wrap_content"
     android:layout_marginTop="?attr/actionBarSize"
     android:orientation="vertical">
-
-    <include layout="@layout/title" />
 
     <view
         android:id="@+id/eb_chessboard"
         class="org.mdc.chess.activities.ChessBoardEdit"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <include layout="@layout/title" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:background="?android:attr/listDivider" />
 
     <TextView
         android:id="@+id/eb_status"
@@ -20,6 +28,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/activity_horizontal_margin"
         android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:background="@color/White"
         android:fontFamily="monospace"
         android:gravity="center_horizontal"
         android:includeFontPadding="true"
@@ -33,7 +42,6 @@
         android:layout_marginEnd="@dimen/activity_horizontal_margin"
         android:layout_marginStart="@dimen/activity_horizontal_margin"
         android:orientation="horizontal">
-
 
         <Button
             android:id="@+id/eb_cancel"

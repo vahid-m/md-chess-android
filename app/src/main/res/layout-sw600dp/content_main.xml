@@ -4,10 +4,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_marginTop="?attr/actionBarSize"
-    android:background="@color/White"
     android:orientation="vertical">
-
-    <include layout="@layout/title" />
 
     <view
         android:id="@+id/chessboard"
@@ -15,26 +12,33 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" />
 
-    <LinearLayout
-        android:layout_width="fill_parent"
+    <include layout="@layout/title" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:background="?android:attr/listDivider" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/activity_horizontal_margin"
         android:layout_marginStart="@dimen/activity_horizontal_margin"
         android:background="@color/White"
-        android:orientation="horizontal"
-        android:paddingTop="1dp">
+        android:gravity="center_horizontal"
+        android:includeFontPadding="true"
+        android:textSize="18sp"
+        android:typeface="monospace" />
 
-        <TextView
-            android:id="@+id/status"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_horizontal"
-            android:includeFontPadding="true"
-            android:textSize="18sp"
-            android:typeface="monospace" />
-
-    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:background="?android:attr/listDivider" />
 
     <view
         class="org.mdc.chess.MyRelativeLayout"

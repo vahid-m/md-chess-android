@@ -22,17 +22,32 @@
 
         <include layout="@layout/title" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:background="?android:attr/listDivider" />
+
         <TextView
             android:id="@+id/status"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/activity_horizontal_margin"
             android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:background="@color/White"
             android:fontFamily="monospace"
             android:gravity="center_horizontal"
             android:includeFontPadding="true"
             android:textSize="18sp"
             android:typeface="monospace" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:background="?android:attr/listDivider" />
 
         <view
             class="org.mdc.chess.MyRelativeLayout"

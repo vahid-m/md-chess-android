@@ -133,14 +133,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
-/*import tourguide.tourguide.Overlay;
-import tourguide.tourguide.Pointer;
-import tourguide.tourguide.Sequence;
-import tourguide.tourguide.ToolTip;
-import tourguide.tourguide.TourGuide;*/
-//import android.content.res.Resources;
-//import android.util.TypedValue;
-
 @SuppressLint("ClickableViewAccessibility")
 public class MaterialChess extends AppCompatActivity
         implements GUIInterface,
@@ -185,76 +177,6 @@ public class MaterialChess extends AppCompatActivity
             Piece.NOTATION_ROOK + " " +
             Piece.NOTATION_QUEEN + " " +
             Piece.NOTATION_KING;
-    /**
-     * React to a selection in the left/right drawers.
-     */
-    /*private void handleDrawerSelection(int itemId) {
-        drawerLayout.closeDrawer(GravityCompat.START);
-        drawerLayout.closeDrawer(GravityCompat.END);
-        maintDrawer.clearChoices();
-        //rightDrawer.clearChoices();
-
-        setAutoMode(AutoMode.OFF);
-
-        switch (itemId) {
-            case ITEM_NEW_GAME:
-                showDialog(NEW_GAME_DIALOG);
-                break;
-            case ITEM_EDIT_BOARD:
-                startEditBoard(ctrl.getFEN());
-                break;
-            case ITEM_SETTINGS: {
-                Intent i = new Intent(MaterialChess.this, Preferences.class);
-                startActivityForResult(i, RESULT_SETTINGS);
-                break;
-            }
-            case ITEM_FILE_MENU:
-                if (storageAvailable()) {
-                    removeDialog(FILE_MENU_DIALOG);
-                    showDialog(FILE_MENU_DIALOG);
-                }
-                break;
-            case ITEM_RESIGN:
-                if (ctrl.humansTurn()) {
-                    ctrl.resignGame();
-                }
-                break;
-            case ITEM_FORCE_MOVE:
-                ctrl.stopSearch();
-                break;
-            case ITEM_DRAW:
-                if (ctrl.humansTurn()) {
-                    if (ctrl.claimDrawIfPossible()) {
-                        ctrl.stopPonder();
-                    } else {
-                        Toast.makeText(getApplicationContext(), R.string.offer_draw,
-                                Toast.LENGTH_SHORT).show();
-                    }
-                }
-                break;
-            case ITEM_SELECT_BOOK:
-                if (storageAvailable()) {
-                    removeDialog(SELECT_BOOK_DIALOG);
-                    showDialog(SELECT_BOOK_DIALOG);
-                }
-                break;
-            case ITEM_MANAGE_ENGINES:
-                if (storageAvailable()) {
-                    removeDialog(MANAGE_ENGINES_DIALOG);
-                    showDialog(MANAGE_ENGINES_DIALOG);
-                } else {
-                    removeDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
-                    showDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
-                }
-                break;
-            case ITEM_SET_COLOR_THEME:
-                showDialog(SET_COLOR_THEME_DIALOG);
-                break;
-            case ITEM_ABOUT:
-                showDialog(ABOUT_DIALOG);
-                break;
-        }
-    }*/
 
     static private final int RESULT_EDITBOARD = 0;
     static private final int RESULT_SETTINGS = 1;
@@ -267,8 +189,6 @@ public class MaterialChess extends AppCompatActivity
     static private final int RESULT_GET_FEN = 8;
     static private final int RESULT_EDITOPTIONS = 9;
     static private final int PROMOTE_DIALOG = 0;
-    // --Commented out by Inspection (21/10/2016 11:33 PM):private ActionBarDrawerToggle
-    // mDrawerToggle;
     static private final int BOARD_MENU_DIALOG = 1;
     static private final int ABOUT_DIALOG = 2;
     static private final int SELECT_BOOK_DIALOG = 4;
@@ -276,11 +196,6 @@ public class MaterialChess extends AppCompatActivity
     static private final int SELECT_ENGINE_DIALOG_NOMANAGE = 6;
     static private final int SELECT_PGN_FILE_DIALOG = 7;
 
-    //private DrawerLayout drawerLayout;
-    // --Commented out by Inspection (22/10/2016 12:08 AM):private ActionBarDrawerToggle
-    // actionBarDrawerToggle;
-    //private ListView maintDrawer;
-    //private ListView rightDrawer;
     static private final int SELECT_PGN_FILE_SAVE_DIALOG = 8;
     static private final int SET_COLOR_THEME_DIALOG = 9;
     static private final int GAME_MODE_DIALOG = 10;
@@ -291,12 +206,6 @@ public class MaterialChess extends AppCompatActivity
     static private final int GO_FORWARD_MENU_DIALOG = 15;
     static private final int FILE_MENU_DIALOG = 16;
     static private final int NEW_GAME_DIALOG = 17;
-    // --Commented out by Inspection (21/10/2016 11:33 PM):static private final int
-    // CUSTOM1_BUTTON_DIALOG = 18;
-    // --Commented out by Inspection (21/10/2016 11:33 PM):static private final int
-    // CUSTOM2_BUTTON_DIALOG = 19;
-    // --Commented out by Inspection (21/10/2016 11:33 PM):static private final int
-    // CUSTOM3_BUTTON_DIALOG = 20;
     static private final int MANAGE_ENGINES_DIALOG = 21;
     static private final int NETWORK_ENGINE_DIALOG = 22;
     static private final int NEW_NETWORK_ENGINE_DIALOG = 23;
@@ -310,8 +219,6 @@ public class MaterialChess extends AppCompatActivity
     private final static int FT_SCID = 2;
     private final static int FT_FEN = 3;
     private static MaterialChessController ctrl = null;
-    //private View secondTitleLine;
-    //private TextView whiteFigText, blackFigText, summaryTitleText;
     private static Dialog moveListMenuDlg;
     private final BookOptions bookOptions = new BookOptions();
     private final PGNOptions pgnOptions = new PGNOptions();
@@ -323,45 +230,6 @@ public class MaterialChess extends AppCompatActivity
         }
     };
 
-    //private TourGuide tourGuide;
-
-
-    // --Commented out by Inspection START (21/10/2016 11:33 PM):
-//    /**
-//     * Defines all configurable button actions.
-//     */
-//    private ActionFactory actionFactory = new ActionFactory() {
-//        private HashMap<String, UIAction> actions;
-//
-//        private void addAction(UIAction a) {
-//            actions.put(a.getId(), a);
-//        }
-//
-//        {
-//            actions = new HashMap<String, UIAction>();
-//            addAction(new UIAction() {
-//                public String getId() {
-//                    return "flipboard";
-//                }
-//
-//                public int getName() {
-//                    return R.string.flip_board;
-//                }
-//
-//                public int getIcon() {
-//                    return R.raw.flip;
-//                }
-//
-//                public boolean enabled() {
-//                    return true;
-//                }
-//
-//                public void run() {
-//                    boardFlipped = !cb.flipped;
-//                    setBooleanPref("boardFlipped", boardFlipped);
-//                    cb.setFlipped(boardFlipped);
-//                }
-//            });
 //            addAction(new UIAction() {
 //                public String getId() {
 //                    return "showThinking";
@@ -508,28 +376,6 @@ public class MaterialChess extends AppCompatActivity
 //            });
 //            addAction(new UIAction() {
 //                public String getId() {
-//                    return "largeButtons";
-//                }
-//
-//                public int getName() {
-//                    return R.string.toggle_large_buttons;
-//                }
-//
-//                public int getIcon() {
-//                    return R.raw.magnify;
-//                }
-//
-//                public boolean enabled() {
-//                    return true;
-//                }
-//
-//                public void run() {
-//                    pgnOptions.view.headers = toggleBooleanPref("largeButtons");
-//                    updateButtons();
-//                }
-//            });
-//            addAction(new UIAction() {
-//                public String getId() {
 //                    return "blindMode";
 //                }
 //
@@ -572,146 +418,7 @@ public class MaterialChess extends AppCompatActivity
 //                    loadLastFile();
 //                }
 //            });
-//            addAction(new UIAction() {
-//                public String getId() {
-//                    return "selectEngine";
-//                }
-//
-//                public int getName() {
-//                    return R.string.select_engine;
-//                }
-//
-//                public int getIcon() {
-//                    return R.raw.engine;
-//                }
-//
-//                public boolean enabled() {
-//                    return true;
-//                }
-//
-//                public void run() {
-//                    removeDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
-//                    showDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
-//                }
-//            });
-//            addAction(new UIAction() {
-//                public String getId() {
-//                    return "engineOptions";
-//                }
-//
-//                public int getName() {
-//                    return R.string.engine_options;
-//                }
-//
-//                public int getIcon() {
-//                    return R.raw.custom;
-//                }
-//
-//                public boolean enabled() {
-//                    return canSetEngineOptions();
-//                }
-//
-//                public void run() {
-//                    setEngineOptions();
-//                }
-//            });
-//        }
-//
-//        @Override
-//        public UIAction getAction(String actionId) {
-//            return actions.get(actionId);
-//        }
-//    };
-// --Commented out by Inspection STOP (21/10/2016 11:33 PM)
     private final Handler autoModeTimer = new Handler();
-
-    /*private void startTourGuide() {
-        if (!guideShowOnStart) {
-            return;
-        }
-
-        tourGuide = TourGuide.init(this);
-        ArrayList<TourGuide> guides = new ArrayList<>();
-
-        TourGuide tg = TourGuide.init(this);
-        tg.setToolTip(new ToolTip()
-                .setTitle(getString(R.string.tour_leftMenu_title))
-                .setDescription(getString(R.string.tour_leftMenu_desc))
-                .setGravity(Gravity.BOTTOM | Gravity.END));
-        tg.playLater(whiteTitleText);
-        guides.add(tg);
-
-        tg = TourGuide.init(this);
-        tg.setToolTip(new ToolTip()
-                .setTitle(getString(R.string.tour_rightMenu_title))
-                .setDescription(getString(R.string.tour_rightMenu_desc))
-                .setGravity(Gravity.BOTTOM | Gravity.START));
-        tg.playLater(blackTitleText);
-        guides.add(tg);
-
-        tg = TourGuide.init(this);
-        int gravity =
-                !landScapeView() ? Gravity.BOTTOM : leftHandedView() ? Gravity.START : Gravity.END;
-        tg.setToolTip(new ToolTip()
-                .setTitle(getString(R.string.tour_chessBoard_title))
-                .setDescription(getString(R.string.tour_chessBoard_desc))
-                .setGravity(gravity));
-        tg.playLater(cb);
-        guides.add(tg);
-
-        tg = TourGuide.init(this);
-        gravity = !landScapeView() ? Gravity.TOP : Gravity.BOTTOM;
-        tg.setToolTip(new ToolTip()
-                .setTitle(getString(R.string.tour_buttons_title))
-                .setDescription(getString(R.string.tour_buttons_desc))
-                .setGravity(gravity));
-        tg.playLater(buttons);
-        guides.add(tg);
-
-        tg = TourGuide.init(this);
-        gravity = !landScapeView() ? Gravity.TOP : leftHandedView() ? Gravity.END : Gravity.START;
-        tg.setToolTip(new ToolTip()
-                .setTitle(getString(R.string.tour_moveList_title))
-                .setDescription(getString(R.string.tour_moveList_desc))
-                .setGravity(gravity));
-        tg.playLater(moveListScroll);
-        guides.add(tg);
-
-        tg = TourGuide.init(this);
-        tg.setToolTip(new ToolTip()
-                .setTitle(getString(R.string.tour_analysis_title))
-                .setDescription(getString(R.string.tour_analysis_desc))
-                .setGravity(Gravity.TOP));
-        tg.playLater(thinkingScroll);
-        guides.add(tg);
-
-        tg.setOverlay(new Overlay()
-                .setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        guideShowOnStart = false;
-                        Editor editor = settings.edit();
-                        editor.putBoolean("guideShowOnStart", false);
-                        editor.apply();
-                        tourGuide.next();
-                        tourGuide = null;
-                    }
-                }));
-
-        Sequence sequence = new Sequence.SequenceBuilder()
-                .add(guides.toArray(new TourGuide[guides.size()]))
-                .setDefaultOverlay(new Overlay()
-                        .setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                tourGuide.next();
-                            }
-                        }))
-                .setDefaultPointer(new Pointer())
-                .setContinueMethod(Sequence.ContinueMethod.OverlayListener)
-                .build();
-        //tourGuide.playInSequence(sequence);
-    }*/
     private ChessBoardPlay cb;
     private boolean mShowThinking;
     private boolean mShowStats;
@@ -733,58 +440,12 @@ public class MaterialChess extends AppCompatActivity
     private ScrollView moveListScroll;
     private MoveListView moveList;
     private TextView thinking;
-    // --Commented out by Inspection (31/10/2016 10:38 PM):private View buttons;
-    //private ImageButton custom1Button, custom2Button, custom3Button;
-    //private ImageButton modeButton, undoButton, redoButton;
-    //private ButtonActions custom1ButtonActions, custom2ButtonActions, custom3ButtonActions;
     private TextView whiteTitleText, blackTitleText, engineTitleText;
     private SharedPreferences settings;
     private float scrollSensitivity;
-
-    // --Commented out by Inspection START (22/10/2016 12:10 AM):
-//    private void overrideViewAttribs() {
-//        Util.overrideViewAttribs(findViewById(R.id.toolbar));
-//    }
-// --Commented out by Inspection STOP (22/10/2016 12:10 AM)
     private boolean invertScrollDirection;
     private boolean leftHanded;
 
-    //private void updateButtons() {
-    //boolean largeButtons = settings.getBoolean("largeButtons", false);
-    //Resources r = getResources();
-    //int bWidth = (int) Math.round(
-    //        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 36, r.getDisplayMetrics()));
-    //int bHeight = (int) Math.round(
-    //        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 32, r.getDisplayMetrics()));
-
-    //SVG svg = SVGParser.getSVGFromResource(getResources(), R.raw.touch);
-        /*setButtonData(custom1Button, bWidth, bHeight, custom1ButtonActions.getIcon(), svg);
-        setButtonData(custom2Button, bWidth, bHeight, custom2ButtonActions.getIcon(), svg);
-        setButtonData(custom3Button, bWidth, bHeight, custom3ButtonActions.getIcon(), svg);
-        setButtonData(modeButton, bWidth, bHeight, R.raw.mode, svg);
-        setButtonData(undoButton, bWidth, bHeight, R.raw.left, svg);
-        setButtonData(redoButton, bWidth, bHeight, R.raw.right, svg);*/
-    //}
-
-    // --Commented out by Inspection START (21/10/2016 11:33 PM):
-//    @SuppressWarnings("deprecation")
-//    private void setButtonData(ImageButton button, int bWidth, int bHeight,
-//            int svgResId, SVG touched) {
-//        SVG svg = SVGParser.getSVGFromResource(getResources(), svgResId);
-//        button.setBackgroundDrawable(new SVGPictureDrawable(svg));
-//
-//        StateListDrawable sld = new StateListDrawable();
-//        sld.addState(new int[]{android.R.attr.state_pressed}, new SVGPictureDrawable(touched));
-//        button.setImageDrawable(sld);
-//
-//        LayoutParams lp = button.getLayoutParams();
-//        lp.height = bHeight;
-//        lp.width = bWidth;
-//        button.setLayoutParams(lp);
-//        button.setPadding(0, 0, 0, 0);
-//        button.setScaleType(ScaleType.FIT_XY);
-//    }
-// --Commented out by Inspection STOP (21/10/2016 11:33 PM)
     private boolean soundEnabled;
     private MediaPlayer moveSound;
     private boolean vibrateEnabled;
@@ -815,100 +476,6 @@ public class MaterialChess extends AppCompatActivity
      */
     private PermissionState storagePermission = PermissionState.UNKNOWN;
     private long lastVisibleMillis; // Time when GUI became invisible. 0 if currently visible.
-
-    /*private class DrawerItem {
-        // --Commented out by Inspection (31/10/2016 10:39 PM):final int id;
-        final int itemId; // Item string resource id
-
-// --Commented out by Inspection START (31/10/2016 10:39 PM):
-//        DrawerItem(int id, int itemId) {
-//            this.id = id;
-//            this.itemId = itemId;
-//        }
-// --Commented out by Inspection STOP (31/10/2016 10:39 PM)
-
-        @Override
-        public String toString() {
-            return getString(itemId);
-        }
-    }*/
-
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int ITEM_NEW_GAME
-    // = 0;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int
-    // ITEM_EDIT_BOARD = 1;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int ITEM_SETTINGS
-    // = 2;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int
-    // ITEM_FILE_MENU = 3;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int ITEM_RESIGN = 4;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int
-    // ITEM_FORCE_MOVE = 5;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int ITEM_DRAW = 6;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int
-    // ITEM_SELECT_BOOK = 7;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int
-    // ITEM_MANAGE_ENGINES = 8;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int
-    // ITEM_SET_COLOR_THEME = 9;
-    // --Commented out by Inspection (31/10/2016 10:39 PM):static private final int ITEM_ABOUT = 10;
-
-
-    /**
-     * Initialize the drawer part of the user interface.
-     */
-    /*private void initDrawers() {
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        maintDrawer = (ListView) findViewById(R.id.main_drawer);
-        //rightDrawer = (ListView) findViewById(R.id.right_drawer);
-
-        final DrawerItem[] leftItems = new DrawerItem[]{
-                new DrawerItem(ITEM_EDIT_BOARD, R.string.option_edit_board),
-                new DrawerItem(ITEM_FILE_MENU, R.string.option_file),
-                new DrawerItem(ITEM_SELECT_BOOK, R.string.option_select_book),
-                new DrawerItem(ITEM_MANAGE_ENGINES, R.string.option_manage_engines),
-                new DrawerItem(ITEM_SET_COLOR_THEME, R.string.option_color_theme),
-                new DrawerItem(ITEM_SETTINGS, R.string.option_settings),
-                new DrawerItem(ITEM_ABOUT, R.string.option_about)
-        };
-        maintDrawer.setAdapter(new ArrayAdapter<>(this,
-                R.layout.drawer_list_item,
-                leftItems));
-        maintDrawer.setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                    int position, long id) {
-                DrawerItem di = leftItems[position];
-                handleDrawerSelection(di.id);
-            }
-        });
-
-        final DrawerItem[] rightItems = new DrawerItem[]{
-                new DrawerItem(ITEM_NEW_GAME, R.string.option_new_game),
-                new DrawerItem(ITEM_RESIGN, R.string.option_resign_game),
-                new DrawerItem(ITEM_FORCE_MOVE, R.string.option_force_computer_move),
-                new DrawerItem(ITEM_DRAW, R.string.option_draw)
-        };
-        /*rightDrawer.setAdapter(new ArrayAdapter<>(this,
-                R.layout.drawer_list_item,
-                rightItems));
-        rightDrawer.setOnItemClickListener(new OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view,
-                    int position, long id) {
-                DrawerItem di = rightItems[position];
-                handleDrawerSelection(di.id);
-            }
-        });*/
-
-
-    //}*/
-
-    /*@Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        drawerLayout.openDrawer(GravityCompat.START);
-        return false;
-    }*/
     private long lastComputationMillis; // Time when engine last showed that it was computing.
     private PgnScreenText gameTextListener;
     private Typeface figNotation;
@@ -956,22 +523,12 @@ public class MaterialChess extends AppCompatActivity
         String intentPgnOrFen = pair.first;
         String intentFilename = pair.second;
 
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        //setSupportActionBar(toolbar);
-
         createDirectories();
 
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         settings = PreferenceManager.getDefaultSharedPreferences(this);
 
         setWakeLock(false);
-
-        /*custom1ButtonActions = new ButtonActions("custom1", CUSTOM1_BUTTON_DIALOG,
-                R.string.select_action);
-        custom2ButtonActions = new ButtonActions("custom2", CUSTOM2_BUTTON_DIALOG,
-                R.string.select_action);
-        custom3ButtonActions = new ButtonActions("custom3", CUSTOM3_BUTTON_DIALOG,
-                R.string.select_action);*/
 
         figNotation = Typeface.createFromAsset(getAssets(), "fonts/KlinicSlabBold.otf");
         setPieceNames(PGNOptions.PT_LOCAL);
@@ -1033,20 +590,7 @@ public class MaterialChess extends AppCompatActivity
             }
         }
 
-
-        //startTourGuide();
     }
-
-// --Commented out by Inspection START (21/10/2016 11:35 PM):
-//    /**
-//     * Toggle a boolean preference setting. Return new value.
-//     */
-//    private boolean toggleBooleanPref(String name) {
-//        boolean value = !settings.getBoolean(name, false);
-//        setBooleanPref(name, value);
-//        return value;
-//    }
-// --Commented out by Inspection STOP (21/10/2016 11:35 PM)
 
     private void setPieceNames(int pieceType) {
         if (pieceType == PGNOptions.PT_FIGURINE) {
@@ -1249,10 +793,7 @@ public class MaterialChess extends AppCompatActivity
         updateThinkingInfo();
         ctrl.updateRemainingTime();
         ctrl.updateMaterialDiffList();
-        /*if (tourGuide != null) {
-            tourGuide.cleanUp();
-            tourGuide = null;
-        }*/
+
     }
 
     /**
@@ -1297,26 +838,14 @@ public class MaterialChess extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_main);
         navigationView.setNavigationItemSelectedListener(this);
-        //overrideViewAttribs();
 
         // title lines need to be regenerated every time due to layout changes (rotations)
         View firstTitleLine = findViewById(R.id.title_line);
-        //secondTitleLine = findViewById(R.id.second_title_line);
         whiteTitleText = (TextView) findViewById(R.id.txt_first);
         whiteTitleText.setSelected(true);
         blackTitleText = (TextView) findViewById(R.id.txt_third);
         blackTitleText.setSelected(true);
         engineTitleText = (TextView) findViewById(R.id.txt_second);
-        /*whiteFigText = (TextView) findViewById(R.id.white_pieces);
-        whiteFigText.setTypeface(figNotation);
-        whiteFigText.setSelected(true);
-        whiteFigText.setTextColor(whiteTitleText.getTextColors());
-        blackFigText = (TextView) findViewById(R.id.black_pieces);
-        blackFigText.setTypeface(figNotation);
-        blackFigText.setSelected(true);
-        blackFigText.setTextColor(blackTitleText.getTextColors());
-        summaryTitleText = (TextView) findViewById(R.id.title_text_summary);*/
-
         status = (TextView) findViewById(R.id.status);
         moveListScroll = (ScrollView) findViewById(R.id.scrollView);
         moveList = (MoveListView) findViewById(R.id.moveList);
@@ -1327,8 +856,6 @@ public class MaterialChess extends AppCompatActivity
         moveListScroll.setFocusable(false);
         moveList.setFocusable(false);
         thinking.setFocusable(false);
-
-        //initDrawers();
 
         class ClickListener implements OnClickListener, OnTouchListener {
             // --Commented out by Inspection (31/10/2016 10:41 PM):private float touchX = -1;
@@ -1346,11 +873,10 @@ public class MaterialChess extends AppCompatActivity
                 return false;
             }
         }
+
         ClickListener listener = new ClickListener();
         firstTitleLine.setOnClickListener(listener);
         firstTitleLine.setOnTouchListener(listener);
-        //secondTitleLine.setOnClickListener(listener);
-        //secondTitleLine.setOnTouchListener(listener);
 
         cb = (ChessBoardPlay) findViewById(R.id.chessboard);
         cb.setFocusable(true);
@@ -1494,18 +1020,18 @@ public class MaterialChess extends AppCompatActivity
             }
         });
         cb.setOnTrackballListener(new ChessBoard.OnTrackballListener() {
-// --Commented out by Inspection START (31/10/2016 10:38 PM):
-//            public void onTrackballEvent(MotionEvent event) {
-//                if (ctrl.humansTurn()) {
-//                    Move m = cb.handleTrackballEvent(event);
-//                    if (m != null) {
-//                        setAutoMode(AutoMode.OFF);
-//                        ctrl.makeHumanMove(m);
-//                    }
-//                    setEgtbHints(cb.getSelectedSquare());
-//                }
-//            }
-// --Commented out by Inspection STOP (31/10/2016 10:38 PM)
+
+            public void onTrackballEvent(MotionEvent event) {
+                if (ctrl.humansTurn()) {
+                    Move m = cb.handleTrackballEvent(event);
+                    if (m != null) {
+                        setAutoMode(AutoMode.OFF);
+                        ctrl.makeHumanMove(m);
+                    }
+                    setEgtbHints(cb.getSelectedSquare());
+                }
+            }
+
         });
 
         moveList.setOnLongClickListener(new OnLongClickListener() {
@@ -1527,60 +1053,16 @@ public class MaterialChess extends AppCompatActivity
             }
         });
 
-        //buttons = findViewById(R.id.buttons);
-        /*custom1Button = (ImageButton) findViewById(R.id.custom1Button);
-        custom1ButtonActions.setImageButton(custom1Button, this);
-        custom2Button = (ImageButton) findViewById(R.id.custom2Button);
-        custom2ButtonActions.setImageButton(custom2Button, this);
-        custom3Button = (ImageButton) findViewById(R.id.custom3Button);
-        custom3ButtonActions.setImageButton(custom3Button, this);
 
-        modeButton = (ImageButton) findViewById(R.id.modeButton);
+        /*modeButton = (ImageButton) findViewById(R.id.modeButton);
         modeButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 showDialog(GAME_MODE_DIALOG);
             }
         });
-        modeButton.setOnLongClickListener(new OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                drawerLayout.openDrawer(Gravity.LEFT);
-                return true;
-            }
-        });
-        undoButton = (ImageButton) findViewById(R.id.undoButton);
-        undoButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setAutoMode(AutoMode.OFF);
-                ctrl.undoMove();
-            }
-        });
-        undoButton.setOnLongClickListener(new OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                removeDialog(GO_BACK_MENU_DIALOG);
-                showDialog(GO_BACK_MENU_DIALOG);
-                return true;
-            }
-        });
-        redoButton = (ImageButton) findViewById(R.id.redoButton);
-        redoButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setAutoMode(AutoMode.OFF);
-                ctrl.redoMove();
-            }
-        });
-        redoButton.setOnLongClickListener(new OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                removeDialog(GO_FORWARD_MENU_DIALOG);
-                showDialog(GO_FORWARD_MENU_DIALOG);
-                return true;
-            }
-        });*/
+
+        */
     }
 
     @Override
@@ -1781,11 +1263,6 @@ public class MaterialChess extends AppCompatActivity
         autoScrollTitle = settings.getBoolean("autoScrollTitle", true);
         setTitleScrolling();
 
-        /*custom1ButtonActions.readPrefs(settings, actionFactory);
-        custom2ButtonActions.readPrefs(settings, actionFactory);
-        custom3ButtonActions.readPrefs(settings, actionFactory);*/
-        //updateButtons();
-
         boolean guideShowOnStart = settings.getBoolean("guideShowOnStart", true);
 
         bookOptions.filename = settings.getString("bookFile", "");
@@ -1841,7 +1318,7 @@ public class MaterialChess extends AppCompatActivity
 
         ColorTheme.instance().readColors(settings);
         cb.setColors();
-        //overrideViewAttribs();
+
 
         gameTextListener.clear();
         setPieceNames(pgnOptions.view.pieceType);
@@ -1850,8 +1327,6 @@ public class MaterialChess extends AppCompatActivity
         // as well in rotation
         setFigurineNotation(pgnOptions.view.pieceType == PGNOptions.PT_FIGURINE, fontSize);
 
-        //boolean showMaterialDiff = settings.getBoolean("materialDiff", false);
-        //secondTitleLine.setVisibility(showMaterialDiff ? View.VISIBLE : View.GONE);
     }
 
     /**
@@ -1879,8 +1354,6 @@ public class MaterialChess extends AppCompatActivity
                 : TextUtils.TruncateAt.END;
         whiteTitleText.setEllipsize(where);
         blackTitleText.setEllipsize(where);
-        //whiteFigText.setEllipsize(where);
-        //blackFigText.setEllipsize(where);
     }
 
     @SuppressLint("Wakelock")
@@ -3024,32 +2497,6 @@ public class MaterialChess extends AppCompatActivity
                 });
         return builder.create();
     }
-
-// --Commented out by Inspection START (21/10/2016 11:33 PM):
-//    private Dialog makeButtonDialog(ButtonActions buttonActions) {
-//        List<CharSequence> names = new ArrayList<CharSequence>();
-//        final List<UIAction> actions = new ArrayList<UIAction>();
-//
-//        HashSet<String> used = new HashSet<String>();
-//        for (UIAction a : buttonActions.getMenuActions()) {
-//            if ((a != null) && a.enabled() && !used.contains(a.getId())) {
-//                names.add(getString(a.getName()));
-//                actions.add(a);
-//                used.add(a.getId());
-//            }
-//        }
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle(buttonActions.getMenuTitle());
-//        builder.setItems(names.toArray(new CharSequence[names.size()]),
-//                new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int item) {
-//                        UIAction a = actions.get(item);
-//                        a.run();
-//                    }
-//                });
-//        return builder.create();
-//    }
-// --Commented out by Inspection STOP (21/10/2016 11:33 PM)
 
     private Dialog selectPgnSaveNewFileDialog() {
         setAutoMode(AutoMode.OFF);
@@ -4210,8 +3657,7 @@ public class MaterialChess extends AppCompatActivity
      * Set automatic move forward/backward mode.
      */
     private void setAutoMode(AutoMode am) {
-//        System.out.printf("%.3f MaterialChess.setAutoMode(): %s\n",
-//                System.currentTimeMillis() * 1e-3, am.toString());
+
         autoMode = am;
         switch (am) {
             case BACKWARD:

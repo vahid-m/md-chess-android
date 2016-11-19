@@ -74,8 +74,6 @@ public class EditBoard extends AppCompatActivity {
     static private final int RESULT_GET_FEN = 0;
     static private final int RESULT_LOAD_FEN = 1;
 
-    //private DrawerLayout drawerLayout;
-    //private ListView mainDrawer;
     private ChessBoardEdit cb;
     private TextView status;
     private boolean egtbHints;
@@ -141,7 +139,6 @@ public class EditBoard extends AppCompatActivity {
             return true;
         }
 
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -165,48 +162,25 @@ public class EditBoard extends AppCompatActivity {
                 onBackPressed();
             }
         });
-        getSupportActionBar().setTitle("Event Details");
-        //Util.overrideViewAttribs(findViewById(R.id.main));
 
-        //View firstTitleLine = findViewById(R.id.first_title_line);
-        //View secondTitleLine = findViewById(R.id.second_title_line);
         cb = (ChessBoardEdit) findViewById(R.id.eb_chessboard);
         status = (TextView) findViewById(R.id.eb_status);
         Button okButton = (Button) findViewById(R.id.eb_ok);
         Button cancelButton = (Button) findViewById(R.id.eb_cancel);
 
-        /*TextView whiteTitleText = (TextView) findViewById(R.id.white_clock);
-        whiteTitleText.setVisibility(View.GONE);
-        TextView blackTitleText = (TextView) findViewById(R.id.black_clock);
-        blackTitleText.setVisibility(View.GONE);
-        TextView engineTitleText = (TextView) findViewById(R.id.title_text);
-        engineTitleText.setVisibility(View.GONE);
-        */
         whiteFigText = (TextView) findViewById(R.id.txt_first);
         whiteFigText.setTypeface(figNotation);
         whiteFigText.setSelected(true);
-        //whiteFigText.setTextColor(whiteTitleText.getTextColors());
         blackFigText = (TextView) findViewById(R.id.txt_third);
         blackFigText.setTypeface(figNotation);
         blackFigText.setSelected(true);
-        //blackFigText.setTextColor(blackTitleText.getTextColors());
         TextView summaryTitleText = (TextView) findViewById(R.id.txt_second);
         summaryTitleText.setText(R.string.edit_board);
 
         TextUtils.TruncateAt where = autoScrollTitle ? TextUtils.TruncateAt.MARQUEE
                 : TextUtils.TruncateAt.END;
-        //engineTitleText.setEllipsize(where);
         whiteFigText.setEllipsize(where);
         blackFigText.setEllipsize(where);
-
-        /*OnClickListener listener = new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //drawerLayout.openDrawer(Gravity.LEFT);
-            }
-        };*/
-        //firstTitleLine.setOnClickListener(listener);
-        //secondTitleLine.setOnClickListener(listener);
 
         okButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
