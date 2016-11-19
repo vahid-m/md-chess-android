@@ -9,8 +9,8 @@ android {
         applicationId "org.mdc.chess"
         minSdkVersion 19
         targetSdkVersion 24
-        versionCode 5
-        versionName "0.5.2"
+        versionCode 6
+        versionName "0.6.0"
     }
 
     buildTypes {
@@ -19,18 +19,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
 
-        debug {
-            minifyEnabled true
-            shrinkResources true
-
-        }
-
-
     }
 
     sourceSets.main {
         jniLibs.srcDir 'src/main/libs'
-        jni.srcDirs = [] //disable automatic ndk-build call
+        //jni.srcDirs = [] //disable automatic ndk-build call
     }
 
     /*splits {
@@ -45,6 +38,12 @@ android {
             include "x86", "mips", "arm64-v8a", "armeabi", "mips64", "x86_64"
         }
     }*/
+
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/Android.mk'
+        }
+    }
 }
 
 repositories {
@@ -57,4 +56,5 @@ dependencies {
     compile 'com.github.amlcurran.showcaseview:library:5.0.0'
     compile 'com.android.support:design:25.0.0'
     compile 'blue.aodev:material-values:1.1.0'
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta3'
 }

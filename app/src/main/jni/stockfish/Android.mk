@@ -1,4 +1,5 @@
 LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
 
 SF_SRC_FILES := \
 	benchmark.cpp main.cpp movegen.cpp pawns.cpp thread.cpp uci.cpp psqt.cpp \

@@ -156,6 +156,16 @@ public class EditBoard extends AppCompatActivity {
         setContentView(R.layout.app_bar_edit_board);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+        getSupportActionBar().setTitle("Event Details");
         //Util.overrideViewAttribs(findViewById(R.id.main));
 
         //View firstTitleLine = findViewById(R.id.first_title_line);

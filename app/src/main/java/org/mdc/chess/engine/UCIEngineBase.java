@@ -46,21 +46,19 @@ public abstract class UCIEngineBase implements UCIEngine {
 
     public static UCIEngine getEngine(Context context, String engine,
             EngineOptions engineOptions, Report report) {
-        // if ("stockfish".equals(engine) && (EngineUtil.internalStockFishName() == null))
-        //    engine = "cuckoochess";
-        if ("cuckoochess".equals(engine)) {
-            return new CuckooChessEngine(report);
-        } else if ("stockfish".equals(engine))
-        //return new InternalStockFish(context, report);
-        {
-            return new CuckooChessEngine(report);
-        } else if (EngineUtil.isOpenExchangeEngine(engine)) {
-            return new OpenExchangeEngine(context, engine, report);
-        } else if (EngineUtil.isNetEngine(engine)) {
-            return new NetworkEngine(context, engine, engineOptions, report);
-        } else {
-            return new ExternalEngine(context, engine, report);
+        if ("stockfish".equals(engine) && (EngineUtil.internalStockFishName() == null)) {
+            engine = "cuckoochess";
         }
+        if ("cuckoochess".equals(engine))
+            return new CuckooChessEngine(report);
+        else if ("stockfish".equals(engine)) {
+            return new InternalStockFish(context, report);
+        } else if (EngineUtil.isOpenExchangeEngine(engine))
+            return new OpenExchangeEngine(context, engine, report);
+        else if (EngineUtil.isNetEngine(engine))
+            return new NetworkEngine(context, engine, engineOptions, report);
+        else
+            return new ExternalEngine(context, engine, report);
     }
 
     protected abstract void startProcess();

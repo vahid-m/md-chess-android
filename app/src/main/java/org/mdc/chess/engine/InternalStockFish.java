@@ -151,6 +151,8 @@ public class InternalStockFish extends ExternalEngine {
         }
         to.createNewFile();
 
+        String[] assets = context.getAssets().list("");
+
         InputStream is = context.getAssets().open(sfExe);
         OutputStream os = new FileOutputStream(to);
 

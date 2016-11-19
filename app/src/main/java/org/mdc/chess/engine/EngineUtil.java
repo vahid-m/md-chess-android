@@ -59,10 +59,9 @@ public class EngineUtil {
                 break;
             default:
                 abi = "armeabi"; // Unknown ABI, assume original ARM
-
                 break;
         }
-        return "stockfish";
+        return "stockfish-" + abi + (noPIE ? "-nopie" : "");
     }
 
     /** Return true if file "engine" is a network engine. */
@@ -105,10 +104,10 @@ public class EngineUtil {
     }
 
     /** Executes chmod 744 exePath. */
-    //final static native boolean chmod(String exePath);
+    final static native boolean chmod(String exePath);
 
     /** Change the priority of a process. */
-    //final static native void reNice(int pid, int prio);
+    final static native void reNice(int pid, int prio);
 
     /** Remove characters from s that are not safe to use in a filename. */
     private static String sanitizeString(String s) {

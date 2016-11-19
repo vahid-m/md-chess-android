@@ -63,7 +63,6 @@ public class Probe {
      * Probe GTB tablebases.
      *
      * @param pos    The position to probe.
-     * @param result Two element array. Set to [tbinfo, plies].
      * @return True if success.
      */
     private final GtbProbeResult gtbProbe(Position pos) {

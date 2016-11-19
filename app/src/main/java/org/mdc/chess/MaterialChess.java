@@ -326,7 +326,7 @@ public class MaterialChess extends AppCompatActivity
     //private TourGuide tourGuide;
 
 
-// --Commented out by Inspection START (21/10/2016 11:33 PM):
+    // --Commented out by Inspection START (21/10/2016 11:33 PM):
 //    /**
 //     * Defines all configurable button actions.
 //     */
@@ -623,7 +623,7 @@ public class MaterialChess extends AppCompatActivity
 //        }
 //    };
 // --Commented out by Inspection STOP (21/10/2016 11:33 PM)
-private final Handler autoModeTimer = new Handler();
+    private final Handler autoModeTimer = new Handler();
 
     /*private void startTourGuide() {
         if (!guideShowOnStart) {
@@ -1292,7 +1292,7 @@ private final Handler autoModeTimer = new Handler();
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open,
                 R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+        drawer.addDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_main);
@@ -1920,8 +1920,7 @@ private final Handler autoModeTimer = new Handler();
         } else {
             eName = getString(engine.equals("cuckoochess") ?
                     R.string.cuckoochess_engine :
-                    R.string.cuckoochess_engine);
-            //R.string.stockfish_engine);
+                    R.string.stockfish_engine);
             boolean analysis = (ctrl != null) && ctrl.analysisMode();
             if ((strength < 1000) && !analysis) {
                 eName = String.format(Locale.US, "%s: %d%%", eName, strength / 10);
@@ -2849,8 +2848,8 @@ private final Handler autoModeTimer = new Handler();
     private Dialog selectEngineDialog(final boolean abortOnCancel) {
         final ArrayList<String> items = new ArrayList<>();
         final ArrayList<String> ids = new ArrayList<>();
-        //ids.add("stockfish");
-        //items.add(getString(R.string.stockfish_engine));
+        ids.add("stockfish");
+        items.add(getString(R.string.stockfish_engine));
         ids.add("cuckoochess");
         items.add(getString(R.string.cuckoochess_engine));
 
@@ -4239,6 +4238,7 @@ private final Handler autoModeTimer = new Handler();
     private enum AutoMode {
         OFF, FORWARD, BACKWARD
     }
+
     /**
      * State of requested permissions.
      */
