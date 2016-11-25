@@ -4,6 +4,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:layout_marginTop="?attr/actionBarSize"
+    android:background="@color/material_color_white"
     android:orientation="vertical">
 
     <view
@@ -14,40 +15,28 @@
 
     <include layout="@layout/title" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:background="?android:attr/listDivider" />
-
     <TextView
         android:id="@+id/status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:background="@color/White"
+        android:background="@color/material_color_grey_100"
         android:gravity="center_horizontal"
         android:includeFontPadding="true"
-        android:textSize="18sp"
+        android:paddingBottom="@dimen/material_baseline_grid_1x"
+        android:paddingEnd="@dimen/material_content_edge_margin_horizontal"
+        android:paddingStart="@dimen/material_content_edge_margin_horizontal"
+        android:textColor="@color/material_color_grey_800"
+        android:textSize="14sp"
         android:typeface="monospace" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:background="?android:attr/listDivider" />
 
     <view
         class="org.mdc.chess.MyRelativeLayout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
         android:background="@color/White"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingEnd="@dimen/material_content_edge_margin_horizontal"
+        android:paddingStart="@dimen/material_content_edge_margin_horizontal">
 
         <ScrollView
             android:id="@+id/scrollView"

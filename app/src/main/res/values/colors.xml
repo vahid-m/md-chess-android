@@ -11,7 +11,7 @@
     <color name="colorIconsText">#FFFFFF</color>
     <color name="colorAccent">@color/material_color_blue_500</color>
     <color name="colorPrimaryText">#212121</color>
-    <color name="colorSecondaryText">#757575</color>
+    <color name="colorSecondaryText">@color/material_color_blue_grey_800</color>
     <color name="colorDivider">#BDBDBD</color>
 
     <item name="blue" type="color">#ff2196f3</item>

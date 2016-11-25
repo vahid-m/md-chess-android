@@ -55,6 +55,7 @@ import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -2505,6 +2506,9 @@ public class MaterialChess extends AppCompatActivity
         builder.setView(content);
         builder.setTitle(R.string.select_pgn_file_save);
         final EditText fileNameView = (EditText) content.findViewById(R.id.create_pgn_filename);
+        final TextInputLayout fileNameWrapper = (TextInputLayout) content.findViewById(
+                R.id.create_pgn_filename_wrapper);
+        fileNameWrapper.setHint(content.getResources().getString(R.string.filename));
         fileNameView.setText("");
         final Runnable savePGN = new Runnable() {
             public void run() {
@@ -3144,6 +3148,9 @@ public class MaterialChess extends AppCompatActivity
         builder.setView(content);
         builder.setTitle(R.string.create_network_engine);
         final EditText engineNameView = (EditText) content.findViewById(R.id.create_network_engine);
+        final TextInputLayout engineNameWrapper = (TextInputLayout) content.findViewById(
+                R.id.create_network_engine_wrapper);
+        engineNameWrapper.setHint(content.getResources().getString(R.string.engine_name));
         engineNameView.setText("");
         final Runnable createEngine = new Runnable() {
             public void run() {
