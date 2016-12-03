@@ -6,7 +6,7 @@ This project is based on Material Chess - Chesstastic & Droidfish. I'm developin
 
 #Google Play 
 
-[Support the development of the app buying tha app, it's cheap!](https://play.google.com/store/apps/details?id=org.mdc.chess)
+[Take a look to the app!](https://play.google.com/store/apps/details?id=org.mdc.chess)
 
 #Goals:
 
