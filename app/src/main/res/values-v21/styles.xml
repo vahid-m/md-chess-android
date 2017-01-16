@@ -9,7 +9,7 @@
         <item name="android:windowSharedElementExitTransition">@android:transition/move</item>
     </style>
 
-    <style name="ToolbarTheme" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+    <style name="ToolbarTheme" parent="@style/ThemeOverlay.AppCompat.Light">
         <item name="android:textColorPrimary">@android:color/white</item>
     </style>
 

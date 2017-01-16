@@ -50,15 +50,15 @@
         <Button
             android:id="@+id/ed_cnt_cancel"
             style="@style/Widget.AppCompat.Button.Borderless"
-            android:layout_weight="1"
-            android:text="@string/cancel"
-            android:theme="@style/AppTheme.Button.Flat" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cancel" />
 
         <Button
             android:id="@+id/ed_cnt_ok"
             style="@style/Widget.AppCompat.Button.Borderless"
-            android:layout_weight="1"
-            android:text="@string/ok"
-            android:theme="@style/AppTheme.Button.Flat" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ok" />
     </TableRow>
 </TableLayout>

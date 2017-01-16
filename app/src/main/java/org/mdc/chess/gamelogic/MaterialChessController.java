@@ -835,6 +835,7 @@ public class MaterialChessController {
                 }
             }
             String player = gui.playerName();
+
             String white = gameMode.playerWhite() ? player : engine;
             String black = gameMode.playerBlack() ? player : engine;
             game.tree.setPlayerNames(white, black);

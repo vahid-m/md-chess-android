@@ -21,21 +21,14 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <style name="AppTheme.Button" parent="AppTheme">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">@dimen/button_height</item>
-        <item name="android:paddingStart">@dimen/standard_padding_2</item>
-        <item name="android:paddingEnd">@dimen/standard_padding_2</item>
-        <item name="android:radius">@dimen/standard_radius</item>
-        <item name="android:background">@drawable/btn_primary_background</item>
-        <item name="android:typeface">monospace</item>
+    <style name="AppTheme.Button" parent="Widget.AppCompat.Button.Colored">
+        <item name="colorButtonNormal">@color/colorPrimary</item>
+        <item name="android:textColor">@color/White</item>
     </style>
 
     <style name="AppTheme.Button.Flat" parent="AppTheme">
         <item name="colorControlHighlight">@color/colorPrimaryLight</item>
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">@dimen/button_height</item>
         <item name="android:paddingStart">@dimen/standard_padding_2</item>
         <item name="android:paddingEnd">@dimen/standard_padding_2</item>
         <item name="android:radius">@dimen/standard_radius</item>

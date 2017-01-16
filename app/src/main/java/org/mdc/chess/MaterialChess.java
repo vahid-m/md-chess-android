@@ -1155,6 +1155,11 @@ public class MaterialChess extends AppCompatActivity
         } else if (id == R.id.nav_settings) {
             Intent i = new Intent(MaterialChess.this, Preferences.class);
             startActivityForResult(i, RESULT_SETTINGS);
+        } else if (id == R.id.nav_file_pgn) {
+            removeDialog(FILE_MENU_DIALOG);
+            showDialog(FILE_MENU_DIALOG);
+        } else if (id == R.id.nav_game_mode) {
+            showDialog(GAME_MODE_DIALOG);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.main_layout);
@@ -1210,6 +1215,8 @@ public class MaterialChess extends AppCompatActivity
         gameMode = new GameMode(modeNr);
         String oldPlayerName = playerName;
         playerName = settings.getString("playerName", "Player");
+        TextView txtPlayerName = (TextView) findViewById(R.id.playerName);
+        txtPlayerName.setText(playerName);
         boardFlipped = settings.getBoolean("boardFlipped", false);
         autoSwapSides = settings.getBoolean("autoSwapSides", false);
         playerNameFlip = settings.getBoolean("playerNameFlip", true);
@@ -2728,11 +2735,20 @@ public class MaterialChess extends AppCompatActivity
 
                                 final TextView preComment, moveView, nag, postComment;
                                 preComment = (TextView) content.findViewById(R.id.ed_comments_pre);
+                                final TextInputLayout preCommentWrapper =
+                                        (TextInputLayout) content.findViewById(
+                                                R.id.ed_comments_pre_wrapper);
+                                preCommentWrapper.setHint(
+                                        content.getResources().getString(R.string.comment_before));
                                 moveView = (TextView) content.findViewById(R.id.ed_comments_move);
                                 nag = (TextView) content.findViewById(R.id.ed_comments_nag);
                                 postComment = (TextView) content.findViewById(
                                         R.id.ed_comments_post);
-
+                                final TextInputLayout postCommentWrapper =
+                                        (TextInputLayout) content.findViewById(
+                                                R.id.ed_comments_post_wrapper);
+                                postCommentWrapper.setHint(
+                                        content.getResources().getString(R.string.comment_after));
                                 preComment.setText(commInfo.preComment);
                                 postComment.setText(commInfo.postComment);
                                 moveView.setText(commInfo.move);

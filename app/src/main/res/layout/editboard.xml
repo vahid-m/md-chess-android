@@ -48,29 +48,24 @@
                 android:background="@color/White"
                 android:orientation="horizontal"
                 android:paddingEnd="@dimen/material_content_edge_margin_horizontal"
-                android:paddingStart="@dimen/material_content_edge_margin_horizontal">
+                android:paddingStart="@dimen/material_content_edge_margin_horizontal"
+                android:paddingTop="@dimen/material_content_edge_margin_horizontal">
 
                 <Button
                     android:id="@+id/eb_cancel"
-                    style="?android:attr/buttonBarButtonStyle"
+                    style="@style/Widget.AppCompat.Button.Colored"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/material_content_edge_margin_horizontal"
                     android:layout_weight="1"
-                    android:background="@drawable/btn_primary_background"
-                    android:text="@string/cancel"
-                    android:textColor="@color/White" />
+                    android:text="@string/cancel" />
 
                 <Button
                     android:id="@+id/eb_ok"
-                    style="?android:attr/buttonBarButtonStyle"
+                    style="@style/Widget.AppCompat.Button.Colored"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="@dimen/material_content_edge_margin_horizontal"
                     android:layout_weight="1"
-                    android:background="@drawable/btn_primary_background"
-                    android:text="@android:string/ok"
-                    android:textColor="@color/White" />
+                    android:text="@android:string/ok" />
 
             </LinearLayout>
         </LinearLayout>

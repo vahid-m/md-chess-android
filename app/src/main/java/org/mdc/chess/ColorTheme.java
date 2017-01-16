@@ -23,7 +23,7 @@ import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 
 public class ColorTheme {
-    public final static int FONT_FOREGROUND = 16;
+    public final static int FONT_FOREGROUND = 0;
     public final static int GENERAL_BACKGROUND = 17;
     final static int DARK_SQUARE = 0;
     final static int BRIGHT_SQUARE = 1;

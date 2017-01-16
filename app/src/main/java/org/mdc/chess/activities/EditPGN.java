@@ -101,9 +101,9 @@ public class EditPGN extends ListActivity {
 
         Intent i = getIntent();
         String action = i.getAction();
-        String fileName = i.getStringExtra("org.mdc.MaterialChess.pathname");
+        String fileName = i.getStringExtra("org.mdc.chess.pathname");
         switch (action) {
-            case "org.mdc.MaterialChess.loadFile":
+            case "org.mdc.chess.loadFile":
                 pgnFile = new PGNFile(fileName);
                 loadGame = true;
                 showDialog(PROGRESS_DIALOG);
@@ -122,11 +122,11 @@ public class EditPGN extends ListActivity {
                 });
                 workThread.start();
                 break;
-            case "org.mdc.MaterialChess.loadFileNextGame":
-            case "org.mdc.MaterialChess.loadFilePrevGame":
+            case "org.mdc.chess.loadFileNextGame":
+            case "org.mdc.chess.loadFilePrevGame":
                 pgnFile = new PGNFile(fileName);
                 loadGame = true;
-                boolean next = action.equals("org.mdc.MaterialChess.loadFileNextGame");
+                boolean next = action.equals("org.mdc.chess.loadFileNextGame");
                 final int loadItem = defaultItem + (next ? 1 : -1);
                 if (loadItem < 0) {
                     Toast.makeText(getApplicationContext(), R.string.no_prev_game,
@@ -158,10 +158,10 @@ public class EditPGN extends ListActivity {
                     workThread.start();
                 }
                 break;
-            case "org.mdc.MaterialChess.saveFile":
+            case "org.mdc.chess.saveFile":
                 loadGame = false;
-                pgnToSave = i.getStringExtra("org.mdc.MaterialChess.pgn");
-                boolean silent = i.getBooleanExtra("org.mdc.MaterialChess.silent", false);
+                pgnToSave = i.getStringExtra("org.mdc.chess.pgn");
+                boolean silent = i.getBooleanExtra("org.mdc.chess.silent", false);
                 if (silent) { // Silently append to file
                     PGNFile pgnFile2 = new PGNFile(fileName);
                     pgnFile2.appendPGN(pgnToSave, null);
@@ -250,7 +250,7 @@ public class EditPGN extends ListActivity {
         progress = null;
         removeDialog(PROGRESS_DIALOG);
         setContentView(R.layout.select_game);
-        Util.overrideViewAttribs(findViewById(android.R.id.content));
+        //Util.overrideViewAttribs(findViewById(android.R.id.content));
         aa = new ArrayAdapter<GameInfo>(this, R.layout.select_game_list_item, gamesInFile) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {

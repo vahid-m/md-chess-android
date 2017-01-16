@@ -3,14 +3,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "24.0.2"
+    buildToolsVersion "24.0.3"
 
     defaultConfig {
         applicationId "org.mdc.chess"
         minSdkVersion 19
-        targetSdkVersion 24
-        versionCode 6
-        versionName "0.6.0"
+        targetSdkVersion 25
+        versionCode 8
+        versionName "0.7.1"
     }
 
     buildTypes {
@@ -52,9 +52,9 @@ repositories {
 
 dependencies {
     compile project(':cuckoochessengine')
-    compile 'com.android.support:appcompat-v7:25.0.0'
+    compile 'com.android.support:appcompat-v7:25.0.1'
     compile 'com.github.amlcurran.showcaseview:library:5.0.0'
-    compile 'com.android.support:design:25.0.0'
+    compile 'com.android.support:design:25.0.1'
     compile 'blue.aodev:material-values:1.1.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.0-beta3'
 }

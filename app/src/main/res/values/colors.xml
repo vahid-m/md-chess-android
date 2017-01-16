@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="default_normal">#ff0099cc</color><!-- android.R.color.holo_blue_dark -->
-    <color name="default_pressed">#ff33b5e5</color><!-- android.R.color.holo_blue_light -->
-    <color name="default_disabled">#aaa</color><!-- android.R.color.darker_gray -->
+
     <color name="White">#FFFFFF</color>
 
     <color name="colorPrimary">@color/material_color_blue_grey_500</color>
     <color name="colorPrimaryDark">@color/material_color_blue_grey_600</color>
     <color name="colorPrimaryLight">@color/material_color_blue_grey_400</color>
     <color name="colorIconsText">#FFFFFF</color>
-    <color name="colorAccent">@color/material_color_blue_500</color>
+    <color name="colorAccent">@color/material_color_red_500</color>
     <color name="colorPrimaryText">#212121</color>
     <color name="colorSecondaryText">@color/material_color_blue_grey_800</color>
     <color name="colorDivider">#BDBDBD</color>
@@ -27,24 +25,5 @@
     <item name="darkorange" type="color">#ffef6c00</item>
     <item name="darkred" type="color">#ffd32f2f</item>
     <item name="disabled" type="color">#757575</item>
-
-    <color name="original_dark_square">@color/material_color_blue_grey_800</color>
-    <color name="original_bright_square">@color/material_color_blue_grey_100</color>
-    <color name="original_selected_square">@color/material_color_blue_accent_700</color>
-    <color name="original_cursor_square">@color/material_color_blue_accent_200</color>
-    <color name="original_dark_piece">@color/material_color_black</color>
-    <color name="original_bright_piece">@color/material_color_white</color>
-    <color name="original_current_move">@color/material_color_blue_grey_600</color>
-    <color name="original_arrow_0">@color/material_color_indigo_accent_700</color>
-    <color name="original_arrow_1">@color/material_color_blue_accent_700</color>
-    <color name="original_arrow_2">@color/material_color_light_blue_accent_700</color>
-    <color name="original_arrow_3">@color/material_color_cyan_accent_700</color>
-    <color name="original_arrow_4">@color/material_color_teal_accent_700</color>
-    <color name="original_arrow_5">@color/material_color_green_accent_700</color>
-    <color name="original_square_label">@color/material_color_orange_accent_700</color>
-    <color name="original_decoration">@color/material_color_blue_grey_200</color>
-    <color name="original_pgn_comment">@color/material_color_blue_grey_400</color>
-    <color name="original_font_foreground">@color/material_color_blue_grey_200</color>
-    <color name="original_general_background">@color/material_color_blue_grey_600</color>
 
 </resources>
