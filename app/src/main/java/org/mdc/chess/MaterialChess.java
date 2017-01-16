@@ -1054,16 +1054,6 @@ public class MaterialChess extends AppCompatActivity
             }
         });
 
-
-        /*modeButton = (ImageButton) findViewById(R.id.modeButton);
-        modeButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDialog(GAME_MODE_DIALOG);
-            }
-        });
-
-        */
     }
 
     @Override
@@ -1215,8 +1205,6 @@ public class MaterialChess extends AppCompatActivity
         gameMode = new GameMode(modeNr);
         String oldPlayerName = playerName;
         playerName = settings.getString("playerName", "Player");
-        TextView txtPlayerName = (TextView) findViewById(R.id.playerName);
-        txtPlayerName.setText(playerName);
         boardFlipped = settings.getBoolean("boardFlipped", false);
         autoSwapSides = settings.getBoolean("autoSwapSides", false);
         playerNameFlip = settings.getBoolean("playerNameFlip", true);
