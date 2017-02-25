@@ -1,6 +1,6 @@
 ![MaterialChess Icon](http://i.imgur.com/H6rLz1d.jpg)
 
-#Material Chess 
+#MD Chess 
 
 This project is based on Material Chess - Chesstastic & Droidfish. I'm developing this as a hobby.
 
