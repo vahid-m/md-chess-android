@@ -1,65 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group android:checkableBehavior="single">
+    <group
+        android:id="@+id/menu_game"
+        android:checkableBehavior="single">
         <item
             android:id="@+id/nav_new_game"
-            android:icon="@drawable/ic_gamepad"
             android:title="@string/option_new_game" />
-        <item
-            android:id="@+id/nav_game_mode"
-            android:icon="@drawable/ic_mode"
-            android:title="@string/select_game_mode" />
+
         <item
             android:id="@+id/nav_edit_board"
-            android:icon="@drawable/ic_mode_edit"
             android:title="@string/option_edit_board" />
+
+        <item
+            android:id="@+id/nav_game_mode"
+            android:title="@string/select_game_mode" />
+
         <item
             android:id="@+id/nav_flip_board"
-            android:icon="@drawable/ic_swap"
             android:title="@string/flip_board" />
-        <item
-            android:id="@+id/nav_load_pgn"
-            android:icon="@drawable/ic_file_upload"
-            android:title="@string/pgn_load" />
-        <item
-            android:id="@+id/nav_file_pgn"
-            android:icon="@drawable/ic_file"
-            android:title="@string/option_file" />
-        <item
-            android:id="@+id/nav_resign"
-            android:icon="@drawable/ic_exit"
-            android:title="@string/option_resign_game" />
-        <item
-            android:id="@+id/nav_force_computer"
-            android:icon="@drawable/ic_play_circle_filled"
-            android:title="@string/option_force_computer_move" />
+    </group>
+
+    <group
+        android:id="@+id/menu_features"
+        android:checkableBehavior="single">
 
         <item
             android:id="@+id/nav_open_book"
-            android:icon="@drawable/ic_book_24dp"
             android:title="@string/select_opening_book_file" />
 
         <item
-            android:id="@+id/nav_theme"
-            android:icon="@drawable/ic_color"
-            android:title="@string/option_color_theme" />
+            android:id="@+id/nav_load_pgn"
+            android:title="@string/pgn_load" />
+
+        <item
+            android:id="@+id/nav_file_pgn"
+            android:title="@string/option_file" />
+    </group>
+
+    <group
+        android:id="@+id/menu_engine"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_resign"
+            android:title="@string/option_resign_game" />
+
+        <item
+            android:id="@+id/nav_force_computer"
+            android:title="@string/option_force_computer_move" />
 
         <item
             android:id="@+id/nav_engine"
-            android:icon="@drawable/ic_build"
             android:title="@string/option_manage_engines" />
+    </group>
+
+    <group
+        android:id="@+id/menu_settings"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_theme"
+            android:title="@string/option_color_theme" />
 
         <item
             android:id="@+id/nav_settings"
-            android:icon="@drawable/ic_settings"
             android:title="@string/option_settings" />
 
         <item
             android:id="@+id/nav_about"
-            android:icon="@drawable/ic_about"
             android:title="@string/option_about" />
 
     </group>
+
 
 </menu>

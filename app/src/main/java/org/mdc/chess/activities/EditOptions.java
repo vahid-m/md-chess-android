@@ -1,5 +1,5 @@
 /*
-    MaterialChess - An Android chess program.
+    MD Chess - An Android chess program.
     Copyright (C) 2014  Peter Österlund, peterosterlund2@gmail.com
 
     This program is free software: you can redistribute it and/or modify

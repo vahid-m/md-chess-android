@@ -1,5 +1,5 @@
 /*
-    MaterialChess - An Android chess program.
+    MD Chess - An Android chess program.
     Copyright (C) 2011-2013  Peter Österlund, peterosterlund2@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ import android.widget.Toast;
 
 import org.mdc.chess.ChessBoard;
 import org.mdc.chess.ChessBoard.SquareDecoration;
-import org.mdc.chess.MaterialChess;
+import org.mdc.chess.MDChess;
 import org.mdc.chess.R;
 import org.mdc.chess.Util;
 import org.mdc.chess.Util.MaterialDiff;
@@ -164,7 +164,7 @@ public class EditBoard extends AppCompatActivity {
         });
 
         cb = (ChessBoardEdit) findViewById(R.id.eb_chessboard);
-        status = (TextView) findViewById(R.id.eb_status);
+        status = (TextView) findViewById(R.id.status);
         Button okButton = (Button) findViewById(R.id.eb_ok);
         Button cancelButton = (Button) findViewById(R.id.eb_cancel);
 
@@ -626,7 +626,7 @@ public class EditBoard extends AppCompatActivity {
                 if (resultCode == RESULT_OK) {
                     String fen = data.getStringExtra(Intent.EXTRA_TEXT);
                     if (fen == null) {
-                        String pathName = MaterialChess.getFilePathFromUri(data.getData());
+                        String pathName = MDChess.getFilePathFromUri(data.getData());
                         Intent i = new Intent(EditBoard.this, LoadFEN.class);
                         i.setAction("org.mdc.chess.loadFen");
                         i.putExtra("org.mdc.chess.pathname", pathName);

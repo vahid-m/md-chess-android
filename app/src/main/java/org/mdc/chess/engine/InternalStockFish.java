@@ -1,5 +1,5 @@
 /*
-    MaterialChess - An Android chess program.
+    MD Chess - An Android chess program.
     Copyright (C) 2011-2014  Peter Österlund, peterosterlund2@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,7 @@ public class InternalStockFish extends ExternalEngine {
     @Override
     protected File getOptionsFile() {
         File extDir = Environment.getExternalStorageDirectory();
-        return new File(extDir, "/MaterialChess/uci/stockfish.ini");
+        return new File(extDir, "/MD Chess/uci/stockfish.ini");
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
-    MaterialChess - An Android chess program.
+    MD Chess - An Android chess program.
     Copyright (C) 2011  Peter Österlund, peterosterlund2@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -62,7 +62,7 @@ public class ColorTheme {
     private final static int defaultTheme = 2;
     private final static String themeColors[][] = {
             { // Original
-                    "#546E7A", "#90A4AE", "#FFFF0000", "#FF00FF00", "#FF000000", "#FFFFFFFF",
+                    "#616161", "#9E9E9E", "#FFFF0000", "#FF00FF00", "#FF000000", "#FFFFFFFF",
                     "#FF888888",
                     "#A01F1FFF", "#A0FF1F1F", "#501F1FFF", "#50FF1F1F", "#1E1F1FFF", "#28FF1F1F",
                     "#FFFF0000",

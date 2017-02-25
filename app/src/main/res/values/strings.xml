@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MaterialChess</string>
+    <string name="app_name">MD Chess</string>
     <string name="engine_hash_default">16</string>
     <string name="moves_per_session_default">60</string>
     <string name="time_control_default">120000</string>
@@ -14,13 +14,13 @@
     <string name="autoDelay_default">5000</string>
     <string name="cpu_warning">\
 <b>CPU Usage</b>\n\
-If you leave MaterialChess running in the background and <i>GameMode</i> is set to \
+If you leave MD Chess running in the background and <i>GameMode</i> is set to \
 <i>Analysis</i> or <i>Computer vs Computer</i>, or if <i>Thinking Time</i> \
-is set to a large value, or if <i>Pondering</i> is enabled, MaterialChess can use \
+is set to a large value, or if <i>Pondering</i> is enabled, MD Chess can use \
 a lot of CPU power.\n\
 \n\
 If you are running on battery power, it is recommended that you change settings to \
-conserve battery power, or that you exit <i>MaterialChess</i> using the back button when \
+conserve battery power, or that you exit <i>MD Chess</i> using the back button when \
 you are not actively using the program.\
     </string>
     <string name="offer_draw">Offer Draw</string>
@@ -84,8 +84,8 @@ you are not actively using the program.\
     <string name="reading_scid_file">Reading Scid file…</string>
     <string name="new_file">&lt;New File&gt;</string>
     <string name="new_engine">&lt;New Engine&gt;</string>
-    <string name="no_pgn_files">No files found in directory MaterialChess/pgn on the SD card</string>
-    <string name="no_fen_files">No files found in directory MaterialChess/epd on the SD card</string>
+    <string name="no_pgn_files">No files found in directory MD Chess/pgn on the SD card</string>
+    <string name="no_fen_files">No files found in directory MD Chess/epd on the SD card</string>
     <string name="select_color_theme">Select Color Theme</string>
     <string name="colortheme_original">Original</string>
     <string name="colortheme_xboard">XBoard</string>
@@ -182,7 +182,7 @@ you are not actively using the program.\
     <string name="show_statistics">Show statistics</string>
     <string name="heavy_cpu_usage">Heavy CPU usage</string>
     <string name="background_processing">Background processing</string>
-    <string name="lot_cpu_power">MaterialChess is using a lot of CPU power</string>
+    <string name="lot_cpu_power">MD Chess is using a lot of CPU power</string>
     <string name="delete">Delete</string>
     <string name="delete_game">Delete game?</string>
     <string name="delete_file">Delete file</string>
@@ -360,7 +360,7 @@ you are not actively using the program.\
     <string name="prefs_bookTournamentMode_summary">Ignore moves marked as not for tournament play</string>
     <string name="prefs_bookRandom_title">Book Randomization</string>
     <string name="prefs_bookFile_title">Book Filename</string>
-    <string name="prefs_bookFile_summary">Polyglot or CTG book file in MaterialChess directory on SD Card</string>
+    <string name="prefs_bookFile_summary">Polyglot or CTG book file in MD Chess directory on SD Card</string>
     <string name="prefs_pgnSettings_title">PGN Settings</string>
     <string name="prefs_pgnSettings_summary">Settings for import and export of portable game notation (PGN) data</string>
     <string name="prefs_pgn_viewer">PGN viewer</string>

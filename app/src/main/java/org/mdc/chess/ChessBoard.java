@@ -1,5 +1,5 @@
 /*
-    MaterialChess - An Android chess program.
+    MD Chess - An Android chess program.
     Copyright (C) 2011  Peter Österlund, peterosterlund2@gmail.com
 
     This program is free software: you can redistribute it and/or modify
@@ -500,40 +500,40 @@ public abstract class ChessBoard extends View {
                 dr = null;        // don't do anything
                 break;
             case Piece.WKING:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.wk);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_white_king);
                 break;
             case Piece.WQUEEN:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.wq);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_white_queen);
                 break;
             case Piece.WROOK:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.wr);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_white_rook);
                 break;
             case Piece.WBISHOP:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.wb);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_white_bishop);
                 break;
             case Piece.WKNIGHT:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.wn);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_white_knight);
                 break;
             case Piece.WPAWN:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.wp);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_white_pawn);
                 break;
             case Piece.BKING:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.bk);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_black_king);
                 break;
             case Piece.BQUEEN:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.bq);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_black_queen);
                 break;
             case Piece.BROOK:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.br);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_black_rook);
                 break;
             case Piece.BBISHOP:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.bb);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_black_bishop);
                 break;
             case Piece.BKNIGHT:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.bn);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_black_knight);
                 break;
             case Piece.BPAWN:
-                dr = ContextCompat.getDrawable(getContext(), R.drawable.bp);
+                dr = ContextCompat.getDrawable(getContext(), R.drawable.ic_black_pawn);
                 break;
         }
         if (dr != null) {

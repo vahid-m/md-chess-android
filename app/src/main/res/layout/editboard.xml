@@ -27,20 +27,6 @@
 
             <include layout="@layout/title" />
 
-            <TextView
-                android:id="@+id/eb_status"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/material_color_grey_100"
-                android:gravity="center_horizontal"
-                android:includeFontPadding="true"
-                android:paddingBottom="@dimen/material_baseline_grid_1x"
-                android:paddingEnd="@dimen/material_content_edge_margin_horizontal"
-                android:paddingStart="@dimen/material_content_edge_margin_horizontal"
-                android:textColor="@color/material_color_grey_800"
-                android:textSize="14sp"
-                android:typeface="monospace" />
-
             <LinearLayout
                 style="?android:attr/buttonBarStyle"
                 android:layout_width="fill_parent"
