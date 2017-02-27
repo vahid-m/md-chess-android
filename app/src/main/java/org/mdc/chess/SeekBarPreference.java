@@ -27,6 +27,7 @@ import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
+import android.support.v4.widget.TextViewCompat;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -68,12 +69,13 @@ public class SeekBarPreference extends Preference
     protected View onCreateView(ViewGroup parent) {
         TextView name = new TextView(getContext());
         name.setText(getTitle());
-        name.setTextAppearance(getContext(), android.R.style.TextAppearance_Large);
-        name.setGravity(Gravity.LEFT);
+        //name.setTextAppearance(getContext(), android.R.style.TextAppearance_Large);
+        TextViewCompat.setTextAppearance(name, android.R.style.TextAppearance_Large);
+        name.setGravity(Gravity.START);
         LinearLayout.LayoutParams lp =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.gravity = Gravity.LEFT;
+        lp.gravity = Gravity.START;
         lp.weight = 1.0f;
         name.setLayoutParams(lp);
 
@@ -98,7 +100,7 @@ public class SeekBarPreference extends Preference
         bar.setOnSeekBarChangeListener(this);
         lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.gravity = Gravity.RIGHT;
+        lp.gravity = Gravity.END;
         bar.setLayoutParams(lp);
 
         CharSequence summaryCharSeq = getSummary();
@@ -108,10 +110,10 @@ public class SeekBarPreference extends Preference
             summary = new TextView(getContext());
             summary.setText(getSummary());
 //            summary.setTextAppearance(getContext(), android.R.style.TextAppearance_Large);
-            summary.setGravity(Gravity.LEFT);
+            summary.setGravity(Gravity.START);
             lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.gravity = Gravity.LEFT;
+            lp.gravity = Gravity.START;
             lp.weight = 1.0f;
             summary.setLayoutParams(lp);
         }
@@ -154,7 +156,8 @@ public class SeekBarPreference extends Preference
                             if (value < 0) value = 0;
                             if (value > maxValue) value = maxValue;
                             onProgressChanged(bar, value, false);
-                        } catch (NumberFormatException nfe) {
+                        } catch (NumberFormatException ignored) {
+
                         }
                     }
                 };
@@ -182,7 +185,7 @@ public class SeekBarPreference extends Preference
         return layout;
     }
 
-    private final String valToString() {
+    private String valToString() {
         return String.format(Locale.US, "%.1f%%", currVal * 0.1);
     }
 
