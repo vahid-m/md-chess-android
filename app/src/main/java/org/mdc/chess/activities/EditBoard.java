@@ -153,7 +153,6 @@ public class EditBoard extends AppCompatActivity {
         setContentView(R.layout.app_bar_edit_board);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
@@ -164,17 +163,17 @@ public class EditBoard extends AppCompatActivity {
         });
 
         cb = (ChessBoardEdit) findViewById(R.id.eb_chessboard);
-        status = (TextView) findViewById(R.id.status);
+        status = (TextView) findViewById(R.id.status_edit);
         Button okButton = (Button) findViewById(R.id.eb_ok);
         Button cancelButton = (Button) findViewById(R.id.eb_cancel);
 
-        whiteFigText = (TextView) findViewById(R.id.txt_first);
+        whiteFigText = (TextView) findViewById(R.id.txt_first_edit);
         whiteFigText.setTypeface(figNotation);
         whiteFigText.setSelected(true);
-        blackFigText = (TextView) findViewById(R.id.txt_third);
+        blackFigText = (TextView) findViewById(R.id.txt_third_edit);
         blackFigText.setTypeface(figNotation);
         blackFigText.setSelected(true);
-        TextView summaryTitleText = (TextView) findViewById(R.id.txt_second);
+        TextView summaryTitleText = (TextView) findViewById(R.id.txt_second_edit);
         summaryTitleText.setText(R.string.edit_board);
 
         TextUtils.TruncateAt where = autoScrollTitle ? TextUtils.TruncateAt.MARQUEE

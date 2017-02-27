@@ -971,7 +971,7 @@ public class MDChessController {
 
         updateRemainingTime();
         updateMaterialDiffList();
-        gui.updateTimeControlTitle();
+        //gui.updateTimeControlTitle();
     }
 
     public final void updateMaterialDiffList() {

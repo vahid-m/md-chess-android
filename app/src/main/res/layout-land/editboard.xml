@@ -20,7 +20,7 @@
         android:layout_height="fill_parent"
         android:orientation="vertical">
 
-        <include layout="@layout/title" />
+        <include layout="@layout/title_edit" />
 
         <Button
             android:id="@+id/eb_cancel"

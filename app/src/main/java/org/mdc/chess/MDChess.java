@@ -21,8 +21,6 @@ package org.mdc.chess;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -91,6 +89,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.kalab.chess.enginesupport.ChessEngine;
 import com.kalab.chess.enginesupport.ChessEngineResolver;
 
@@ -189,38 +189,14 @@ public class MDChess extends AppCompatActivity
     static private final int RESULT_OI_FEN_LOAD = 7;
     static private final int RESULT_GET_FEN = 8;
     static private final int RESULT_EDITOPTIONS = 9;
-    static private final int PROMOTE_DIALOG = 0;
-    static private final int BOARD_MENU_DIALOG = 1;
-    static private final int ABOUT_DIALOG = 2;
-    static private final int SELECT_BOOK_DIALOG = 4;
-    static private final int SELECT_ENGINE_DIALOG = 5;
-    static private final int SELECT_ENGINE_DIALOG_NOMANAGE = 6;
     static private final int SELECT_PGN_FILE_DIALOG = 7;
-
     static private final int SELECT_PGN_FILE_SAVE_DIALOG = 8;
-    static private final int SET_COLOR_THEME_DIALOG = 9;
-    static private final int GAME_MODE_DIALOG = 10;
-    static private final int SELECT_PGN_SAVE_NEWFILE_DIALOG = 11;
-    static private final int MOVELIST_MENU_DIALOG = 12;
-    static private final int THINKING_MENU_DIALOG = 13;
-    static private final int GO_BACK_MENU_DIALOG = 14;
-    static private final int GO_FORWARD_MENU_DIALOG = 15;
-    static private final int FILE_MENU_DIALOG = 16;
-    static private final int NEW_GAME_DIALOG = 17;
-    static private final int MANAGE_ENGINES_DIALOG = 21;
-    static private final int NETWORK_ENGINE_DIALOG = 22;
-    static private final int NEW_NETWORK_ENGINE_DIALOG = 23;
-    static private final int NETWORK_ENGINE_CONFIG_DIALOG = 24;
-    static private final int DELETE_NETWORK_ENGINE_DIALOG = 25;
-    static private final int CLIPBOARD_DIALOG = 26;
     static private final int SELECT_FEN_FILE_DIALOG = 27;
-    static private final int CONFIRM_RESIGN_DIALOG = 28;
     private final static int FT_NONE = 0;
     private final static int FT_PGN = 1;
     private final static int FT_SCID = 2;
     private final static int FT_FEN = 3;
     private static MDChessController ctrl = null;
-    private static Dialog moveListMenuDlg;
     private final BookOptions bookOptions = new BookOptions();
     private final PGNOptions pgnOptions = new PGNOptions();
     private final EngineOptions engineOptions = new EngineOptions();
@@ -254,6 +230,7 @@ public class MDChess extends AppCompatActivity
     private MoveListView moveList;
     private TextView thinking;
     private TextView whiteTitleText, blackTitleText, engineTitleText;
+    private TextView whiteFigText, blackFigText;
     private SharedPreferences settings;
     private float scrollSensitivity;
     private boolean invertScrollDirection;
@@ -347,7 +324,7 @@ public class MDChess extends AppCompatActivity
         setPieceNames(PGNOptions.PT_LOCAL);
         initUI();
 
-        gameTextListener = new PgnScreenText(this, pgnOptions);
+        gameTextListener = new PgnScreenText(pgnOptions);
         moveList.setOnLinkClickListener(gameTextListener);
         moveList.setBackgroundColor(Color.WHITE);
         if (ctrl != null) {
@@ -659,10 +636,19 @@ public class MDChess extends AppCompatActivity
         blackTitleText = (TextView) findViewById(R.id.txt_third);
         blackTitleText.setSelected(true);
         engineTitleText = (TextView) findViewById(R.id.txt_second);
+
+        whiteFigText = (TextView) findViewById(R.id.white_pieces);
+        whiteFigText.setTypeface(figNotation);
+        whiteFigText.setSelected(true);
+        whiteFigText.setTextColor(whiteTitleText.getTextColors());
+        blackFigText = (TextView) findViewById(R.id.black_pieces);
+        blackFigText.setTypeface(figNotation);
+        blackFigText.setSelected(true);
+        blackFigText.setTextColor(blackTitleText.getTextColors());
+
         status = (TextView) findViewById(R.id.status);
         moveListScroll = (ScrollView) findViewById(R.id.scrollView);
         moveList = (MoveListView) findViewById(R.id.moveList);
-        View thinkingScroll = findViewById(R.id.scrollViewBot);
         thinking = (TextView) findViewById(R.id.thinking);
         defaultThinkingListTypeFace = thinking.getTypeface();
         status.setFocusable(false);
@@ -705,8 +691,7 @@ public class MDChess extends AppCompatActivity
                     pending = false;
                     handler.removeCallbacks(runnable);
                     ((Vibrator) getSystemService(Context.VIBRATOR_SERVICE)).vibrate(20);
-                    removeDialog(BOARD_MENU_DIALOG);
-                    showDialog(BOARD_MENU_DIALOG);
+                    boardMenuDialog();
                 }
             };
             private boolean pendingClick = false;
@@ -832,7 +817,7 @@ public class MDChess extends AppCompatActivity
                 return false;
             }
         });
-        cb.setOnTrackballListener(new ChessBoard.OnTrackballListener() {
+        /*cb.setOnTrackballListener(new ChessBoard.OnTrackballListener() {
 
             public void onTrackballEvent(MotionEvent event) {
                 if (ctrl.humansTurn()) {
@@ -845,12 +830,11 @@ public class MDChess extends AppCompatActivity
                 }
             }
 
-        });
+        });*/
 
         moveList.setOnLongClickListener(new OnLongClickListener() {
             public boolean onLongClick(View v) {
-                removeDialog(MOVELIST_MENU_DIALOG);
-                showDialog(MOVELIST_MENU_DIALOG);
+                moveListMenuDialog();
                 return true;
             }
         });
@@ -858,8 +842,7 @@ public class MDChess extends AppCompatActivity
             public boolean onLongClick(View v) {
                 if (mShowThinking || gameMode.analysisMode()) {
                     if (!pvMoves.isEmpty()) {
-                        removeDialog(THINKING_MENU_DIALOG);
-                        showDialog(THINKING_MENU_DIALOG);
+                        thinkingMenuDialog();
                     }
                 }
                 return true;
@@ -892,6 +875,30 @@ public class MDChess extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_drawer, menu);
+        View actionUndo = findViewById(R.id.action_undo);
+        if (actionUndo != null) {
+            actionUndo.setOnLongClickListener(
+                    new View.OnLongClickListener() {
+                        @Override
+                        public boolean onLongClick(View v) {
+                            goBackMenuDialog();
+                            return true;
+                        }
+                    }
+            );
+        }
+        View actionRedo = findViewById(R.id.action_redo);
+        if (actionRedo != null) {
+            actionRedo.setOnLongClickListener(
+                    new View.OnLongClickListener() {
+                        @Override
+                        public boolean onLongClick(View v) {
+                            goForwardMenuDialog();
+                            return true;
+                        }
+                    }
+            );
+        }
         return true;
     }
 
@@ -921,47 +928,43 @@ public class MDChess extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_new_game) {
-            showDialog(NEW_GAME_DIALOG);
+            gameDialog();
         } else if (id == R.id.nav_edit_board) {
             startEditBoard(ctrl.getFEN());
         } else if (id == R.id.nav_flip_board) {
             boardFlipped = !cb.flipped;
             cb.setFlipped(boardFlipped);
         } else if (id == R.id.nav_load_pgn) {
-            removeDialog(SELECT_PGN_FILE_DIALOG);
-            showDialog(SELECT_PGN_FILE_DIALOG);
+            selectPgnFileDialog();
         } else if (id == R.id.nav_resign) {
             if (ctrl.humansTurn()) {
-                removeDialog(CONFIRM_RESIGN_DIALOG);
-                showDialog(CONFIRM_RESIGN_DIALOG);
+                //removeDialog(CONFIRM_RESIGN_DIALOG);
+                //showDialog(CONFIRM_RESIGN_DIALOG);
+                resignDialog();
             }
         } else if (id == R.id.nav_force_computer) {
             ctrl.stopSearch();
         } else if (id == R.id.nav_open_book) {
             if (storageAvailable()) {
-                removeDialog(SELECT_BOOK_DIALOG);
-                showDialog(SELECT_BOOK_DIALOG);
+                selectBookDialog();
             }
         } else if (id == R.id.nav_theme) {
-            showDialog(SET_COLOR_THEME_DIALOG);
+            setColorThemeDialog();
         } else if (id == R.id.nav_about) {
-            showDialog(ABOUT_DIALOG);
+            aboutDialog();
         } else if (id == R.id.nav_engine) {
             if (storageAvailable()) {
-                removeDialog(MANAGE_ENGINES_DIALOG);
-                showDialog(MANAGE_ENGINES_DIALOG);
+                manageEnginesDialog();
             } else {
-                removeDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
-                showDialog(SELECT_ENGINE_DIALOG_NOMANAGE);
+                selectEngineDialog(true);
             }
         } else if (id == R.id.nav_settings) {
             Intent i = new Intent(MDChess.this, Preferences.class);
             startActivityForResult(i, RESULT_SETTINGS);
         } else if (id == R.id.nav_file_pgn) {
-            removeDialog(FILE_MENU_DIALOG);
-            showDialog(FILE_MENU_DIALOG);
+            fileMenuDialog();
         } else if (id == R.id.nav_game_mode) {
-            showDialog(GAME_MODE_DIALOG);
+            gameModeDialog();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.main_layout);
@@ -1214,12 +1217,12 @@ public class MDChess extends AppCompatActivity
      * Update center field in second header line.
      */
     public final void updateTimeControlTitle() {
-        int[] tmpInfo = ctrl.getTimeLimit();
-        StringBuilder sb = new StringBuilder();
+        /*int[] tmpInfo = ctrl.getTimeLimit();
+        //StringBuilder sb = new StringBuilder();
         int tc = tmpInfo[0];
         int mps = tmpInfo[1];
         int inc = tmpInfo[2];
-        if (mps > 0) {
+        /*if (mps > 0) {
             sb.append(mps);
             sb.append("/");
         }
@@ -1227,8 +1230,8 @@ public class MDChess extends AppCompatActivity
         if ((inc > 0) || (mps <= 0)) {
             sb.append("+");
             sb.append(tmpInfo[2] / 1000);
-        }
-        //summaryTitleText.setText(sb.toString());
+        }*/
+        //status.setText(sb.toString());
     }
 
     @Override
@@ -1240,8 +1243,8 @@ public class MDChess extends AppCompatActivity
 
     @Override
     public void updateMaterialDifferenceTitle(Util.MaterialDiff diff) {
-        //whiteFigText.setText(diff.white);
-        //blackFigText.setText(diff.black);
+        whiteFigText.setText(diff.white);
+        blackFigText.setText(diff.black);
     }
 
     private void setBookOptions() {
@@ -1663,7 +1666,13 @@ public class MDChess extends AppCompatActivity
                 s += "<br>";
             }
             s += Util.boldStart + getString(R.string.book) + Util.boldStop + bookInfoStr;
-            thinking.append(Html.fromHtml(s));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                thinking.append(Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY));
+            } else {
+                //noinspection deprecation
+                thinking.append(Html.fromHtml(s));
+            }
+
             thinkingEmpty = false;
         }
         if (showVariationLine && (variantStr.indexOf(' ') >= 0)) {
@@ -1672,7 +1681,12 @@ public class MDChess extends AppCompatActivity
                 s += "<br>";
             }
             s += Util.boldStart + getString(R.string.variation) + Util.boldStop + variantStr;
-            thinking.append(Html.fromHtml(s));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                thinking.append(Html.fromHtml(s, Html.FROM_HTML_MODE_LEGACY));
+            } else {
+                //noinspection deprecation
+                thinking.append(Html.fromHtml(s));
+            }
             thinkingEmpty = false;
         }
         thinking.setVisibility(thinkingEmpty ? View.GONE : View.VISIBLE);
@@ -1704,113 +1718,67 @@ public class MDChess extends AppCompatActivity
         cb.setMoveHints(hints);
     }
 
-    @Override
-    protected Dialog onCreateDialog(int id) {
-        switch (id) {
-            case CONFIRM_RESIGN_DIALOG:
-                return newResignDialog();
-            case NEW_GAME_DIALOG:
-                return newGameDialog();
-            case PROMOTE_DIALOG:
-                return promoteDialog();
-            case BOARD_MENU_DIALOG:
-                return boardMenuDialog();
-            case FILE_MENU_DIALOG:
-                return fileMenuDialog();
-            case ABOUT_DIALOG:
-                return aboutDialog();
-            case SELECT_BOOK_DIALOG:
-                return selectBookDialog();
-            case SELECT_ENGINE_DIALOG:
-                return selectEngineDialog(false);
-            case SELECT_ENGINE_DIALOG_NOMANAGE:
-                return selectEngineDialog(true);
-            case SELECT_PGN_FILE_DIALOG:
-                return selectPgnFileDialog();
-            case SELECT_PGN_FILE_SAVE_DIALOG:
-                return selectPgnFileSaveDialog();
-            case SELECT_PGN_SAVE_NEWFILE_DIALOG:
-                return selectPgnSaveNewFileDialog();
-            case SET_COLOR_THEME_DIALOG:
-                return setColorThemeDialog();
-            case GAME_MODE_DIALOG:
-                return gameModeDialog();
-            case MOVELIST_MENU_DIALOG:
-                return moveListMenuDialog();
-            case THINKING_MENU_DIALOG:
-                return thinkingMenuDialog();
-            case GO_BACK_MENU_DIALOG:
-                return goBackMenuDialog();
-            case GO_FORWARD_MENU_DIALOG:
-                return goForwardMenuDialog();
-            /*case CUSTOM1_BUTTON_DIALOG:
-                return makeButtonDialog(custom1ButtonActions);
-            case CUSTOM2_BUTTON_DIALOG:
-                return makeButtonDialog(custom2ButtonActions);
-            case CUSTOM3_BUTTON_DIALOG:
-                return makeButtonDialog(custom3ButtonActions);*/
-            case MANAGE_ENGINES_DIALOG:
-                return manageEnginesDialog();
-            case NETWORK_ENGINE_DIALOG:
-                return networkEngineDialog();
-            case NEW_NETWORK_ENGINE_DIALOG:
-                return newNetworkEngineDialog();
-            case NETWORK_ENGINE_CONFIG_DIALOG:
-                return networkEngineConfigDialog();
-            case DELETE_NETWORK_ENGINE_DIALOG:
-                return deleteNetworkEngineDialog();
-            case CLIPBOARD_DIALOG:
-                return clipBoardDialog();
-            case SELECT_FEN_FILE_DIALOG:
-                return selectFenFileDialog();
-        }
-        return null;
+    private void gameDialog() {
+        new MaterialDialog.Builder(this)
+                .title(R.string.option_new_game)
+                .content(R.string.start_new_game)
+                .positiveText(R.string.black)
+                .negativeText(R.string.white)
+                .neutralText(R.string.yes)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        startNewGame(1);
+                    }
+                })
+                .onNeutral(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        startNewGame(2);
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        startNewGame(0);
+                    }
+                })
+                .show();
     }
 
-    private Dialog newGameDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.option_new_game);
-        builder.setMessage(R.string.start_new_game);
-        builder.setNeutralButton(R.string.yes, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                startNewGame(2);
-            }
-        });
-        builder.setNegativeButton(R.string.white, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                startNewGame(0);
-            }
-        });
-        builder.setPositiveButton(R.string.black, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                startNewGame(1);
-            }
-        });
-        return builder.create();
-    }
+    private void resignDialog() {
+        new MaterialDialog.Builder(this)
+                .title(R.string.option_resign_game)
+                .positiveText(R.string.yes)
+                .negativeText(R.string.no)
+                .neutralText(R.string.option_new_game)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        if (ctrl.humansTurn()) {
+                            ctrl.resignGame();
+                        }
+                    }
+                })
+                .onNeutral(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        gameDialog();
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
 
-    private Dialog newResignDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        //builder.setTitle(R.string.option_new_game);
-        builder.setMessage(R.string.option_resign_game);
-        builder.setNegativeButton(R.string.no, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-        builder.setPositiveButton(R.string.yes, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (ctrl.humansTurn()) {
-                    ctrl.resignGame();
-                }
-            }
-        });
-        return builder.create();
+                    }
+                })
+                .show();
     }
 
     private void startNewGame(int type) {
@@ -1831,22 +1799,25 @@ public class MDChess extends AppCompatActivity
         updateEngineTitle();
     }
 
-    private Dialog promoteDialog() {
+    private void promoteDialog() {
         final CharSequence[] items = {
                 getString(R.string.queen), getString(R.string.rook),
                 getString(R.string.bishop), getString(R.string.knight)
         };
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.promote_pawn_to);
-        builder.setItems(items, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                ctrl.reportPromotePiece(item);
-            }
-        });
-        return builder.create();
+        new MaterialDialog.Builder(this)
+                .title(R.string.promote_pawn_to)
+                .items(items)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        ctrl.reportPromotePiece(which);
+                    }
+                })
+                .show();
     }
 
-    private Dialog clipBoardDialog() {
+    private void clipBoardDialog() {
         final int COPY_GAME = 0;
         final int COPY_POSITION = 1;
         final int PASTE = 2;
@@ -1861,12 +1832,14 @@ public class MDChess extends AppCompatActivity
         lst.add(getString(R.string.paste));
         actions.add(PASTE);
         final List<Integer> finalActions = actions;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.tools_menu);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        switch (finalActions.get(item)) {
+        new MaterialDialog.Builder(this)
+                .title(R.string.tools_menu)
+                .items(lst)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        switch (finalActions.get(which)) {
                             case COPY_GAME: {
                                 String pgn = ctrl.getPGN();
                                 ClipboardManager clipboard = (ClipboardManager) getSystemService(
@@ -1909,11 +1882,11 @@ public class MDChess extends AppCompatActivity
                             }
                         }
                     }
-                });
-        return builder.create();
+                })
+                .show();
     }
 
-    private Dialog boardMenuDialog() {
+    private void boardMenuDialog() {
         final int CLIPBOARD = 0;
         final int FILEMENU = 1;
         final int SHARE = 2;
@@ -1935,19 +1908,20 @@ public class MDChess extends AppCompatActivity
             actions.add(GET_FEN);
         }
         final List<Integer> finalActions = actions;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.tools_menu);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        switch (finalActions.get(item)) {
+        new MaterialDialog.Builder(this)
+                .title(R.string.tools_menu)
+                .items(lst)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        switch (finalActions.get(which)) {
                             case CLIPBOARD: {
-                                showDialog(CLIPBOARD_DIALOG);
+                                clipBoardDialog();
                                 break;
                             }
                             case FILEMENU: {
-                                removeDialog(FILE_MENU_DIALOG);
-                                showDialog(FILE_MENU_DIALOG);
+                                fileMenuDialog();
                                 break;
                             }
                             case SHARE: {
@@ -1959,12 +1933,13 @@ public class MDChess extends AppCompatActivity
                                 break;
                         }
                     }
-                });
-        return builder.create();
+                })
+                .show();
     }
 
     private void shareGame() {
         Intent i = new Intent(Intent.ACTION_SEND);
+        //noinspection deprecation
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
         i.setType("text/plain");
         i.putExtra(Intent.EXTRA_TEXT, ctrl.getPGN());
@@ -1975,7 +1950,7 @@ public class MDChess extends AppCompatActivity
         }
     }
 
-    private Dialog fileMenuDialog() {
+    private void fileMenuDialog() {
         final int LOAD_LAST_FILE = 0;
         final int LOAD_GAME = 1;
         final int LOAD_POS = 2;
@@ -2000,12 +1975,14 @@ public class MDChess extends AppCompatActivity
         lst.add(getString(R.string.save_game));
         actions.add(SAVE_GAME);
         final List<Integer> finalActions = actions;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.load_save_menu);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        switch (finalActions.get(item)) {
+        new MaterialDialog.Builder(this)
+                .title(R.string.load_save_menu)
+                .items(lst)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        switch (finalActions.get(which)) {
                             case LOAD_LAST_FILE:
                                 loadLastFile();
                                 break;
@@ -2029,8 +2006,8 @@ public class MDChess extends AppCompatActivity
                                 break;
                         }
                     }
-                });
-        return builder.create();
+                })
+                .show();
     }
 
     /**
@@ -2057,11 +2034,11 @@ public class MDChess extends AppCompatActivity
         }
     }
 
-    private Dialog aboutDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    private void aboutDialog() {
+        //AlertDialog.Builder builder = new AlertDialog.Builder(this);
         String title = getString(R.string.app_name);
         WebView wv = new WebView(this);
-        builder.setView(wv);
+        //builder.setView(wv);
         InputStream is = getResources().openRawResource(R.raw.about);
         String data = Util.readFromStream(is);
         if (data == null) {
@@ -2079,11 +2056,13 @@ public class MDChess extends AppCompatActivity
         } catch (NameNotFoundException e) {
             Log.d("Exception", e.toString());
         }
-        builder.setTitle(title);
-        return builder.create();
+        new MaterialDialog.Builder(this)
+                .title(title)
+                .customView(wv, true)
+                .show();
     }
 
-    private Dialog selectBookDialog() {
+    private void selectBookDialog() {
         String[] fileNames = findFilesInDirectory(bookDir, new FileNameFilter() {
             @Override
             public boolean accept(String filename) {
@@ -2107,26 +2086,37 @@ public class MDChess extends AppCompatActivity
                 break;
             }
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.select_opening_book_file);
-        builder.setSingleChoiceItems(items, defaultItem, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                Editor editor = settings.edit();
-                String bookFile = "";
-                if (item < numFiles) {
-                    bookFile = finalItems[item].toString();
-                }
-                editor.putString("bookFile", bookFile);
-                editor.apply();
-                bookOptions.filename = bookFile;
-                setBookOptions();
-                dialog.dismiss();
-            }
-        });
-        return builder.create();
+        new MaterialDialog.Builder(this)
+                .title(R.string.select_opening_book_file)
+                .items(items)
+                .itemsCallbackSingleChoice(defaultItem,
+                        new MaterialDialog.ListCallbackSingleChoice() {
+                            @Override
+                            public boolean onSelection(MaterialDialog dialog, View view, int which,
+                                    CharSequence text) {
+                                /**
+                                 * If you use alwaysCallSingleChoiceCallback(), which is
+                                 * discussed below,
+                                 * returning false here won't allow the newly selected radio
+                                 * button to actually be selected.
+                                 **/
+                                Editor editor = settings.edit();
+                                String bookFile = "";
+                                if (which < numFiles) {
+                                    bookFile = finalItems[which].toString();
+                                }
+                                editor.putString("bookFile", bookFile);
+                                editor.apply();
+                                bookOptions.filename = bookFile;
+                                setBookOptions();
+                                dialog.dismiss();
+                                return true;
+                            }
+                        })
+                .show();
     }
 
-    private Dialog selectEngineDialog(final boolean abortOnCancel) {
+    private void selectEngineDialog(final boolean abortOnCancel) {
         final ArrayList<String> items = new ArrayList<>();
         final ArrayList<String> ids = new ArrayList<>();
         ids.add("stockfish");
@@ -2182,38 +2172,44 @@ public class MDChess extends AppCompatActivity
                 break;
             }
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.select_chess_engine);
-        builder.setSingleChoiceItems(items.toArray(new String[0]), defaultItem,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        if ((item < 0) || (item >= nEngines)) {
-                            return;
+        new MaterialDialog.Builder(this)
+                .title(R.string.select_chess_engine)
+                .items(items)
+                .itemsCallbackSingleChoice(defaultItem,
+                        new MaterialDialog.ListCallbackSingleChoice() {
+                            @Override
+                            public boolean onSelection(MaterialDialog dialog, View view, int which,
+                                    CharSequence text) {
+                                /**
+                                 * If you use alwaysCallSingleChoiceCallback(), which is
+                                 * discussed below,
+                                 * returning false here won't allow the newly selected radio
+                                 * button to actually be selected.
+                                 **/
+                                Editor editor = settings.edit();
+                                String engine = ids.get(which);
+                                editor.putString("engine", engine);
+                                editor.apply();
+                                dialog.dismiss();
+                                int strength = settings.getInt("strength", 1000);
+                                setEngineOptions(false);
+                                setEngineStrength(engine, strength);
+                                return true;
+                            }
+                        })
+                .cancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialogInterface) {
+                        if (!abortOnCancel) {
+                            manageEnginesDialog();
                         }
-                        Editor editor = settings.edit();
-                        String engine = ids.get(item);
-                        editor.putString("engine", engine);
-                        editor.apply();
-                        dialog.dismiss();
-                        int strength = settings.getInt("strength", 1000);
-                        setEngineOptions(false);
-                        setEngineStrength(engine, strength);
                     }
-                });
-        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                if (!abortOnCancel) {
-                    removeDialog(MANAGE_ENGINES_DIALOG);
-                    showDialog(MANAGE_ENGINES_DIALOG);
-                }
-            }
-        });
-        return builder.create();
+                })
+                .show();
     }
 
-    private Dialog selectPgnFileDialog() {
-        return selectFileDialog(pgnDir, R.string.select_pgn_file, R.string.no_pgn_files,
+    private void selectPgnFileDialog() {
+        selectFileDialog(pgnDir, R.string.select_pgn_file, R.string.no_pgn_files,
                 "currentPGNFile", new Loader() {
                     @Override
                     public void load(String pathName) {
@@ -2222,8 +2218,8 @@ public class MDChess extends AppCompatActivity
                 });
     }
 
-    private Dialog selectFenFileDialog() {
-        return selectFileDialog(fenDir, R.string.select_fen_file, R.string.no_fen_files,
+    private void selectFenFileDialog() {
+        selectFileDialog(fenDir, R.string.select_fen_file, R.string.no_fen_files,
                 "currentFENFile", new Loader() {
                     @Override
                     public void load(String pathName) {
@@ -2232,42 +2228,55 @@ public class MDChess extends AppCompatActivity
                 });
     }
 
-    private Dialog selectFileDialog(final String defaultDir, int selectFileMsg,
+    private void selectFileDialog(final String defaultDir, int selectFileMsg,
             int noFilesMsg,
             String settingsName, final Loader loader) {
         setAutoMode(AutoMode.OFF);
-        final String[] fileNames = findFilesInDirectory(defaultDir, null);
-        final int numFiles = fileNames.length;
+        final String[] files = findFilesInDirectory(defaultDir, null);
+        final int numFiles = files.length;
         if (numFiles == 0) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.app_name).setMessage(noFilesMsg);
-            return builder.create();
-        }
-        int defaultItem = 0;
-        String currentFile = settings.getString(settingsName, "");
-        currentFile = new File(currentFile).getName();
-        for (int i = 0; i < numFiles; i++) {
-            if (currentFile.equals(fileNames[i])) {
-                defaultItem = i;
-                break;
+            new MaterialDialog.Builder(this)
+                    .title(R.string.app_name)
+                    .content(noFilesMsg);
+        } else {
+            int defaultItem = 0;
+            String currentFile = settings.getString(settingsName, "");
+            currentFile = new File(currentFile).getName();
+            for (int i = 0; i < numFiles; i++) {
+                if (currentFile.equals(files[i])) {
+                    defaultItem = i;
+                    break;
+                }
             }
+            new MaterialDialog.Builder(this)
+                    .title(selectFileMsg)
+                    .items(files)
+                    .itemsCallbackSingleChoice(defaultItem,
+                            new MaterialDialog.ListCallbackSingleChoice() {
+                                @Override
+                                public boolean onSelection(MaterialDialog dialog, View view,
+                                        int which, CharSequence text) {
+                                    /**
+                                     * If you use alwaysCallSingleChoiceCallback(), which is
+                                     * discussed below,
+                                     * returning false here won't allow the newly selected radio
+                                     * button to actually be selected.
+                                     **/
+                                    String sep = File.separator;
+                                    String fn = files[which];
+                                    String pathName =
+                                            Environment.getExternalStorageDirectory() + sep
+                                                    + defaultDir
+                                                    + sep + fn;
+                                    loader.load(pathName);
+                                    return true;
+                                }
+                            })
+                    .show();
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(selectFileMsg);
-        builder.setSingleChoiceItems(fileNames, defaultItem, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                dialog.dismiss();
-                String sep = File.separator;
-                String fn = fileNames[item];
-                String pathName =
-                        Environment.getExternalStorageDirectory() + sep + defaultDir + sep + fn;
-                loader.load(pathName);
-            }
-        });
-        return builder.create();
     }
 
-    private Dialog selectPgnFileSaveDialog() {
+    private void selectPgnFileSaveDialog() {
         setAutoMode(AutoMode.OFF);
         final String[] fileNames = findFilesInDirectory(pgnDir, null);
         final int numFiles = fileNames.length;
@@ -2283,35 +2292,44 @@ public class MDChess extends AppCompatActivity
         CharSequence[] items = new CharSequence[numFiles + 1];
         System.arraycopy(fileNames, 0, items, 0, numFiles);
         items[numFiles] = getString(R.string.new_file);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.select_pgn_file_save);
-        builder.setSingleChoiceItems(items, defaultItem,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        String pgnFile;
-                        if (item >= numFiles) {
-                            dialog.dismiss();
-                            showDialog(SELECT_PGN_SAVE_NEWFILE_DIALOG);
-                        } else {
-                            dialog.dismiss();
-                            pgnFile = fileNames[item];
-                            String sep = File.separator;
-                            String pathName =
-                                    Environment.getExternalStorageDirectory() + sep + pgnDir + sep
-                                            + pgnFile;
-                            savePGNToFile(pathName);
-                        }
-                    }
-                });
-        return builder.create();
+        new MaterialDialog.Builder(this)
+                .title(R.string.select_pgn_file_save)
+                .items(items)
+                .itemsCallbackSingleChoice(defaultItem,
+                        new MaterialDialog.ListCallbackSingleChoice() {
+                            @Override
+                            public boolean onSelection(MaterialDialog dialog, View view, int which,
+                                    CharSequence text) {
+                                /**
+                                 * If you use alwaysCallSingleChoiceCallback(), which is
+                                 * discussed below,
+                                 * returning false here won't allow the newly selected radio
+                                 * button to actually be selected.
+                                 **/
+                                String pgnFile;
+                                if (which >= numFiles) {
+                                    dialog.dismiss();
+                                    selectPgnSaveNewFileDialog();
+                                } else {
+                                    dialog.dismiss();
+                                    pgnFile = fileNames[which];
+                                    String sep = File.separator;
+                                    String pathName =
+                                            Environment.getExternalStorageDirectory() + sep + pgnDir
+                                                    + sep
+                                                    + pgnFile;
+                                    savePGNToFile(pathName);
+                                }
+                                return true;
+                            }
+                        })
+                .show();
     }
 
-    private Dialog selectPgnSaveNewFileDialog() {
+    private void selectPgnSaveNewFileDialog() {
         setAutoMode(AutoMode.OFF);
         View content = View.inflate(this, R.layout.create_pgn_file, null);
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(content);
-        builder.setTitle(R.string.select_pgn_file_save);
+
         final EditText fileNameView = (EditText) content.findViewById(R.id.create_pgn_filename);
         final TextInputLayout fileNameWrapper = (TextInputLayout) content.findViewById(
                 R.id.create_pgn_filename_wrapper);
@@ -2329,49 +2347,69 @@ public class MDChess extends AppCompatActivity
                 savePGNToFile(pathName);
             }
         };
-        builder.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                savePGN.run();
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, null);
 
-        final Dialog dialog = builder.create();
+        new MaterialDialog.Builder(this)
+                .title(R.string.select_pgn_file_save)
+                .customView(content, true)
+                .positiveText(android.R.string.ok)
+                .negativeText(R.string.cancel)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        savePGN.run();
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+
+                    }
+                })
+                .show();
+
         fileNameView.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
                         == KeyEvent.KEYCODE_ENTER)) {
                     savePGN.run();
-                    dialog.cancel();
                     return true;
                 }
                 return false;
             }
         });
-        return dialog;
     }
 
-    private Dialog setColorThemeDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.select_color_theme);
-        String[] themeNames = new String[ColorTheme.themeNames.length];
-        for (int i = 0; i < themeNames.length; i++) {
-            themeNames[i] = getString(ColorTheme.themeNames[i]);
+    private void setColorThemeDialog() {
+        String[] themes = new String[ColorTheme.themeNames.length];
+        for (int i = 0; i < themes.length; i++) {
+            themes[i] = getString(ColorTheme.themeNames[i]);
         }
-        builder.setSingleChoiceItems(themeNames, -1, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                ColorTheme.instance().setTheme(settings, item);
-                cb.setColors();
-                gameTextListener.clear();
-                ctrl.prefsChanged(false);
-                dialog.dismiss();
-                //overrideViewAttribs();
-            }
-        });
-        return builder.create();
+        new MaterialDialog.Builder(this)
+                .title(R.string.select_color_theme)
+                .items(themes)
+                .itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
+                    @Override
+                    public boolean onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        /**
+                         * If you use alwaysCallSingleChoiceCallback(), which is discussed below,
+                         * returning false here won't allow the newly selected radio button to
+                         * actually be selected.
+                         **/
+                        ColorTheme.instance().setTheme(settings, which);
+                        cb.setColors();
+                        gameTextListener.clear();
+                        ctrl.prefsChanged(false);
+                        dialog.dismiss();
+                        return true;
+                    }
+                })
+                .show();
     }
 
-    private Dialog gameModeDialog() {
+    private void gameModeDialog() {
         final CharSequence[] items = {
                 getString(R.string.analysis_mode),
                 getString(R.string.edit_replay_game),
@@ -2380,54 +2418,62 @@ public class MDChess extends AppCompatActivity
                 getString(R.string.two_players),
                 getString(R.string.comp_vs_comp)
         };
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.select_game_mode);
-        builder.setItems(items, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                int gameModeType = -1;
-                /* only flip site in case the player was specified resp. changed */
-                boolean flipSite = false;
-                switch (item) {
-                    case 0:
-                        gameModeType = GameMode.ANALYSIS;
-                        break;
-                    case 1:
-                        gameModeType = GameMode.EDIT_GAME;
-                        break;
-                    case 2:
-                        gameModeType = GameMode.PLAYER_WHITE;
-                        flipSite = true;
-                        break;
-                    case 3:
-                        gameModeType = GameMode.PLAYER_BLACK;
-                        flipSite = true;
-                        break;
-                    case 4:
-                        gameModeType = GameMode.TWO_PLAYERS;
-                        break;
-                    case 5:
-                        gameModeType = GameMode.TWO_COMPUTERS;
-                        break;
-                    default:
-                        break;
-                }
-                dialog.dismiss();
-                if (gameModeType >= 0) {
-                    Editor editor = settings.edit();
-                    String gameModeStr = String.format(Locale.US, "%d", gameModeType);
-                    editor.putString("gameMode", gameModeStr);
-                    editor.apply();
-                    gameMode = new GameMode(gameModeType);
-                    maybeAutoModeOff(gameMode);
-                    ctrl.setGameMode(gameMode);
-                    setBoardFlip(flipSite);
-                }
-            }
-        });
-        return builder.create();
+        new MaterialDialog.Builder(this)
+                .title(R.string.select_game_mode)
+                .items(items)
+                .itemsCallbackSingleChoice(-1, new MaterialDialog.ListCallbackSingleChoice() {
+                    @Override
+                    public boolean onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        /**
+                         * If you use alwaysCallSingleChoiceCallback(), which is discussed below,
+                         * returning false here won't allow the newly selected radio button to
+                         * actually be selected.
+                         **/
+                        int gameModeType = -1;
+                        /* only flip site in case the player was specified resp. changed */
+                        boolean flipSite = false;
+                        switch (which) {
+                            case 0:
+                                gameModeType = GameMode.ANALYSIS;
+                                break;
+                            case 1:
+                                gameModeType = GameMode.EDIT_GAME;
+                                break;
+                            case 2:
+                                gameModeType = GameMode.PLAYER_WHITE;
+                                flipSite = true;
+                                break;
+                            case 3:
+                                gameModeType = GameMode.PLAYER_BLACK;
+                                flipSite = true;
+                                break;
+                            case 4:
+                                gameModeType = GameMode.TWO_PLAYERS;
+                                break;
+                            case 5:
+                                gameModeType = GameMode.TWO_COMPUTERS;
+                                break;
+                            default:
+                                break;
+                        }
+                        if (gameModeType >= 0) {
+                            Editor editor = settings.edit();
+                            String gameModeStr = String.format(Locale.US, "%d", gameModeType);
+                            editor.putString("gameMode", gameModeStr);
+                            editor.apply();
+                            gameMode = new GameMode(gameModeType);
+                            maybeAutoModeOff(gameMode);
+                            ctrl.setGameMode(gameMode);
+                            setBoardFlip(flipSite);
+                        }
+                        return true;
+                    }
+                })
+                .show();
     }
 
-    private Dialog moveListMenuDialog() {
+    private void moveListMenuDialog() {
         final int EDIT_HEADERS = 0;
         final int EDIT_COMMENTS = 1;
         final int REMOVE_SUBTREE = 2;
@@ -2465,23 +2511,22 @@ public class MDChess extends AppCompatActivity
             actions.add(ADD_NULL_MOVE);
         }
         final List<Integer> finalActions = actions;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.edit_game);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        switch (finalActions.get(item)) {
+
+        new MaterialDialog.Builder(this)
+                .title(R.string.edit_game)
+                .items(lst)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        switch (finalActions.get(which)) {
                             case EDIT_HEADERS: {
                                 final TreeMap<String, String> headers =
                                         new TreeMap<>();
                                 ctrl.getHeaders(headers);
 
-                                AlertDialog.Builder builder = new AlertDialog.Builder(
-                                        MDChess.this);
-                                builder.setTitle(R.string.edit_headers);
                                 View content = View.inflate(MDChess.this,
                                         R.layout.edit_headers, null);
-                                builder.setView(content);
 
                                 final TextView event, site, date, round, white, black;
 
@@ -2499,10 +2544,15 @@ public class MDChess extends AppCompatActivity
                                 white.setText(headers.get("White"));
                                 black.setText(headers.get("Black"));
 
-                                builder.setNegativeButton(R.string.cancel, null);
-                                builder.setPositiveButton(android.R.string.ok,
-                                        new Dialog.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int which) {
+                                new MaterialDialog.Builder(MDChess.this)
+                                        .title(R.string.edit_headers)
+                                        .customView(content, true)
+                                        .positiveText(android.R.string.ok)
+                                        .negativeText(R.string.cancel)
+                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog,
+                                                    @NonNull DialogAction which) {
                                                 headers.put("Event",
                                                         event.getText().toString().trim());
                                                 headers.put("Site",
@@ -2518,18 +2568,21 @@ public class MDChess extends AppCompatActivity
                                                 ctrl.setHeaders(headers);
                                                 setBoardFlip(true);
                                             }
-                                        });
+                                        })
+                                        .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog,
+                                                    @NonNull DialogAction which) {
 
-                                builder.show();
+                                            }
+                                        })
+                                        .show();
+
                                 break;
                             }
                             case EDIT_COMMENTS: {
-                                AlertDialog.Builder builder = new AlertDialog.Builder(
-                                        MDChess.this);
-                                builder.setTitle(R.string.edit_comments);
                                 View content = View.inflate(MDChess.this,
                                         R.layout.edit_comments, null);
-                                builder.setView(content);
 
                                 MDChessController.CommentInfo commInfo = ctrl.getComments();
 
@@ -2558,10 +2611,15 @@ public class MDChess extends AppCompatActivity
                                 }
                                 nag.setText(nagStr);
 
-                                builder.setNegativeButton(R.string.cancel, null);
-                                builder.setPositiveButton(android.R.string.ok,
-                                        new Dialog.OnClickListener() {
-                                            public void onClick(DialogInterface dialog, int which) {
+                                new MaterialDialog.Builder(MDChess.this)
+                                        .title(R.string.edit_comments)
+                                        .customView(content, true)
+                                        .positiveText(android.R.string.ok)
+                                        .negativeText(R.string.cancel)
+                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog,
+                                                    @NonNull DialogAction which) {
                                                 String pre = preComment.getText().toString().trim();
                                                 String post =
                                                         postComment.getText().toString().trim();
@@ -2575,9 +2633,16 @@ public class MDChess extends AppCompatActivity
                                                 commInfo.nag = nagVal;
                                                 ctrl.setComments(commInfo);
                                             }
-                                        });
+                                        })
+                                        .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog,
+                                                    @NonNull DialogAction which) {
 
-                                builder.show();
+                                            }
+                                        })
+                                        .show();
+
                                 break;
                             }
                             case REMOVE_SUBTREE:
@@ -2593,15 +2658,12 @@ public class MDChess extends AppCompatActivity
                                 ctrl.makeHumanNullMove();
                                 break;
                         }
-                        moveListMenuDlg = null;
                     }
-                });
-        AlertDialog alert = builder.create();
-        moveListMenuDlg = alert;
-        return alert;
+                })
+                .show();
     }
 
-    private Dialog thinkingMenuDialog() {
+    private void thinkingMenuDialog() {
         final int ADD_ANALYSIS = 0;
         final int MULTIPV_DEC = 1;
         final int MULTIPV_INC = 2;
@@ -2636,12 +2698,14 @@ public class MDChess extends AppCompatActivity
             }
         }
         final List<Integer> finalActions = actions;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.analysis);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        switch (finalActions.get(item)) {
+        new MaterialDialog.Builder(this)
+                .title(R.string.analysis)
+                .items(lst)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        switch (finalActions.get(which)) {
                             case ADD_ANALYSIS: {
                                 ArrayList<ArrayList<Move>> pvMovesTmp = pvMoves;
                                 String[] pvStrs = thinkingStr1.split("\n");
@@ -2671,7 +2735,7 @@ public class MDChess extends AppCompatActivity
                                 break;
                             case HIDE_STATISTICS:
                             case SHOW_STATISTICS: {
-                                mShowStats = finalActions.get(item) == SHOW_STATISTICS;
+                                mShowStats = finalActions.get(which) == SHOW_STATISTICS;
                                 Editor editor = settings.edit();
                                 editor.putBoolean("showStats", mShowStats);
                                 editor.apply();
@@ -2680,8 +2744,8 @@ public class MDChess extends AppCompatActivity
                             }
                         }
                     }
-                });
-        return builder.create();
+                })
+                .show();
     }
 
     private void setMultiPVMode(int nPV) {
@@ -2692,7 +2756,7 @@ public class MDChess extends AppCompatActivity
         ctrl.setMultiPVMode(numPV);
     }
 
-    private Dialog goBackMenuDialog() {
+    private void goBackMenuDialog() {
         final int GOTO_START_GAME = 0;
         final int GOTO_START_VAR = 1;
         final int GOTO_PREV_VAR = 2;
@@ -2721,12 +2785,14 @@ public class MDChess extends AppCompatActivity
             actions.add(AUTO_BACKWARD);
         }
         final List<Integer> finalActions = actions;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.go_back);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        switch (finalActions.get(item)) {
+        new MaterialDialog.Builder(this)
+                .title(R.string.go_back)
+                .items(lst)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        switch (finalActions.get(which)) {
                             case GOTO_START_GAME:
                                 ctrl.gotoMove(0);
                                 break;
@@ -2760,11 +2826,11 @@ public class MDChess extends AppCompatActivity
                                 break;
                         }
                     }
-                });
-        return builder.create();
+                })
+                .show();
     }
 
-    private Dialog goForwardMenuDialog() {
+    private void goForwardMenuDialog() {
         final int GOTO_END_VAR = 0;
         final int GOTO_NEXT_VAR = 1;
         final int LOAD_NEXT_GAME = 2;
@@ -2790,12 +2856,14 @@ public class MDChess extends AppCompatActivity
             actions.add(AUTO_FORWARD);
         }
         final List<Integer> finalActions = actions;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.go_forward);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        switch (finalActions.get(item)) {
+        new MaterialDialog.Builder(this)
+                .title(R.string.go_forward)
+                .items(lst)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        switch (finalActions.get(which)) {
                             case GOTO_END_VAR:
                                 ctrl.gotoMove(Integer.MAX_VALUE);
                                 break;
@@ -2826,11 +2894,12 @@ public class MDChess extends AppCompatActivity
                                 break;
                         }
                     }
-                });
-        return builder.create();
+                })
+                .show();
+
     }
 
-    private Dialog manageEnginesDialog() {
+    private void manageEnginesDialog() {
         final int SELECT_ENGINE = 0;
         final int SET_ENGINE_OPTIONS = 1;
         final int CONFIG_NET_ENGINE = 2;
@@ -2845,27 +2914,28 @@ public class MDChess extends AppCompatActivity
         lst.add(getString(R.string.configure_network_engine));
         actions.add(CONFIG_NET_ENGINE);
         final List<Integer> finalActions = actions;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.option_manage_engines);
-        builder.setItems(lst.toArray(new CharSequence[lst.size()]),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-                        switch (finalActions.get(item)) {
+        new MaterialDialog.Builder(this)
+                .title(R.string.option_manage_engines)
+                .items(lst)
+                .itemsCallback(new MaterialDialog.ListCallback() {
+                    @Override
+                    public void onSelection(MaterialDialog dialog, View view, int which,
+                            CharSequence text) {
+                        switch (finalActions.get(which)) {
                             case SELECT_ENGINE:
-                                removeDialog(SELECT_ENGINE_DIALOG);
-                                showDialog(SELECT_ENGINE_DIALOG);
+
+                                selectEngineDialog(false);
                                 break;
                             case SET_ENGINE_OPTIONS:
                                 setEngineOptions();
                                 break;
                             case CONFIG_NET_ENGINE:
-                                removeDialog(NETWORK_ENGINE_DIALOG);
-                                showDialog(NETWORK_ENGINE_DIALOG);
+                                networkEngineDialog();
                                 break;
                         }
                     }
-                });
-        return builder.create();
+                })
+                .show();
     }
 
     /**
@@ -2900,7 +2970,7 @@ public class MDChess extends AppCompatActivity
         }
     }
 
-    private Dialog networkEngineDialog() {
+    private void networkEngineDialog() {
         String[] fileNames = findFilesInDirectory(engineDir, new FileNameFilter() {
             @Override
             public boolean accept(String filename) {
@@ -2930,39 +3000,43 @@ public class MDChess extends AppCompatActivity
                 break;
             }
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.configure_network_engine);
-        builder.setSingleChoiceItems(items, defaultItem, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int item) {
-                if ((item < 0) || (item >= numItems)) {
-                    return;
-                }
-                dialog.dismiss();
-                if (item == numItems - 1) {
-                    showDialog(NEW_NETWORK_ENGINE_DIALOG);
-                } else {
-                    networkEngineToConfig = ids[item];
-                    removeDialog(NETWORK_ENGINE_CONFIG_DIALOG);
-                    showDialog(NETWORK_ENGINE_CONFIG_DIALOG);
-                }
-            }
-        });
-        builder.setOnCancelListener(new Dialog.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                removeDialog(MANAGE_ENGINES_DIALOG);
-                showDialog(MANAGE_ENGINES_DIALOG);
-            }
-        });
-        return builder.create();
+        new MaterialDialog.Builder(this)
+                .title(R.string.configure_network_engine)
+                .items(items)
+                .itemsCallbackSingleChoice(defaultItem,
+                        new MaterialDialog.ListCallbackSingleChoice() {
+                            @Override
+                            public boolean onSelection(MaterialDialog dialog, View view, int which,
+                                    CharSequence text) {
+                                /**
+                                 * If you use alwaysCallSingleChoiceCallback(), which is
+                                 * discussed below,
+                                 * returning false here won't allow the newly selected radio
+                                 * button to actually be selected.
+                                 **/
+                                if (which == numItems - 1) {
+                                    newNetworkEngineDialog();
+                                } else {
+                                    networkEngineToConfig = ids[which];
+                                    networkEngineConfigDialog();
+                                }
+                                return true;
+                            }
+                        })
+                .negativeText(R.string.cancel)
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        manageEnginesDialog();
+                    }
+                })
+                .show();
     }
 
     // Ask for name of new network engine
-    private Dialog newNetworkEngineDialog() {
+    private void newNetworkEngineDialog() {
         View content = View.inflate(this, R.layout.create_network_engine, null);
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(content);
-        builder.setTitle(R.string.create_network_engine);
         final EditText engineNameView = (EditText) content.findViewById(R.id.create_network_engine);
         final TextInputLayout engineNameWrapper = (TextInputLayout) content.findViewById(
                 R.id.create_network_engine_wrapper);
@@ -2986,56 +3060,49 @@ public class MDChess extends AppCompatActivity
                 }
                 if (!nameOk) {
                     Toast.makeText(getApplicationContext(), errMsg, Toast.LENGTH_LONG).show();
-                    removeDialog(NETWORK_ENGINE_DIALOG);
-                    showDialog(NETWORK_ENGINE_DIALOG);
+                    networkEngineDialog();
                     return;
                 }
                 networkEngineToConfig = pathName;
-                removeDialog(NETWORK_ENGINE_CONFIG_DIALOG);
-                showDialog(NETWORK_ENGINE_CONFIG_DIALOG);
+                networkEngineConfigDialog();
             }
         };
-        builder.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                createEngine.run();
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                removeDialog(NETWORK_ENGINE_DIALOG);
-                showDialog(NETWORK_ENGINE_DIALOG);
-            }
-        });
-        builder.setOnCancelListener(new Dialog.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                removeDialog(NETWORK_ENGINE_DIALOG);
-                showDialog(NETWORK_ENGINE_DIALOG);
-            }
-        });
+        new MaterialDialog.Builder(this)
+                .title(R.string.create_network_engine)
+                .customView(content, true)
+                .positiveText(android.R.string.ok)
+                .negativeText(R.string.cancel)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        createEngine.run();
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        networkEngineDialog();
+                    }
+                })
+                .show();
 
-        final Dialog dialog = builder.create();
         engineNameView.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
                         == KeyEvent.KEYCODE_ENTER)) {
                     createEngine.run();
-                    dialog.cancel();
                     return true;
                 }
                 return false;
             }
         });
-        return dialog;
     }
 
     // Configure network engine settings
-    private Dialog networkEngineConfigDialog() {
+    private void networkEngineConfigDialog() {
         View content = View.inflate(this, R.layout.network_engine_config, null);
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(content);
-        builder.setTitle(R.string.configure_network_engine);
         final EditText hostNameView = (EditText) content.findViewById(R.id.network_engine_host);
         final EditText portView = (EditText) content.findViewById(R.id.network_engine_port);
         String hostName = "";
@@ -3074,96 +3141,87 @@ public class MDChess extends AppCompatActivity
                 }
             }
         };
-        builder.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                writeConfig.run();
-                removeDialog(NETWORK_ENGINE_DIALOG);
-                showDialog(NETWORK_ENGINE_DIALOG);
-            }
-        });
-        builder.setNegativeButton(R.string.cancel, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                removeDialog(NETWORK_ENGINE_DIALOG);
-                showDialog(NETWORK_ENGINE_DIALOG);
-            }
-        });
-        builder.setOnCancelListener(new Dialog.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                removeDialog(NETWORK_ENGINE_DIALOG);
-                showDialog(NETWORK_ENGINE_DIALOG);
-            }
-        });
-        builder.setNeutralButton(R.string.delete, new Dialog.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                removeDialog(DELETE_NETWORK_ENGINE_DIALOG);
-                showDialog(DELETE_NETWORK_ENGINE_DIALOG);
-            }
-        });
+        new MaterialDialog.Builder(this)
+                .title(R.string.configure_network_engine)
+                .customView(content, true)
+                .positiveText(android.R.string.ok)
+                .negativeText(R.string.cancel)
+                .neutralText(R.string.delete)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        writeConfig.run();
+                        networkEngineDialog();
+                    }
+                })
+                .onNeutral(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        deleteNetworkEngineDialog();
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        networkEngineDialog();
+                    }
+                });
 
-        final Dialog dialog = builder.create();
         portView.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode
                         == KeyEvent.KEYCODE_ENTER)) {
                     writeConfig.run();
-                    dialog.cancel();
-                    removeDialog(NETWORK_ENGINE_DIALOG);
-                    showDialog(NETWORK_ENGINE_DIALOG);
+                    networkEngineDialog();
                     return true;
                 }
                 return false;
             }
         });
-        return dialog;
     }
 
-    private Dialog deleteNetworkEngineDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.delete_network_engine);
+    private void deleteNetworkEngineDialog() {
         String msg = networkEngineToConfig;
         if (msg.lastIndexOf('/') >= 0) {
             msg = msg.substring(msg.lastIndexOf('/') + 1);
         }
-        builder.setMessage(getString(R.string.network_engine) + ": " + msg);
-        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                boolean result = new File(networkEngineToConfig).delete();
-                Log.d("Result delete", "" + result);
-                String engine = settings.getString("engine", "stockfish");
-                if (engine.equals(networkEngineToConfig)) {
-                    engine = "stockfish";
-                    Editor editor = settings.edit();
-                    editor.putString("engine", engine);
-                    editor.apply();
-                    dialog.dismiss();
-                    int strength = settings.getInt("strength", 1000);
-                    setEngineOptions(false);
-                    setEngineStrength(engine, strength);
-                }
-                dialog.cancel();
-                removeDialog(NETWORK_ENGINE_DIALOG);
-                showDialog(NETWORK_ENGINE_DIALOG);
-            }
-        });
-        builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                dialog.cancel();
-                removeDialog(NETWORK_ENGINE_DIALOG);
-                showDialog(NETWORK_ENGINE_DIALOG);
-            }
-        });
-        builder.setOnCancelListener(new Dialog.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                removeDialog(NETWORK_ENGINE_DIALOG);
-                showDialog(NETWORK_ENGINE_DIALOG);
-            }
-        });
-        return builder.create();
+        new MaterialDialog.Builder(this)
+                .title(R.string.delete_network_engine)
+                .content(getString(R.string.network_engine) + ": " + msg)
+                .positiveText(R.string.yes)
+                .negativeText(R.string.no)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        boolean result = new File(networkEngineToConfig).delete();
+                        Log.d("Result delete", "" + result);
+                        String engine = settings.getString("engine", "stockfish");
+                        if (engine.equals(networkEngineToConfig)) {
+                            engine = "stockfish";
+                            Editor editor = settings.edit();
+                            editor.putString("engine", engine);
+                            editor.apply();
+                            dialog.dismiss();
+                            int strength = settings.getInt("strength", 1000);
+                            setEngineOptions(false);
+                            setEngineStrength(engine, strength);
+                        }
+                        dialog.cancel();
+                        networkEngineDialog();
+                    }
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog,
+                            @NonNull DialogAction which) {
+                        networkEngineDialog();
+                    }
+                })
+                .show();
     }
 
     /**
@@ -3186,8 +3244,12 @@ public class MDChess extends AppCompatActivity
         try {
             startActivityForResult(i, result);
         } catch (ActivityNotFoundException e) {
-            removeDialog(dialog);
-            showDialog(dialog);
+            if (dialog == SELECT_PGN_FILE_SAVE_DIALOG) {
+                selectPgnFileSaveDialog();
+            } else if (dialog == SELECT_FEN_FILE_DIALOG) {
+                selectFenFileDialog();
+            }
+
         }
     }
 
@@ -3340,7 +3402,7 @@ public class MDChess extends AppCompatActivity
 
     @Override
     public void requestPromotePiece() {
-        showDialog(PROMOTE_DIALOG);
+        promoteDialog();
     }
 
     @Override
@@ -3414,7 +3476,6 @@ public class MDChess extends AppCompatActivity
         String ns = Context.NOTIFICATION_SERVICE;
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
         if (show) {
-            boolean silhouette = Build.VERSION.SDK_INT >= 21;
             int icon = R.mipmap.ic_launcher;
             CharSequence tickerText = getString(R.string.heavy_cpu_usage);
             long when = System.currentTimeMillis();
@@ -3534,7 +3595,6 @@ public class MDChess extends AppCompatActivity
         // --Commented out by Inspection (21/10/2016 11:38 PM):Node currNode = null;
         final static int indentStep = 15;
         final PGNOptions options;
-        final MDChess df;
         final HashMap<Node, NodeInfo> nodeToCharPos;
         private final TreeMap<Integer, Node> offs2Node = new TreeMap<>();
         int nestLevel = 0;
@@ -3549,8 +3609,7 @@ public class MDChess extends AppCompatActivity
         private SpannableStringBuilder sb = new SpannableStringBuilder();
         private int prevType = PgnToken.EOF;
 
-        PgnScreenText(MDChess df, PGNOptions options) {
-            this.df = df;
+        PgnScreenText(PGNOptions options) {
             nodeToCharPos = new HashMap<>();
             this.options = options;
         }
@@ -3622,11 +3681,11 @@ public class MDChess extends AppCompatActivity
             // On android 4.1 this onClick method is called
             // even when you long click the move list. The test
             // below works around the problem.
-            Dialog mlmd = moveListMenuDlg;
+            /*Dialog mlmd = moveListMenuDlg;
             if ((mlmd == null) || !mlmd.isShowing()) {
                 df.setAutoMode(AutoMode.OFF);
                 ctrl.goNode(node);
-            }
+            }*/
             return true;
         }
 

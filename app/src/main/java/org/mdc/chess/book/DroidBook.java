@@ -18,8 +18,6 @@
 
 package org.mdc.chess.book;
 
-import android.annotation.SuppressLint;
-
 import org.mdc.chess.Util;
 import org.mdc.chess.gamelogic.Move;
 import org.mdc.chess.gamelogic.MoveGen;
@@ -41,15 +39,13 @@ import java.util.Random;
  */
 public final class DroidBook {
     private static final DroidBook INSTANCE = new DroidBook();
-    @SuppressLint("TrulyRandom")
-    private Random rndGen = new SecureRandom();
-
+    private final Random rndGen = new SecureRandom();
+    private final IOpeningBook internalBook = new InternalBook();
     private IOpeningBook externalBook = new NullBook();
-    private IOpeningBook internalBook = new InternalBook();
     private BookOptions options = null;
 
     private DroidBook() {
-        rndGen.setSeed(System.currentTimeMillis());
+
     }
 
     /** Get singleton instance. */
@@ -164,7 +160,7 @@ public final class DroidBook {
         return new Pair<>(ret.toString(), bookMoveList);
     }
 
-    private final double scaleWeight(double w) {
+    private double scaleWeight(double w) {
         if (w <= 0) {
             return 0;
         }
@@ -174,7 +170,7 @@ public final class DroidBook {
         return Math.pow(w, Math.exp(-options.random));
     }
 
-    private final IOpeningBook getBook() {
+    private IOpeningBook getBook() {
         if (externalBook.enabled()) {
             return externalBook;
         } else {

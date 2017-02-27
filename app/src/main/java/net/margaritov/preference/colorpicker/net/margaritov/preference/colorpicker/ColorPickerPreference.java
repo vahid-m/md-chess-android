@@ -314,7 +314,7 @@ public class ColorPickerPreference
 
         public SavedState(Parcel source) {
             super(source);
-            dialogBundle = source.readBundle();
+            dialogBundle = source.readBundle(getClass().getClassLoader());
         }
 
         public SavedState(Parcelable superState) {

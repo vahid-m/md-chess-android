@@ -16,7 +16,7 @@
         android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/txt_first"
+            android:id="@+id/txt_first_edit"
             style="@style/AppTheme.SubHeader"
             android:focusable="true"
             android:focusableInTouchMode="true"
@@ -25,13 +25,13 @@
             android:paddingStart="@dimen/material_content_edge_margin_horizontal" />
 
         <TextView
-            android:id="@+id/txt_second"
+            android:id="@+id/txt_second_edit"
             style="@style/AppTheme.SubHeader"
             android:gravity="center"
             android:text="" />
 
         <TextView
-            android:id="@+id/txt_third"
+            android:id="@+id/txt_third_edit"
             style="@style/AppTheme.SubHeader"
             android:focusable="true"
             android:focusableInTouchMode="true"
@@ -40,33 +40,10 @@
             android:paddingStart="@dimen/material_content_edge_margin_horizontal" />
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/status_edit"
+        style="@style/AppTheme.SubHeader"
+        android:gravity="center"
+        android:text="" />
 
-        <TextView
-            android:id="@+id/white_pieces"
-            style="@style/AppTheme.SubHeader"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:gravity="start"
-            android:paddingEnd="@dimen/material_content_edge_margin_horizontal"
-            android:paddingStart="@dimen/material_content_edge_margin_horizontal" />
-
-        <TextView
-            android:id="@+id/status"
-            style="@style/AppTheme.SubHeader"
-            android:gravity="center"
-            android:text="" />
-
-        <TextView
-            android:id="@+id/black_pieces"
-            style="@style/AppTheme.SubHeader"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:gravity="start"
-            android:paddingEnd="@dimen/material_content_edge_margin_horizontal"
-            android:paddingStart="@dimen/material_content_edge_margin_horizontal" />
-
-    </LinearLayout>
 </LinearLayout>
