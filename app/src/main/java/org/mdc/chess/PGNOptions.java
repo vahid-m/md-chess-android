@@ -29,9 +29,9 @@ public class PGNOptions {
      * and a special font.
      */
     public static final int PT_FIGURINE = 2;
-    public Viewer view;
-    public Import imp;
-    public Export exp;
+    public final Viewer view;
+    public final Import imp;
+    public final Export exp;
 
     public PGNOptions() {
         view = new Viewer();
