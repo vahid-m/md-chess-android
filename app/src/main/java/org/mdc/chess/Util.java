@@ -2,16 +2,7 @@ package org.mdc.chess;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.os.Build;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.ListView;
-import android.widget.TextView;
 
 import org.mdc.chess.gamelogic.Piece;
 import org.mdc.chess.gamelogic.Position;
@@ -29,16 +20,8 @@ public final class Util {
     public final static String boldStop;
 
     static {
-        // Using bold face causes crashes in android 4.1, see:
-        // http://code.google.com/p/android/issues/detail?id=34872
-        final int sdkVersion = Build.VERSION.SDK_INT;
-        if (sdkVersion == 16) {
-            boldStart = "";
-            boldStop = "";
-        } else {
-            boldStart = "<b>";
-            boldStop = "</b>";
-        }
+        boldStart = "<b>";
+        boldStop = "</b>";
     }
 
     /** Read a text file. Return string array with one string per line. */
@@ -107,16 +90,15 @@ public final class Util {
     }
 
     /** Change foreground/background color in a view. */
-    public static void overrideViewAttribs(final View v) {
+    /*private static void overrideViewAttribs(final View v) {
         if (v == null) {
             return;
         }
         final int bg = ColorTheme.instance().getColor(ColorTheme.GENERAL_BACKGROUND);
         Object tag = v.getTag();
-        final boolean excludedItems = v instanceof Button ||
-                ((v instanceof EditText) && !(v instanceof MoveListView)) ||
-                v instanceof ImageButton ||
-                "title".equals(tag);
+        final boolean excludedItems =
+                v instanceof Button || v instanceof EditText || v instanceof ImageButton
+                        || "title".equals(tag);
         if (!excludedItems) {
             int c = bg;
             if ("thinking".equals(tag)) {
@@ -143,12 +125,12 @@ public final class Util {
             int fg = ColorTheme.instance().getColor(ColorTheme.FONT_FOREGROUND);
             ((MoveListView) v).setTextColor(fg);
         }
-    }
+    }*/
 
     /** Represent material difference as two unicode strings. */
     public final static class MaterialDiff {
-        public CharSequence white;
-        public CharSequence black;
+        public final CharSequence white;
+        public final CharSequence black;
 
         MaterialDiff(CharSequence w, CharSequence b) {
             white = w;
