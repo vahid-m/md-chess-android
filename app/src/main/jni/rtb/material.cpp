@@ -1,6 +1,6 @@
 /*
-    MD Chess - An Android chess program.
-    Copyright (C) 2012  Peter Österlund, peterosterlund2@gmail.com
+    Texel - A UCI chess engine.
+    Copyright (C) 2013  Peter Österlund, peterosterlund2@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,10 +16,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mdc.chess;
+/*
+ * material.cpp
+ *
+ *  Created on: May 1, 2013
+ *      Author: petero
+ */
 
-public interface ActionFactory {
+#include "material.hpp"
 
-    /** Create action given an action ID. */
-    public UIAction getAction(String actionId);
-}
+const int MatId::materialId[] = {
+        0,
+        0, WQ, WR, WB, WN, WP,
+        0, BQ, BR, BB, BN, BP
+};

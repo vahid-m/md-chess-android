@@ -26,19 +26,6 @@ android {
         //jni.srcDirs = [] //disable automatic ndk-build call
     }
 
-    /*splits {
-        density {
-            enable true
-            reset()
-            include "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"
-        }
-        abi {
-            enable true
-            reset()
-            include "x86", "mips", "arm64-v8a", "armeabi", "mips64", "x86_64"
-        }
-    }*/
-
     externalNativeBuild {
         ndkBuild {
             path 'src/main/jni/Android.mk'

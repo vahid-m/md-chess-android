@@ -1,6 +1,6 @@
 /*
-    MD Chess - An Android chess program.
-    Copyright (C) 2012  Peter Österlund, peterosterlund2@gmail.com
+    CuckooChess - A java chess program.
+    Copyright (C) 2011  Peter Österlund, peterosterlund2@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,19 +16,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.mdc.chess;
+package chess;
 
-/** Interface for user interface actions. */
-public interface UIAction extends Runnable {
-    /** Get a unique identifier for this action. */
-    public String getId();
+/**
+ * A small helper class that makes it possible to return two values from a function.
+ *
+ * @author petero
+ */
+public final class TwoReturnValues<T1, T2> {
+    public final T1 first;
+    public final T2 second;
 
-    /** Get name resource for the action. */
-    public int getName();
-
-    /** Get icon SVG resource or -1 for no icon. */
-    public int getIcon();
-
-    /** Return true if the action is currently enabled. */
-    public boolean enabled();
+    TwoReturnValues(T1 first, T2 second) {
+        this.first = first;
+        this.second = second;
+    }
 }

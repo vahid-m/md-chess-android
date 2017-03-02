@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_marginTop="?attr/actionBarSize"
+    android:background="@color/material_color_white"
+    android:orientation="vertical">
+
+    <view
+        android:id="@+id/eb_chessboard"
+        class="org.mdc.chess.activities.ChessBoardEdit"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+    <include layout="@layout/title_edit" />
+
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="@dimen/material_content_edge_margin_horizontal"
+        android:background="@color/White"
+        android:orientation="horizontal"
+        android:paddingEnd="@dimen/material_content_edge_margin_horizontal"
+        android:paddingStart="@dimen/material_content_edge_margin_horizontal">
+
+        <Button
+            android:id="@+id/eb_cancel"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/cancel" />
+
+        <Button
+            android:id="@+id/eb_ok"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@android:string/ok" />
+
+    </LinearLayout>
+</LinearLayout>
+

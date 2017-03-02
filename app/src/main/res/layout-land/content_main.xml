@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_marginTop="?attr/actionBarSize"
+    android:background="@color/material_color_white"
+    android:orientation="horizontal">
+
+    <view
+        android:id="@+id/chessboard"
+        class="org.mdc.chess.ChessBoardPlay"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical">
+
+        <include layout="@layout/title" />
+
+        <view
+            class="org.mdc.chess.MyRelativeLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical"
+            android:paddingEnd="@dimen/material_content_edge_margin_horizontal"
+            android:paddingStart="@dimen/material_content_edge_margin_horizontal">
+
+            <ScrollView
+                android:id="@+id/scrollView"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+
+                <view
+                    android:id="@+id/moveList"
+                    class="org.mdc.chess.MoveListView"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="true"
+                    android:padding="0dp" />
+
+            </ScrollView>
+
+            <view
+                android:id="@+id/scrollViewBot"
+                class="org.mdc.chess.MyScrollView"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true">
+
+                <TextView
+                    android:id="@+id/thinking"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:includeFontPadding="true"
+                    android:tag="thinking"
+                    android:textSize="14sp"
+                    android:typeface="monospace" />
+
+            </view>
+        </view>
+    </LinearLayout>
+</LinearLayout>
+
+
