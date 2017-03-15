@@ -10,10 +10,10 @@
         android:fillColor="#212121"
         android:pathData="M320,160v18c0,4.4 -1.6,10 -6,10h16c4.4,0 6,-5.6 6,-10v-18H320z" />
     <path
-        android:fillColor="#EEEEEE"
+        android:fillColor="#757575"
         android:pathData="M180,188h144v152h-144z" />
     <path
-        android:fillColor="#BDBDBD"
+        android:fillColor="#616161"
         android:pathData="M308,188h16v152h-16z" />
     <path
         android:fillColor="#424242"

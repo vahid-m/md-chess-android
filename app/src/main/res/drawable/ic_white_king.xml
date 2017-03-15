@@ -40,13 +40,13 @@
         android:fillColor="#E0E0E0"
         android:pathData="M284,200h-16c4.4,0 8,3.6 8,8s-3.6,8 -8,8h16c4.4,0 8,-3.6 8,-8S288.4,200 284,200z" />
     <path
-        android:fillColor="#E0E0E0"
+        android:fillColor="#000000"
         android:pathData="M252,48h8v76h-8z" />
     <path
-        android:fillColor="#E0E0E0"
+        android:fillColor="#000000"
         android:pathData="M220,84h72v8h-72z" />
     <path
-        android:fillColor="#E0E0E0"
+        android:fillColor="#000000"
         android:pathData="M240,60h32v8h-32z" />
     <path
         android:fillColor="#EEEEEE"
