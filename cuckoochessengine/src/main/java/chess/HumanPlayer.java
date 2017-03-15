@@ -24,11 +24,7 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * A player that reads input from the keyboard.
- *
- * @author petero
- */
+/** A player that reads input from the keyboard. */
 public class HumanPlayer implements Player {
     private String lastCmd = "";
     private BufferedReader in;
@@ -43,9 +39,8 @@ public class HumanPlayer implements Player {
             String color = pos.whiteMove ? "white" : "black";
             System.out.print(String.format(Locale.US, "Enter move (%s):", color));
             String moveStr = in.readLine();
-            if (moveStr == null) {
+            if (moveStr == null)
                 return "quit";
-            }
             if (moveStr.length() == 0) {
                 return lastCmd;
             } else {
@@ -56,12 +51,12 @@ public class HumanPlayer implements Player {
             return "quit";
         }
     }
-
+    
     @Override
     public boolean isHumanPlayer() {
         return true;
     }
-
+    
     @Override
     public void useBook(boolean bookOn) {
     }

@@ -20,12 +20,8 @@ package chess;
 
 import java.util.Locale;
 
-/**
- * @author petero
- */
 public class TextIO {
-    static public final String startPosFEN =
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    static public final String startPosFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     /** Parse a FEN string and return a chess Position object. */
     public static final Position readFEN(String fen) throws ChessParseError {
@@ -34,91 +30,35 @@ public class TextIO {
         if (words.length < 2) {
             throw new ChessParseError("Too few spaces");
         }
-
+        
         // Piece placement
         int row = 7;
         int col = 0;
         for (int i = 0; i < words[0].length(); i++) {
             char c = words[0].charAt(i);
             switch (c) {
-                case '1':
-                    col += 1;
-                    break;
-                case '2':
-                    col += 2;
-                    break;
-                case '3':
-                    col += 3;
-                    break;
-                case '4':
-                    col += 4;
-                    break;
-                case '5':
-                    col += 5;
-                    break;
-                case '6':
-                    col += 6;
-                    break;
-                case '7':
-                    col += 7;
-                    break;
-                case '8':
-                    col += 8;
-                    break;
-                case '/':
-                    row--;
-                    col = 0;
-                    break;
-                case 'P':
-                    safeSetPiece(pos, col, row, Piece.WPAWN);
-                    col++;
-                    break;
-                case 'N':
-                    safeSetPiece(pos, col, row, Piece.WKNIGHT);
-                    col++;
-                    break;
-                case 'B':
-                    safeSetPiece(pos, col, row, Piece.WBISHOP);
-                    col++;
-                    break;
-                case 'R':
-                    safeSetPiece(pos, col, row, Piece.WROOK);
-                    col++;
-                    break;
-                case 'Q':
-                    safeSetPiece(pos, col, row, Piece.WQUEEN);
-                    col++;
-                    break;
-                case 'K':
-                    safeSetPiece(pos, col, row, Piece.WKING);
-                    col++;
-                    break;
-                case 'p':
-                    safeSetPiece(pos, col, row, Piece.BPAWN);
-                    col++;
-                    break;
-                case 'n':
-                    safeSetPiece(pos, col, row, Piece.BKNIGHT);
-                    col++;
-                    break;
-                case 'b':
-                    safeSetPiece(pos, col, row, Piece.BBISHOP);
-                    col++;
-                    break;
-                case 'r':
-                    safeSetPiece(pos, col, row, Piece.BROOK);
-                    col++;
-                    break;
-                case 'q':
-                    safeSetPiece(pos, col, row, Piece.BQUEEN);
-                    col++;
-                    break;
-                case 'k':
-                    safeSetPiece(pos, col, row, Piece.BKING);
-                    col++;
-                    break;
-                default:
-                    throw new ChessParseError("Invalid piece");
+                case '1': col += 1; break;
+                case '2': col += 2; break;
+                case '3': col += 3; break;
+                case '4': col += 4; break;
+                case '5': col += 5; break;
+                case '6': col += 6; break;
+                case '7': col += 7; break;
+                case '8': col += 8; break;
+                case '/': row--; col = 0; break;
+                case 'P': safeSetPiece(pos, col, row, Piece.WPAWN);   col++; break;
+                case 'N': safeSetPiece(pos, col, row, Piece.WKNIGHT); col++; break;
+        case 'B': safeSetPiece(pos, col, row, Piece.WBISHOP); col++; break;
+        case 'R': safeSetPiece(pos, col, row, Piece.WROOK);   col++; break;
+        case 'Q': safeSetPiece(pos, col, row, Piece.WQUEEN);  col++; break;
+        case 'K': safeSetPiece(pos, col, row, Piece.WKING);   col++; break;
+        case 'p': safeSetPiece(pos, col, row, Piece.BPAWN);   col++; break;
+        case 'n': safeSetPiece(pos, col, row, Piece.BKNIGHT); col++; break;
+        case 'b': safeSetPiece(pos, col, row, Piece.BBISHOP); col++; break;
+        case 'r': safeSetPiece(pos, col, row, Piece.BROOK);   col++; break;
+        case 'q': safeSetPiece(pos, col, row, Piece.BQUEEN);  col++; break;
+        case 'k': safeSetPiece(pos, col, row, Piece.BKING);   col++; break;
+                default: throw new ChessParseError("Invalid piece");
             }
         }
         if (words[1].length() == 0) {
@@ -229,23 +169,21 @@ public class TextIO {
         }
     }
 
-    private static final void safeSetPiece(Position pos, int col, int row, int p)
-            throws ChessParseError {
+    private static final void safeSetPiece(Position pos, int col, int row, int p) throws ChessParseError {
         if (row < 0) throw new ChessParseError("Too many rows");
         if (col > 7) throw new ChessParseError("Too many columns");
         if ((p == Piece.WPAWN) || (p == Piece.BPAWN)) {
-            if ((row == 0) || (row == 7)) {
+            if ((row == 0) || (row == 7))
                 throw new ChessParseError("Pawn on first/last rank");
-            }
         }
         pos.setPiece(Position.getSquare(col, row), p);
     }
-
+    
     /** Return a FEN string corresponding to a chess Position object. */
     public static final String toFEN(Position pos) {
         StringBuilder ret = new StringBuilder();
         // Piece placement
-        for (int r = 7; r >= 0; r--) {
+        for (int r = 7; r >=0; r--) {
             int numEmpty = 0;
             for (int c = 0; c < 8; c++) {
                 int p = pos.getPiece(Position.getSquare(c, r));
@@ -257,44 +195,19 @@ public class TextIO {
                         numEmpty = 0;
                     }
                     switch (p) {
-                        case Piece.WKING:
-                            ret.append('K');
-                            break;
-                        case Piece.WQUEEN:
-                            ret.append('Q');
-                            break;
-                        case Piece.WROOK:
-                            ret.append('R');
-                            break;
-                        case Piece.WBISHOP:
-                            ret.append('B');
-                            break;
-                        case Piece.WKNIGHT:
-                            ret.append('N');
-                            break;
-                        case Piece.WPAWN:
-                            ret.append('P');
-                            break;
-                        case Piece.BKING:
-                            ret.append('k');
-                            break;
-                        case Piece.BQUEEN:
-                            ret.append('q');
-                            break;
-                        case Piece.BROOK:
-                            ret.append('r');
-                            break;
-                        case Piece.BBISHOP:
-                            ret.append('b');
-                            break;
-                        case Piece.BKNIGHT:
-                            ret.append('n');
-                            break;
-                        case Piece.BPAWN:
-                            ret.append('p');
-                            break;
-                        default:
-                            throw new RuntimeException();
+                        case Piece.WKING:   ret.append('K'); break;
+                        case Piece.WQUEEN:  ret.append('Q'); break;
+                        case Piece.WROOK:   ret.append('R'); break;
+                        case Piece.WBISHOP: ret.append('B'); break;
+                        case Piece.WKNIGHT: ret.append('N'); break;
+                        case Piece.WPAWN:   ret.append('P'); break;
+                        case Piece.BKING:   ret.append('k'); break;
+                        case Piece.BQUEEN:  ret.append('q'); break;
+                        case Piece.BROOK:   ret.append('r'); break;
+                        case Piece.BBISHOP: ret.append('b'); break;
+                        case Piece.BKNIGHT: ret.append('n'); break;
+                        case Piece.BPAWN:   ret.append('p'); break;
+                        default: throw new RuntimeException();
                     }
                 }
             }
@@ -328,15 +241,15 @@ public class TextIO {
         if (!anyCastle) {
             ret.append('-');
         }
-
+        
         // En passant target square
         {
             ret.append(' ');
             if (pos.getEpSquare() >= 0) {
                 int x = Position.getX(pos.getEpSquare());
                 int y = Position.getY(pos.getEpSquare());
-                ret.append((char) (x + 'a'));
-                ret.append((char) (y + '1'));
+                ret.append((char)(x + 'a'));
+                ret.append((char)(y + '1'));
             } else {
                 ret.append('-');
             }
@@ -350,10 +263,9 @@ public class TextIO {
 
         return ret.toString();
     }
-
+    
     /**
      * Convert a chess move to human readable form.
-     *
      * @param pos      The chess position.
      * @param move     The executed move.
      * @param longForm If true, use long notation, eg Ng1-f3.
@@ -364,16 +276,14 @@ public class TextIO {
         MoveGen.removeIllegal(pos, moves);
         return moveToString(pos, move, longForm, moves);
     }
-
-    private static final String moveToString(Position pos, Move move, boolean longForm,
-            MoveGen.MoveList moves) {
+    private static final String moveToString(Position pos, Move move, boolean longForm, MoveGen.MoveList moves) {
         StringBuilder ret = new StringBuilder();
         int wKingOrigPos = Position.getSquare(4, 0);
         int bKingOrigPos = Position.getSquare(4, 7);
         if (move.from == wKingOrigPos && pos.getPiece(wKingOrigPos) == Piece.WKING) {
             // Check white castle
             if (move.to == Position.getSquare(6, 0)) {
-                ret.append("O-O");
+                    ret.append("O-O");
             } else if (move.to == Position.getSquare(2, 0)) {
                 ret.append("O-O-O");
             }
@@ -393,7 +303,7 @@ public class TextIO {
             int x2 = Position.getX(move.to);
             int y2 = Position.getY(move.to);
             if (longForm) {
-                ret.append((char) (x1 + 'a'));
+                ret.append((char)(x1 + 'a'));
                 ret.append((char) (y1 + '1'));
                 ret.append(isCapture(pos, move) ? 'x' : '-');
             } else {
@@ -407,17 +317,14 @@ public class TextIO {
                     int numSameRow = 0;
                     for (int mi = 0; mi < moves.size; mi++) {
                         Move m = moves.m[mi];
-                        if (m == null) {
+                        if (m == null)
                             break;
-                        }
                         if ((pos.getPiece(m.from) == p) && (m.to == move.to)) {
                             numSameTarget++;
-                            if (Position.getX(m.from) == x1) {
+                            if (Position.getX(m.from) == x1)
                                 numSameFile++;
-                            }
-                            if (Position.getY(m.from) == y1) {
+                            if (Position.getY(m.from) == y1)
                                 numSameRow++;
-                            }
                         }
                     }
                     if (numSameTarget < 2) {
@@ -486,16 +393,14 @@ public class TextIO {
 
     /**
      * Convert a string to a Move object.
-     *
      * @return A move object, or null if move has invalid syntax
      */
     public static final Move uciStringToMove(String move) {
         Move m = null;
-        if ((move.length() < 4) || (move.length() > 5)) {
+        if ((move.length() < 4) || (move.length() > 5))
             return m;
-        }
         int fromSq = TextIO.getSquare(move.substring(0, 2));
-        int toSq = TextIO.getSquare(move.substring(2, 4));
+        int toSq   = TextIO.getSquare(move.substring(2, 4));
         if ((fromSq < 0) || (toSq < 0)) {
             return m;
         }
@@ -538,8 +443,7 @@ public class TextIO {
     private static final boolean isCapture(Position pos, Move move) {
         if (pos.getPiece(move.to) == Piece.EMPTY) {
             int p = pos.getPiece(move.from);
-            if ((p == (pos.whiteMove ? Piece.WPAWN : Piece.BPAWN)) && (move.to
-                    == pos.getEpSquare())) {
+            if ((p == (pos.whiteMove ? Piece.WPAWN : Piece.BPAWN)) && (move.to == pos.getEpSquare())) {
                 return true;
             } else {
                 return false;
@@ -557,9 +461,8 @@ public class TextIO {
     public static final Move stringToMove(Position pos, String strMove) {
         strMove = strMove.replaceAll("=", "");
         Move move = null;
-        if (strMove.length() == 0) {
+        if (strMove.length() == 0)
             return move;
-        }
         MoveGen.MoveList moves = MoveGen.instance.pseudoLegalMoves(pos);
         MoveGen.removeIllegal(pos, moves);
         {
@@ -598,7 +501,7 @@ public class TextIO {
                 }
             }
         }
-
+        
         for (int i = 0; i < 2; i++) {
             // Search for unique substring match
             for (int mi = 0; mi < moves.size; mi++) {
@@ -620,24 +523,21 @@ public class TextIO {
                     }
                 }
             }
-            if (move != null) {
+            if (move != null)
                 return move;
-            }
         }
         return move;
     }
 
     /**
      * Convert a string, such as "e4" to a square number.
-     *
      * @return The square number, or -1 if not a legal square.
      */
     public static final int getSquare(String s) {
         int x = s.charAt(0) - 'a';
         int y = s.charAt(1) - '1';
-        if ((x < 0) || (x > 7) || (y < 0) || (y > 7)) {
+        if ((x < 0) || (x > 7) || (y < 0) || (y > 7))
             return -1;
-        }
         return Position.getSquare(x, y);
     }
 
@@ -659,8 +559,7 @@ public class TextIO {
     public static final String asciiBoard(Position pos) {
         StringBuilder ret = new StringBuilder(400);
         String nl = String.format(Locale.US, "%n");
-        ret.append("    +----+----+----+----+----+----+----+----+");
-        ret.append(nl);
+        ret.append("    +----+----+----+----+----+----+----+----+"); ret.append(nl);
         for (int y = 7; y >= 0; y--) {
             ret.append("    |");
             for (int x = 0; x < 8; x++) {
@@ -672,9 +571,8 @@ public class TextIO {
                 } else {
                     ret.append(Piece.isWhite(p) ? ' ' : '*');
                     String pieceName = pieceToChar(p);
-                    if (pieceName.length() == 0) {
+                    if (pieceName.length() == 0)
                         pieceName = "P";
-                    }
                     ret.append(pieceName);
                     ret.append(" |");
                 }
@@ -698,24 +596,14 @@ public class TextIO {
         }
         return str;
     }
-
+    
     private final static String pieceToChar(int p) {
         switch (p) {
-            case Piece.WQUEEN:
-            case Piece.BQUEEN:
-                return "Q";
-            case Piece.WROOK:
-            case Piece.BROOK:
-                return "R";
-            case Piece.WBISHOP:
-            case Piece.BBISHOP:
-                return "B";
-            case Piece.WKNIGHT:
-            case Piece.BKNIGHT:
-                return "N";
-            case Piece.WKING:
-            case Piece.BKING:
-                return "K";
+            case Piece.WQUEEN:  case Piece.BQUEEN:  return "Q";
+            case Piece.WROOK:   case Piece.BROOK:   return "R";
+            case Piece.WBISHOP: case Piece.BBISHOP: return "B";
+            case Piece.WKNIGHT: case Piece.BKNIGHT: return "N";
+            case Piece.WKING:   case Piece.BKING:   return "K";
         }
         return "";
     }

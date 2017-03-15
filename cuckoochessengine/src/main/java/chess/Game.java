@@ -23,54 +23,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * @author petero
- */
 public class Game {
-    public Position pos = null;
     protected List<Move> moveList = null;
     protected List<UndoInfo> uiInfoList = null;
-    protected int currentMove;
-    protected Player whitePlayer;
-    protected Player blackPlayer;
     List<Boolean> drawOfferList = null;
+    protected int currentMove;
     boolean pendingDrawOffer;
     GameState drawState;
     String drawStateMoveStr; // Move required to claim DRAW_REP or DRAW_50
     GameState resignState;
-
+    public Position pos = null;
+    protected Player whitePlayer;
+    protected Player blackPlayer;
+    
     public Game(Player whitePlayer, Player blackPlayer) {
         this.whitePlayer = whitePlayer;
         this.blackPlayer = blackPlayer;
         handleCommand("new");
     }
 
-    final static long perfT(MoveGen moveGen, Position pos, int depth) {
-        if (depth == 0) {
-            return 1;
-        }
-        long nodes = 0;
-        MoveGen.MoveList moves = moveGen.pseudoLegalMoves(pos);
-        MoveGen.removeIllegal(pos, moves);
-        if (depth == 1) {
-            int ret = moves.size;
-            moveGen.returnMoveList(moves);
-            return ret;
-        }
-        UndoInfo ui = new UndoInfo();
-        for (int mi = 0; mi < moves.size; mi++) {
-            Move m = moves.m[mi];
-            pos.makeMove(m, ui);
-            nodes += perfT(moveGen, pos, depth - 1);
-            pos.unMakeMove(m, ui);
-        }
-        moveGen.returnMoveList(moves);
-        return nodes;
-    }
-
     /**
      * Update the game state according to move/command string from a player.
-     *
      * @param str The move or command to process.
      * @return True if str was understood, false otherwise.
      */
@@ -114,17 +87,19 @@ public class Game {
             case WHITE_STALEMATE:
             case BLACK_STALEMATE:
                 return "Game over, draw by stalemate!";
-            case DRAW_REP: {
+            case DRAW_REP:
+            {
                 String ret = "Game over, draw by repetition!";
                 if ((drawStateMoveStr != null) && (drawStateMoveStr.length() > 0)) {
                     ret = ret + " [" + drawStateMoveStr + "]";
                 }
                 return ret;
             }
-            case DRAW_50: {
+            case DRAW_50:
+            {
                 String ret = "Game over, draw by 50 move rule!";
                 if ((drawStateMoveStr != null) && (drawStateMoveStr.length() > 0)) {
-                    ret = ret + " [" + drawStateMoveStr + "]";
+                    ret = ret + " [" + drawStateMoveStr + "]";  
                 }
                 return ret;
             }
@@ -152,6 +127,20 @@ public class Game {
         return m;
     }
 
+    public enum GameState {
+        ALIVE,
+        WHITE_MATE,         // White mates
+        BLACK_MATE,         // Black mates
+        WHITE_STALEMATE,    // White is stalemated
+        BLACK_STALEMATE,    // Black is stalemated
+        DRAW_REP,           // Draw by 3-fold repetition
+        DRAW_50,            // Draw by 50 move rule
+        DRAW_NO_MATE,       // Draw by impossibility of check mate
+        DRAW_AGREE,         // Draw by agreement
+        RESIGN_WHITE,       // White resigns
+        RESIGN_BLACK        // Black resigns
+    }
+
     /**
      * Get the current state of the game.
      */
@@ -176,7 +165,6 @@ public class Game {
 
     /**
      * Check if a draw offer is available.
-     *
      * @return True if the current player has the option to accept a draw offer.
      */
     public boolean haveDrawOffer() {
@@ -186,12 +174,11 @@ public class Game {
             return false;
         }
     }
-
+    
     /**
      * Handle a special command.
-     *
-     * @param moveStr The command to handle
-     * @return True if command handled, false otherwise.
+     * @param moveStr  The command to handle
+     * @return  True if command handled, false otherwise.
      */
     protected boolean handleCommand(String moveStr) {
         if (moveStr.equals("new")) {
@@ -267,7 +254,7 @@ public class Game {
                 return true;
             }
         } else if (moveStr.equals("resign")) {
-            if (getGameState() == GameState.ALIVE) {
+            if (getGameState()== GameState.ALIVE) {
                 resignState = pos.whiteMove ? GameState.RESIGN_WHITE : GameState.RESIGN_BLACK;
                 return true;
             } else {
@@ -283,7 +270,8 @@ public class Game {
                 whitePlayer.timeLimit(timeLimit, timeLimit, false);
                 blackPlayer.timeLimit(timeLimit, timeLimit, false);
                 return true;
-            } catch (NumberFormatException nfe) {
+            }
+            catch (NumberFormatException nfe) {
                 System.out.printf("Number format exception: %s\n", nfe.getMessage());
                 return false;
             }
@@ -295,8 +283,9 @@ public class Game {
                 long t0 = System.currentTimeMillis();
                 long nodes = perfT(moveGen, pos, depth);
                 long t1 = System.currentTimeMillis();
-                System.out.printf("perft(%d) = %d, t=%.3fs\n", depth, nodes, (t1 - t0) * 1e-3);
-            } catch (NumberFormatException nfe) {
+                System.out.printf("perft(%d) = %d, t=%.3fs\n", depth, nodes, (t1 - t0)*1e-3);
+            }
+            catch (NumberFormatException nfe) {
                 System.out.printf("Number format exception: %s\n", nfe.getMessage());
                 return false;
             }
@@ -317,7 +306,7 @@ public class Game {
 
     public List<String> getPosHistory() {
         List<String> ret = new ArrayList<String>();
-
+        
         Position pos = new Position(this.pos);
         for (int i = currentMove; i > 0; i--) {
             pos.unMakeMove(moveList.get(i - 1), uiInfoList.get(i - 1));
@@ -334,7 +323,7 @@ public class Game {
         }
         ret.add(moves.toString()); // Store move list string
         int numUndo = moveList.size() - currentMove;
-        ret.add(((Integer) numUndo).toString());
+        ret.add(((Integer)numUndo).toString());
         return ret;
     }
 
@@ -406,7 +395,7 @@ public class Game {
         }
         return ret.toString();
     }
-
+    
     public final String getPGNResultString() {
         String gameResult = "*";
         switch (getGameState()) {
@@ -437,10 +426,9 @@ public class Game {
         ArrayList<Position> posList = new ArrayList<Position>();
         Position pos = new Position(this.pos);
         for (int i = currentMove; i > 0; i--) {
-            if (pos.halfMoveClock == 0) {
+            if (pos.halfMoveClock == 0)
                 break;
-            }
-            pos.unMakeMove(moveList.get(i - 1), uiInfoList.get(i - 1));
+            pos.unMakeMove(moveList.get(i- 1), uiInfoList.get(i- 1));
             posList.add(new Position(pos));
         }
         Collections.reverse(posList);
@@ -475,9 +463,8 @@ public class Game {
                 int repetitions = 0;
                 Position firstPos = oldPositions.get(0);
                 for (Position p : oldPositions) {
-                    if (p.drawRuleEquals(firstPos)) {
+                    if (p.drawRuleEquals(firstPos))
                         repetitions++;
-                    }
                 }
                 if (repetitions >= 3) {
                     valid = true;
@@ -535,11 +522,11 @@ public class Game {
 
     private boolean insufficientMaterial() {
         if (pos.pieceTypeBB[Piece.WQUEEN] != 0) return false;
-        if (pos.pieceTypeBB[Piece.WROOK] != 0) return false;
-        if (pos.pieceTypeBB[Piece.WPAWN] != 0) return false;
+        if (pos.pieceTypeBB[Piece.WROOK]  != 0) return false;
+        if (pos.pieceTypeBB[Piece.WPAWN]  != 0) return false;
         if (pos.pieceTypeBB[Piece.BQUEEN] != 0) return false;
-        if (pos.pieceTypeBB[Piece.BROOK] != 0) return false;
-        if (pos.pieceTypeBB[Piece.BPAWN] != 0) return false;
+        if (pos.pieceTypeBB[Piece.BROOK]  != 0) return false;
+        if (pos.pieceTypeBB[Piece.BPAWN]  != 0) return false;
         int wb = Long.bitCount(pos.pieceTypeBB[Piece.WBISHOP]);
         int wn = Long.bitCount(pos.pieceTypeBB[Piece.WKNIGHT]);
         int bb = Long.bitCount(pos.pieceTypeBB[Piece.BBISHOP]);
@@ -551,25 +538,32 @@ public class Game {
             // Only bishops. If they are all on the same color, the position is a draw.
             long bMask = pos.pieceTypeBB[Piece.WBISHOP] | pos.pieceTypeBB[Piece.BBISHOP];
             if (((bMask & BitBoard.maskDarkSq) == 0) ||
-                    ((bMask & BitBoard.maskLightSq) == 0)) {
+                ((bMask & BitBoard.maskLightSq) == 0))
                 return true;
-            }
         }
 
         return false;
     }
 
-    public enum GameState {
-        ALIVE,
-        WHITE_MATE,         // White mates
-        BLACK_MATE,         // Black mates
-        WHITE_STALEMATE,    // White is stalemated
-        BLACK_STALEMATE,    // Black is stalemated
-        DRAW_REP,           // Draw by 3-fold repetition
-        DRAW_50,            // Draw by 50 move rule
-        DRAW_NO_MATE,       // Draw by impossibility of check mate
-        DRAW_AGREE,         // Draw by agreement
-        RESIGN_WHITE,       // White resigns
-        RESIGN_BLACK        // Black resigns
+    final static long perfT(MoveGen moveGen, Position pos, int depth) {
+        if (depth == 0)
+            return 1;
+        long nodes = 0;
+        MoveGen.MoveList moves = moveGen.pseudoLegalMoves(pos);
+        MoveGen.removeIllegal(pos, moves);
+        if (depth == 1) {
+            int ret = moves.size;
+            moveGen.returnMoveList(moves);
+            return ret;
+        }
+        UndoInfo ui = new UndoInfo();
+        for (int mi = 0; mi < moves.size; mi++) {
+            Move m = moves.m[mi];
+            pos.makeMove(m, ui);
+            nodes += perfT(moveGen, pos, depth - 1);
+            pos.unMakeMove(m, ui);
+        }
+        moveGen.returnMoveList(moves);
+        return nodes;
     }
 }

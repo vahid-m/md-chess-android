@@ -18,28 +18,30 @@
 
 package chess;
 
-/**
- * Implement a table of killer moves for the killer heuristic.
- *
- * @author petero
- */
+/** Implement a table of killer moves for the killer heuristic. */
 public class KillerTable {
+    /** There is one KTEntry for each ply in the search tree. */
+    static final class KTEntry {
+        public KTEntry() {
+            move0 = move1 = 0;
+        }
+        int move0;
+        int move1;
+    }
     KTEntry[] ktList;
 
     /** Create an empty killer table. */
     public KillerTable() {
         ktList = new KTEntry[200];
-        for (int i = 0; i < ktList.length; i++) {
+        for (int i = 0; i < ktList.length; i++)
             ktList[i] = new KTEntry();
-        }
     }
 
     /** Add a killer move to the table. Moves are replaced on an LRU basis. */
     final public void addKiller(int ply, Move m) {
-        if (ply >= ktList.length) {
+        if (ply >= ktList.length)
             return;
-        }
-        int move = (short) (m.from + (m.to << 6) + (m.promoteTo << 12));
+        int move = (short)(m.from + (m.to << 6) + (m.promoteTo << 12));
         KTEntry ent = ktList[ply];
         if (move != ent.move0) {
             ent.move1 = ent.move0;
@@ -56,7 +58,7 @@ public class KillerTable {
      * The score is 0 otherwise.
      */
     final public int getKillerScore(int ply, Move m) {
-        int move = (short) (m.from + (m.to << 6) + (m.promoteTo << 12));
+        int move = (short)(m.from + (m.to << 6) + (m.promoteTo << 12));
         if (ply < ktList.length) {
             KTEntry ent = ktList[ply];
             if (move == ent.move0) {
@@ -74,15 +76,5 @@ public class KillerTable {
             }
         }
         return 0;
-    }
-
-    /** There is one KTEntry for each ply in the search tree. */
-    static final class KTEntry {
-        int move0;
-        int move1;
-
-        public KTEntry() {
-            move0 = move1 = 0;
-        }
     }
 }

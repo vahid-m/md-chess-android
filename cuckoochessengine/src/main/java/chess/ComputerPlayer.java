@@ -22,11 +22,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
 
-/**
- * A computer algorithm player.
- *
- * @author petero
- */
+/** A computer algorithm player. */
 public class ComputerPlayer implements Player {
     public static final String engineName;
 
@@ -34,28 +30,26 @@ public class ComputerPlayer implements Player {
         String name = "CuckooChess 1.13a9";
         try {
             String m = System.getProperty("sun.arch.data.model");
-            if ("32".equals(m)) {
+            if ("32".equals(m))
                 name += " 32-bit";
-            } else if ("64".equals(m)) {
+            else if ("64".equals(m))
                 name += " 64-bit";
-            }
         } catch (SecurityException ex) {
             // getProperty not allowed in applets
         }
         engineName = name;
     }
 
-    public boolean verbose;
     int minTimeMillis;
     int maxTimeMillis;
     int maxDepth;
     int maxNodes;
+    public boolean verbose;
     TranspositionTable tt;
     Book book;
     boolean bookEnabled;
     boolean randomMode;
     Search currentSearch;
-    Search.Listener listener;
 
     public ComputerPlayer() {
         minTimeMillis = 10000;
@@ -69,16 +63,11 @@ public class ComputerPlayer implements Player {
         randomMode = false;
     }
 
-    private final static int moveProbWeight(int moveScore, int bestScore) {
-        double d = (bestScore - moveScore) / 100.0;
-        double w = 100 * Math.exp(-d * d / 2);
-        return (int) Math.ceil(w);
-    }
-
     public void setTTLogSize(int logSize) {
         tt = new TranspositionTable(logSize);
     }
-
+    
+    Search.Listener listener;
     public void setListener(Search.Listener listener) {
         this.listener = listener;
     }
@@ -113,13 +102,12 @@ public class ComputerPlayer implements Player {
                 return TextIO.moveToString(pos, bookMove, false);
             }
         }
-
+        
         // Find best move using iterative deepening
         currentSearch = sc;
         sc.setListener(listener);
         Move bestM;
-        if ((moves.size == 1) && (canClaimDraw(pos, posHashList, posHashListSize, moves.m[0])
-                == "")) {
+        if ((moves.size == 1) && (canClaimDraw(pos, posHashList, posHashListSize, moves.m[0]) == "")) {
             bestM = moves.m[0];
             bestM.score = 0;
         } else if (randomMode) {
@@ -135,16 +123,13 @@ public class ComputerPlayer implements Player {
         // Claim draw if appropriate
         if (bestM.score <= 0) {
             String drawClaim = canClaimDraw(pos, posHashList, posHashListSize, bestM);
-            if (drawClaim != "") {
+            if (drawClaim != "")
                 strMove = drawClaim;
-            }
         }
         return strMove;
     }
-
-    /**
-     * Check if a draw claim is allowed, possibly after playing "move".
-     *
+    
+    /** Check if a draw claim is allowed, possibly after playing "move".
      * @param move The move that may have to be made before claiming draw.
      * @return The draw string that claims the draw, or empty string if draw claim not valid.
      */
@@ -205,7 +190,7 @@ public class ComputerPlayer implements Player {
         tt.nextGeneration();
         History ht = new History();
         Search sc = new Search(pos, posHashList, 0, tt, ht);
-
+        
         // Determine all legal moves
         MoveGen.MoveList moves = new MoveGen().pseudoLegalMoves(pos);
         MoveGen.removeIllegal(pos, moves);
@@ -248,7 +233,13 @@ public class ComputerPlayer implements Player {
             }
             rnd -= weight;
         }
-        assert (false);
+        assert(false);
         return null;
+    }
+
+    private final static int moveProbWeight(int moveScore, int bestScore) {
+        double d = (bestScore - moveScore) / 100.0;
+        double w = 100*Math.exp(-d*d/2);
+        return (int)Math.ceil(w);
     }
 }

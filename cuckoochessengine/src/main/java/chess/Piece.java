@@ -18,11 +18,7 @@
 
 package chess;
 
-/**
- * Constants for different piece types.
- *
- * @author petero
- */
+/** Constants for different piece types. */
 public class Piece {
     public static final int EMPTY = 0;
 
@@ -49,11 +45,9 @@ public class Piece {
     public static final boolean isWhite(int pType) {
         return pType < BKING;
     }
-
     public static final int makeWhite(int pType) {
         return pType < BKING ? pType : pType - (BKING - WKING);
     }
-
     public static final int makeBlack(int pType) {
         return ((pType > EMPTY) && (pType < BKING)) ? pType + (BKING - WKING) : pType;
     }

@@ -18,11 +18,7 @@
 
 package chess;
 
-/**
- * Implements the relative history heuristic.
- *
- * @author petero
- */
+/** Implements the relative history heuristic. */
 public final class History {
     private int countSuccess[][];
     private int countFail[][];
@@ -70,9 +66,8 @@ public final class History {
     public final int getHistScore(Position pos, Move m) {
         int p = pos.getPiece(m.from);
         int ret = score[p][m.to];
-        if (ret >= 0) {
+        if (ret >= 0)
             return ret;
-        }
         int succ = countSuccess[p][m.to];
         int fail = countFail[p][m.to];
         if (succ + fail > 0) {

@@ -21,10 +21,92 @@ package chess;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author petero
- */
 public class TranspositionTable {
+    static final public class TTEntry {
+        long key;               // Zobrist hash key
+        private short move;     // from + (to<<6) + (promote<<12)
+        private short score;    // Score from search
+        private short depthSlot; // Search depth (bit 0-14) and hash slot (bit 15).
+        byte generation;        // Increase when OTB position changes
+        public byte type;       // exact score, lower bound, upper bound
+        short evalScore;        // Score from static evaluation 
+
+        static public final int T_EXACT = 0;   // Exact score
+        static public final int T_GE = 1;      // True score >= this.score
+        static public final int T_LE = 2;      // True score <= this.score
+        static public final int T_EMPTY = 3;   // Empty hash slot
+        
+        /** Return true if this object is more valuable than the other, false otherwise. */
+        public final boolean betterThan(TTEntry other, int currGen) {
+            if ((generation == currGen) != (other.generation == currGen)) {
+                return generation == currGen;   // Old entries are less valuable
+            }
+            if ((type == T_EXACT) != (other.type == T_EXACT)) {
+                return type == T_EXACT;         // Exact score more valuable than lower/upper bound
+            }
+            if (getDepth() != other.getDepth()) {
+                return getDepth() > other.getDepth();     // Larger depth is more valuable
+            }
+            return false;   // Otherwise, pretty much equally valuable
+        }
+
+        /** Return true if entry is good enough to spend extra time trying to avoid overwriting it. */
+        public final boolean valuable(int currGen) {
+            if (generation != currGen)
+                return false;
+            return (type == T_EXACT) || (getDepth() > 3 * Search.plyScale);
+        }
+
+        public final void getMove(Move m) {
+            m.from = move & 63;
+            m.to = (move >> 6) & 63;
+            m.promoteTo = (move >> 12) & 15;
+        }
+        public final void setMove(Move move) {
+            this.move = (short)(move.from + (move.to << 6) + (move.promoteTo << 12));
+        }
+        
+        /** Get the score from the hash entry and convert from "mate in x" to "mate at ply". */
+        public final int getScore(int ply) {
+            int sc = score;
+            if (sc > Search.MATE0 - 1000) {
+                sc -= ply;
+            } else if (sc < -(Search.MATE0 - 1000)) {
+                sc += ply;
+            }
+            return sc;
+        }
+        
+        /** Convert score from "mate at ply" to "mate in x" and store in hash entry. */
+        public final void setScore(int score, int ply) {
+            if (score > Search.MATE0 - 1000) {
+                score += ply;
+            } else if (score < -(Search.MATE0 - 1000)) {
+                score -= ply;
+            }
+            this.score = (short)score;
+        }
+
+        /** Get depth from the hash entry. */
+        public final int getDepth() {
+            return depthSlot & 0x7fff;
+        }
+
+        /** Set depth. */
+        public final void setDepth(int d) {
+            depthSlot &= 0x8000;
+            depthSlot |= ((short)d) & 0x7fff;
+        }
+
+        final int getHashSlot() {
+            return depthSlot >>> 15;
+        }
+
+        public final void setHashSlot(int s) {
+            depthSlot &= 0x7fff;
+            depthSlot |= (s << 15);
+        }
+    }
     TTEntry[] table;
     TTEntry emptySlot;
     byte generation;
@@ -68,7 +150,7 @@ public class TranspositionTable {
                     altEnt.move = ent.move;
                     altEnt.score = ent.score;
                     altEnt.depthSlot = ent.depthSlot;
-                    altEnt.generation = (byte) ent.generation;
+                    altEnt.generation = (byte)ent.generation;
                     altEnt.type = ent.type;
                     altEnt.setHashSlot(1 - ent.getHashSlot());
                     altEnt.evalScore = ent.evalScore;
@@ -86,16 +168,15 @@ public class TranspositionTable {
             }
         }
         if (doStore) {
-            if ((ent.key != key) || (sm.from != sm.to)) {
+            if ((ent.key != key) || (sm.from != sm.to))
                 ent.setMove(sm);
-            }
             ent.key = key;
             ent.setScore(sm.score, ply);
             ent.setDepth(depth);
-            ent.generation = (byte) generation;
-            ent.type = (byte) type;
+            ent.generation = (byte)generation;
+            ent.type = (byte)type;
             ent.setHashSlot(hashSlot);
-            ent.evalScore = (short) evalScore;
+            ent.evalScore = (short)evalScore;
         }
     }
 
@@ -104,13 +185,13 @@ public class TranspositionTable {
         int idx0 = h0(key);
         TTEntry ent = table[idx0];
         if (ent.key == key) {
-            ent.generation = (byte) generation;
+            ent.generation = (byte)generation;
             return ent;
         }
         int idx1 = h1(key);
         ent = table[idx1];
         if (ent.key == key) {
-            ent.generation = (byte) generation;
+            ent.generation = (byte)generation;
             return ent;
         }
         return emptySlot;
@@ -152,20 +233,18 @@ public class TranspositionTable {
             if (ent.type == TTEntry.T_EMPTY) {
                 break;
             }
-            m = new Move(0, 0, 0);
+            m = new Move(0,0,0);
             ent.getMove(m);
             MoveGen.MoveList moves = moveGen.pseudoLegalMoves(pos);
             MoveGen.removeIllegal(pos, moves);
             boolean contains = false;
-            for (int mi = 0; mi < moves.size; mi++) {
+            for (int mi = 0; mi < moves.size; mi++)
                 if (moves.m[mi].equals(m)) {
                     contains = true;
                     break;
                 }
-            }
-            if (!contains) {
+            if  (!contains)
                 break;
-            }
         }
         return ret;
     }
@@ -187,24 +266,21 @@ public class TranspositionTable {
             } else if (ent.type == TTEntry.T_GE) {
                 type = ">";
             }
-            Move m = new Move(0, 0, 0);
+            Move m = new Move(0,0,0);
             ent.getMove(m);
             MoveGen.MoveList moves = moveGen.pseudoLegalMoves(pos);
             MoveGen.removeIllegal(pos, moves);
             boolean contains = false;
-            for (int mi = 0; mi < moves.size; mi++) {
+            for (int mi = 0; mi < moves.size; mi++)
                 if (moves.m[mi].equals(m)) {
                     contains = true;
                     break;
                 }
-            }
-            if (!contains) {
+            if  (!contains)
                 break;
-            }
             String moveStr = TextIO.moveToString(pos, m, false);
-            if (repetition) {
+            if (repetition)
                 break;
-            }
             if (!first) {
                 ret.append(" ");
             }
@@ -226,7 +302,7 @@ public class TranspositionTable {
         int unused = 0;
         int thisGen = 0;
         List<Integer> depHist = new ArrayList<Integer>();
-        final int maxDepth = 20 * 8;
+        final int maxDepth = 20*8;
         for (int i = 0; i < maxDepth; i++) {
             depHist.add(0);
         }
@@ -244,108 +320,19 @@ public class TranspositionTable {
         }
         double w = 100.0 / table.length;
         System.out.printf("Hash stats: size:%d unused:%d (%.2f%%) thisGen:%d (%.2f%%)\n",
-                table.length, unused, unused * w, thisGen, thisGen * w);
+                          table.length, unused, unused*w, thisGen, thisGen*w);
         for (int i = 0; i < maxDepth; i++) {
             int c = depHist.get(i);
-            if (c > 0) {
-                System.out.printf("%3d %8d (%6.2f%%)\n", i, c, c * w);
-            }
+            if (c > 0)
+                System.out.printf("%3d %8d (%6.2f%%)\n", i, c, c*w);
         }
     }
-
+    
     private final int h0(long key) {
-        return (int) (key & (table.length - 1));
+        return (int)(key & (table.length - 1));
     }
-
+    
     private final int h1(long key) {
-        return (int) ((key >> 32) & (table.length - 1));
-    }
-
-    static final public class TTEntry {
-        static public final int T_EXACT = 0;   // Exact score
-        static public final int T_GE = 1;      // True score >= this.score
-        static public final int T_LE = 2;      // True score <= this.score
-        static public final int T_EMPTY = 3;   // Empty hash slot
-        public byte type;       // exact score, lower bound, upper bound
-        long key;               // Zobrist hash key
-        byte generation;        // Increase when OTB position changes
-        short evalScore;        // Score from static evaluation
-        private short move;     // from + (to<<6) + (promote<<12)
-        private short score;    // Score from search
-        private short depthSlot; // Search depth (bit 0-14) and hash slot (bit 15).
-
-        /** Return true if this object is more valuable than the other, false otherwise. */
-        public final boolean betterThan(TTEntry other, int currGen) {
-            if ((generation == currGen) != (other.generation == currGen)) {
-                return generation == currGen;   // Old entries are less valuable
-            }
-            if ((type == T_EXACT) != (other.type == T_EXACT)) {
-                return type == T_EXACT;         // Exact score more valuable than lower/upper bound
-            }
-            if (getDepth() != other.getDepth()) {
-                return getDepth() > other.getDepth();     // Larger depth is more valuable
-            }
-            return false;   // Otherwise, pretty much equally valuable
-        }
-
-        /** Return true if entry is good enough to spend extra time trying to avoid overwriting
-         * it. */
-        public final boolean valuable(int currGen) {
-            if (generation != currGen) {
-                return false;
-            }
-            return (type == T_EXACT) || (getDepth() > 3 * Search.plyScale);
-        }
-
-        public final void getMove(Move m) {
-            m.from = move & 63;
-            m.to = (move >> 6) & 63;
-            m.promoteTo = (move >> 12) & 15;
-        }
-
-        public final void setMove(Move move) {
-            this.move = (short) (move.from + (move.to << 6) + (move.promoteTo << 12));
-        }
-
-        /** Get the score from the hash entry and convert from "mate in x" to "mate at ply". */
-        public final int getScore(int ply) {
-            int sc = score;
-            if (sc > Search.MATE0 - 1000) {
-                sc -= ply;
-            } else if (sc < -(Search.MATE0 - 1000)) {
-                sc += ply;
-            }
-            return sc;
-        }
-
-        /** Convert score from "mate at ply" to "mate in x" and store in hash entry. */
-        public final void setScore(int score, int ply) {
-            if (score > Search.MATE0 - 1000) {
-                score += ply;
-            } else if (score < -(Search.MATE0 - 1000)) {
-                score -= ply;
-            }
-            this.score = (short) score;
-        }
-
-        /** Get depth from the hash entry. */
-        public final int getDepth() {
-            return depthSlot & 0x7fff;
-        }
-
-        /** Set depth. */
-        public final void setDepth(int d) {
-            depthSlot &= 0x8000;
-            depthSlot |= ((short) d) & 0x7fff;
-        }
-
-        final int getHashSlot() {
-            return depthSlot >>> 15;
-        }
-
-        public final void setHashSlot(int s) {
-            depthSlot &= 0x7fff;
-            depthSlot |= (s << 15);
-        }
+        return (int)((key >> 32) & (table.length - 1));
     }
 }
