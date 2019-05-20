@@ -30,13 +30,6 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="application/x-chess-pgn" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
                 <data
                     android:host="*"
                     android:mimeType="text/plain"
@@ -263,20 +256,12 @@
                     android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.epd"
                     android:scheme="file" />
             </intent-filter>
-            -
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:mimeType="application/x-chess-pgn" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data android:mimeType="application/x-chess-fen" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

@@ -2,8 +2,7 @@ apply plugin: 'com.android.application'
 
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 28
 
     defaultConfig {
         applicationId "org.mdc.chess"
@@ -31,6 +30,11 @@ android {
             path 'src/main/jni/Android.mk'
         }
     }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+    buildToolsVersion = '28.0.3'
 }
 
 repositories {
@@ -38,12 +42,12 @@ repositories {
 }
 
 dependencies {
-    compile project(':cuckoochessengine')
-    compile 'com.android.support:appcompat-v7:25.3.0'
-    compile 'com.android.support:support-v13:25.3.0'
-    compile 'com.github.amlcurran.showcaseview:library:5.0.0'
-    compile 'com.android.support:design:25.3.0'
-    compile 'blue.aodev:material-values:1.1.0'
-    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta3'
-    compile 'com.afollestad.material-dialogs:core:0.9.3.0'
+    implementation project(':cuckoochessengine')
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:support-v13:28.0.0'
+    implementation 'com.github.amlcurran.showcaseview:library:5.4.3'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'blue.aodev:material-values:1.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:2.0.0-beta1'
+    implementation 'com.afollestad.material-dialogs:core:0.9.3.0'
 }
